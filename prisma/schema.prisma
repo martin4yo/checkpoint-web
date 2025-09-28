@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  assignments UserPlaceAssignment[]
+  checkpoints Checkpoint[]
+
+  @@map("users")
+}
+
+model Place {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  assignments UserPlaceAssignment[]
+  checkpoints Checkpoint[]
+
+  @@map("places")
+}
+
+model UserPlaceAssignment {
+  id      String @id @default(cuid())
+  userId  String
+  placeId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, placeId])
+  @@map("user_place_assignments")
+}
+
+model Checkpoint {
+  id        String   @id @default(cuid())
+  userId    String
+  placeId   String?
+  placeName String
+  latitude  Float
+  longitude Float
+  timestamp DateTime
+  notes     String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  place Place? @relation(fields: [placeId], references: [id])
+
+  @@map("checkpoints")
+}
