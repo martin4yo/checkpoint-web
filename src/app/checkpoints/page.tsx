@@ -687,9 +687,14 @@ export default function CheckpointsPage() {
 
         if (response.ok) {
           fetchCheckpoints()
+          alert('Checkpoint eliminado exitosamente')
+        } else {
+          const errorData = await response.json()
+          alert(`Error al eliminar: ${errorData.error || 'Error desconocido'}`)
         }
       } catch (error) {
         console.error('Error deleting checkpoint:', error)
+        alert('Error de conexión al eliminar el checkpoint')
       }
     }
   }
