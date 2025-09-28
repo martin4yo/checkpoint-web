@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get('userId')
     const placeId = searchParams.get('placeId')
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (search) {
       where.placeName = {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     if (dateFrom) {
       where.timestamp = {
-        ...where.timestamp,
+        ...(where.timestamp || {}),
         gte: new Date(dateFrom),
       }
     }
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       const endDate = new Date(dateTo)
       endDate.setHours(23, 59, 59, 999)
       where.timestamp = {
-        ...where.timestamp,
+        ...(where.timestamp || {}),
         lte: endDate,
       }
     }

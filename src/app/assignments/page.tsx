@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Trash2, Users, MapPin } from 'lucide-react'
+import { Plus, Trash2, Users } from 'lucide-react'
 
 interface Assignment {
   id: string
@@ -69,7 +69,7 @@ export default function AssignmentsPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.filter((u: any) => u.isActive))
+        setUsers(data.filter((u: { isActive: boolean }) => u.isActive))
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -81,7 +81,7 @@ export default function AssignmentsPage() {
       const response = await fetch('/api/places')
       if (response.ok) {
         const data = await response.json()
-        setPlaces(data.filter((p: any) => p.isActive))
+        setPlaces(data.filter((p: { isActive: boolean }) => p.isActive))
       }
     } catch (error) {
       console.error('Error fetching places:', error)
@@ -139,10 +139,6 @@ export default function AssignmentsPage() {
     setShowForm(false)
   }
 
-  const getAvailableUsers = () => {
-    const assignedUserIds = assignments.map(a => a.userId)
-    return users.filter(user => !assignedUserIds.includes(user.id))
-  }
 
   const getAvailablePlaces = () => {
     if (!formData.userId) return places

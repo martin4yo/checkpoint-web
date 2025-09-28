@@ -32,7 +32,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Error al iniciar sesión')
       }
-    } catch (error) {
+    } catch {
       setError('Error de conexión')
     } finally {
       setLoading(false)

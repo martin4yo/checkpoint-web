@@ -52,11 +52,15 @@ async function main() {
   ]
 
   for (const placeData of places) {
-    await prisma.place.upsert({
-      where: { name: placeData.name },
-      update: {},
-      create: placeData,
+    const existingPlace = await prisma.place.findFirst({
+      where: { name: placeData.name }
     })
+
+    if (!existingPlace) {
+      await prisma.place.create({
+        data: placeData,
+      })
+    }
   }
 
   console.log('🌱 Database seeded successfully!')

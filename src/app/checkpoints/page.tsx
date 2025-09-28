@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Search, Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera } from 'lucide-react'
+import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera } from 'lucide-react'
 
 interface Checkpoint {
   id: string
@@ -347,7 +347,7 @@ interface LocationModalProps {
 function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
   console.log('PhotoInfoModal rendering with checkpoint:', checkpoint)
 
-  const formatFileSize = (url: string) => {
+  const formatFileSize = () => {
     // Simulamos el tamaño ya que no tenemos acceso directo al archivo
     return '2.4 MB'
   }
@@ -413,7 +413,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
                   <span className="text-sm font-semibold text-gray-700">Tamaño</span>
                 </div>
                 <p className="text-gray-900 font-medium ml-6">
-                  {checkpoint.imageUrl ? formatFileSize(checkpoint.imageUrl) : 'N/A'}
+                  {checkpoint.imageUrl ? formatFileSize() : 'N/A'}
                 </p>
               </div>
 
@@ -657,7 +657,7 @@ export default function CheckpointsPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.map((u: any) => ({ id: u.id, name: u.name })))
+        setUsers(data.map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })))
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -669,7 +669,7 @@ export default function CheckpointsPage() {
       const response = await fetch('/api/places')
       if (response.ok) {
         const data = await response.json()
-        setPlaces(data.map((p: any) => ({ id: p.id, name: p.name })))
+        setPlaces(data.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
       }
     } catch (error) {
       console.error('Error fetching places:', error)

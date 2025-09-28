@@ -79,7 +79,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       email,
     }
