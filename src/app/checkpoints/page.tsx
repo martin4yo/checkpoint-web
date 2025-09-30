@@ -306,7 +306,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
             </button>
             <div className="w-full h-full bg-gray-200 rounded-lg overflow-hidden">
               <iframe
-                src={`https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d3000!2d${checkpoint.longitude}!3d${checkpoint.latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1ses!2sar!4v1234567890123`}
+                src={`https://maps.google.com/maps?q=${checkpoint.latitude},${checkpoint.longitude}&hl=es&z=18&output=embed`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -505,7 +505,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
             <div>
               <div className="w-full h-[512px] bg-gray-200 rounded-lg overflow-hidden">
                 <iframe
-                  src={`https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1000!2d${checkpoint.longitude}!3d${checkpoint.latitude}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1ses!2sar!4v1234567890123`}
+                  src={`https://maps.google.com/maps?q=${checkpoint.latitude},${checkpoint.longitude}&hl=es&z=18&output=embed`}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
