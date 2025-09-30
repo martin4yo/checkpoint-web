@@ -547,7 +547,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4 min-h-[100px] flex flex-col">
                 <div className="flex items-center mb-2">
                   <Calendar className="h-4 w-4 text-gray-500 mr-2" />
                   <span className="text-sm font-semibold text-gray-700">Fecha de Registro</span>
@@ -564,7 +564,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4 min-h-[100px] flex flex-col">
                 <div className="flex items-center mb-2">
                   <User className="h-4 w-4 text-gray-500 mr-2" />
                   <span className="text-sm font-semibold text-gray-700">Registrado por</span>
