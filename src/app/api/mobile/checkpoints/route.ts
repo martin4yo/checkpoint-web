@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
     const notes = formData.get('notes') as string | null
     const imageFile = formData.get('image') as File | null
 
+    console.log('📷 Backend: Imagen recibida:', !!imageFile)
+    if (imageFile) {
+      console.log('📷 Backend: Nombre:', imageFile.name, 'Tamaño:', Math.round(imageFile.size / 1024), 'KB')
+    }
+
     let imageUrl: string | null = null
 
     // Guardar imagen si existe
@@ -41,9 +46,13 @@ export async function POST(req: NextRequest) {
 
       await writeFile(filePath, buffer)
       imageUrl = `/uploads/${fileName}`
+      console.log('📷 Backend: Imagen guardada en:', imageUrl)
+      console.log('📷 Backend: Archivo físico:', filePath)
     }
 
     // Crear checkpoint
+    console.log('📷 Backend: Guardando en DB con imageUrl:', imageUrl)
+
     const checkpoint = await prisma.checkpoint.create({
       data: {
         userId: payload.userId,
@@ -57,10 +66,13 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    console.log('📷 Backend: Checkpoint creado:', checkpoint.id, 'imageUrl en DB:', checkpoint.imageUrl)
+
     return NextResponse.json({
       success: true,
       message: 'Ubicación registrada exitosamente',
       checkpointId: checkpoint.id,
+      imageUrl: checkpoint.imageUrl, // Incluir en respuesta para debug
     })
   } catch (error) {
     console.error('Create checkpoint error:', error)

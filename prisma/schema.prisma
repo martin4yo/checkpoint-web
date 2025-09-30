@@ -8,47 +8,41 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
+  id          String                @id @default(cuid())
   name        String
-  email       String   @unique
+  email       String                @unique
   password    String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relaciones
-  assignments UserPlaceAssignment[]
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
   checkpoints Checkpoint[]
+  assignments UserPlaceAssignment[]
 
   @@map("users")
 }
 
 model Place {
-  id        String   @id @default(cuid())
-  name      String
-  address   String
-  latitude  Float
-  longitude Float
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
-  assignments UserPlaceAssignment[]
+  id          String                @id @default(cuid())
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
   checkpoints Checkpoint[]
+  assignments UserPlaceAssignment[]
 
   @@map("places")
 }
 
 model UserPlaceAssignment {
-  id      String @id @default(cuid())
-  userId  String
-  placeId String
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
-
+  id        String   @id @default(cuid())
+  userId    String
+  placeId   String
   createdAt DateTime @default(now())
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, placeId])
   @@map("user_place_assignments")
@@ -65,9 +59,8 @@ model Checkpoint {
   notes     String?
   imageUrl  String?
   createdAt DateTime @default(now())
-
-  user  User   @relation(fields: [userId], references: [id])
-  place Place? @relation(fields: [placeId], references: [id])
+  place     Place?   @relation(fields: [placeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("checkpoints")
 }

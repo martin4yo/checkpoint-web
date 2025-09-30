@@ -143,7 +143,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
                   </div>
                   <div className="relative">
                     <img
-                      src={checkpoint.imageUrl}
+                      src={`${window.location.origin}${checkpoint.imageUrl}`}
                       alt="Checkpoint"
                       className="w-full h-64 object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={(e) => {
@@ -261,13 +261,13 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
               <X className="h-8 w-8" />
             </button>
             <img
-              src={checkpoint.imageUrl}
+              src={`${window.location.origin}${checkpoint.imageUrl}`}
               alt="Checkpoint"
               className="max-h-[90vh] max-w-full object-contain rounded-lg"
             />
             <div className="mt-4 text-center">
               <a
-                href={checkpoint.imageUrl}
+                href={`${window.location.origin}${checkpoint.imageUrl}`}
                 download
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors"
@@ -384,7 +384,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
             <div>
               {checkpoint.imageUrl ? (
                 <img
-                  src={checkpoint.imageUrl}
+                  src={`${window.location.origin}${checkpoint.imageUrl}`}
                   alt="Checkpoint"
                   className="w-full h-64 object-cover rounded-lg shadow-md"
                 />
@@ -452,7 +452,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
           <div className="mt-6 flex justify-end space-x-3">
             {checkpoint.imageUrl && (
               <a
-                href={checkpoint.imageUrl}
+                href={`${window.location.origin}${checkpoint.imageUrl}`}
                 download
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
               >
@@ -864,7 +864,7 @@ export default function CheckpointsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {checkpoint.imageUrl ? (
                       <img
-                        src={checkpoint.imageUrl}
+                        src={`${window.location.origin}${checkpoint.imageUrl}`}
                         alt="Checkpoint"
                         className="h-12 w-12 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => {
