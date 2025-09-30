@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
       id: assignment.place.id,
       name: assignment.place.name,
       address: assignment.place.address,
-      lat: assignment.place.latitude,
-      lng: assignment.place.longitude,
+      latitude: assignment.place.latitude,
+      longitude: assignment.place.longitude,
     }))
 
     return NextResponse.json(places)
