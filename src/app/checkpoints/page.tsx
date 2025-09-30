@@ -489,7 +489,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto bg-white rounded-2xl shadow-xl p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="pointer-events-auto bg-white rounded-2xl shadow-xl p-6 max-w-5xl w-full mx-4 max-h-[80vh] overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Información de la Ubicación</h3>
             <button
@@ -503,7 +503,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Mapa de Google */}
             <div>
-              <div className="w-full h-[512px] bg-gray-200 rounded-lg overflow-hidden">
+              <div className="w-full h-[360px] bg-gray-200 rounded-lg overflow-hidden">
                 <iframe
                   src={`https://maps.google.com/maps?q=${checkpoint.latitude},${checkpoint.longitude}&hl=es&z=18&output=embed`}
                   width="100%"
