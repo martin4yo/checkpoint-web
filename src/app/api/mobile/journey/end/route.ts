@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const durationMinutes = Math.floor((endedAt.getTime() - activeJourney.timestamp.getTime()) / (1000 * 60))
 
     // Crear checkpoint de fin de jornada
-    const endCheckpoint = await prisma.checkpoint.create({
+    await prisma.checkpoint.create({
       data: {
         userId: payload.userId,
         placeId: activeJourney.placeId,

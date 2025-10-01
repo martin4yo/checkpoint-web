@@ -25,7 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { password: _, ...userWithoutPassword } = user
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user
     return NextResponse.json(userWithoutPassword)
   } catch (error) {
     console.error('Get user error:', error)
