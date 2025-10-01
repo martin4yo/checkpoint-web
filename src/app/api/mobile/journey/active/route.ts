@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { CheckpointType } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: 'JOURNEY_START'
+        type: CheckpointType.JOURNEY_START
       },
       orderBy: { timestamp: 'desc' }
     })
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     const journeyEnd = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: 'JOURNEY_END',
+        type: CheckpointType.JOURNEY_END,
         timestamp: { gt: activeJourney.timestamp }
       }
     })

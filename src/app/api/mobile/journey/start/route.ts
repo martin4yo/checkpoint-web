@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { CheckpointType } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: 'JOURNEY_START'
+        type: CheckpointType.JOURNEY_START
       },
       orderBy: { timestamp: 'desc' }
     })
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
       const journeyEnd = await prisma.checkpoint.findFirst({
         where: {
           userId: payload.userId,
-          type: 'JOURNEY_END',
+          type: CheckpointType.JOURNEY_END,
           timestamp: { gt: activeJourney.timestamp }
         }
       })
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
         latitude,
         longitude,
         timestamp: new Date(),
-        type: 'JOURNEY_START',
+        type: CheckpointType.JOURNEY_START,
         notes: 'Inicio de jornada laboral'
       }
     })
