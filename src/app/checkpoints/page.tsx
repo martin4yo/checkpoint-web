@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera } from 'lucide-react'
+import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, Clock } from 'lucide-react'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface Checkpoint {
   id: string
@@ -12,6 +13,7 @@ interface Checkpoint {
   timestamp: string
   notes?: string
   imageUrl?: string
+  type: 'MANUAL' | 'JOURNEY_START' | 'JOURNEY_END'
   createdAt: string
   user: {
     id: string
@@ -23,11 +25,125 @@ interface Checkpoint {
     name: string
     address: string
   }
+  _count?: {
+    journeyLocations: number
+  }
+}
+
+interface JourneyLocation {
+  id: string
+  latitude: number
+  longitude: number
+  recordedAt: string
+}
+
+interface JourneyLocationsModalProps {
+  journeyCheckpoint: Checkpoint
+  onClose: () => void
 }
 
 interface CheckpointDetailsModalProps {
   checkpoint: Checkpoint
   onClose: () => void
+}
+
+function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsModalProps) {
+  const [locations, setLocations] = useState<JourneyLocation[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchJourneyLocations()
+  }, [])
+
+  const fetchJourneyLocations = async () => {
+    try {
+      const response = await fetch(`/api/mobile/journey/${journeyCheckpoint.id}/locations`)
+      if (response.ok) {
+        const data = await response.json()
+        setLocations(data.locations || [])
+      }
+    } catch (error) {
+      console.error('Error fetching journey locations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
+        <div className="inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Ubicaciones de Jornada - {journeyCheckpoint.placeName}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="mb-4 text-sm text-gray-600">
+            <p><strong>Usuario:</strong> {journeyCheckpoint.user.name}</p>
+            <p><strong>Inicio:</strong> {new Date(journeyCheckpoint.timestamp).toLocaleString()}</p>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-gray-500">Cargando ubicaciones...</div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium mb-2">Ubicaciones Registradas ({locations.length})</h4>
+                {locations.length === 0 ? (
+                  <p className="text-gray-500">No hay ubicaciones registradas para esta jornada.</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {locations.map((location, index) => (
+                      <div key={location.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                        <div className="flex items-center space-x-2">
+                          <Navigation className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium">Ubicación #{index + 1}</span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(location.recordedAt).toLocaleTimeString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
+                            window.open(url, '_blank')
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalProps) {
@@ -602,6 +718,36 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
   )
 }
 
+// Función para obtener el icono y estilo según el tipo de checkpoint
+const getCheckpointTypeInfo = (type: string) => {
+  switch (type) {
+    case 'JOURNEY_START':
+      return {
+        icon: Play,
+        label: 'Inicio Jornada',
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+        borderColor: 'border-green-200'
+      }
+    case 'JOURNEY_END':
+      return {
+        icon: Square,
+        label: 'Fin Jornada',
+        color: 'text-red-600',
+        bgColor: 'bg-red-100',
+        borderColor: 'border-red-200'
+      }
+    default:
+      return {
+        icon: MapPin,
+        label: 'Ubicación Manual',
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100',
+        borderColor: 'border-blue-200'
+      }
+  }
+}
+
 export default function CheckpointsPage() {
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -617,6 +763,12 @@ export default function CheckpointsPage() {
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<Checkpoint | null>(null)
   const [showPhotoModal, setShowPhotoModal] = useState<Checkpoint | null>(null)
   const [showLocationModal, setShowLocationModal] = useState<Checkpoint | null>(null)
+  const [showJourneyLocationsModal, setShowJourneyLocationsModal] = useState<Checkpoint | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; checkpointId: string; checkpointName: string }>({
+    isOpen: false,
+    checkpointId: '',
+    checkpointName: ''
+  })
 
   // Debug logging
   console.log('Current selectedCheckpoint:', selectedCheckpoint)
@@ -676,26 +828,30 @@ export default function CheckpointsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este checkpoint?')) {
-      try {
-        const response = await fetch('/api/checkpoints', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
-        })
+  const handleDeleteClick = (checkpoint: Checkpoint) => {
+    setDeleteConfirm({
+      isOpen: true,
+      checkpointId: checkpoint.id,
+      checkpointName: checkpoint.placeName
+    })
+  }
 
-        if (response.ok) {
-          fetchCheckpoints()
-          alert('Checkpoint eliminado exitosamente')
-        } else {
-          const errorData = await response.json()
-          alert(`Error al eliminar: ${errorData.error || 'Error desconocido'}`)
-        }
-      } catch (error) {
-        console.error('Error deleting checkpoint:', error)
-        alert('Error de conexión al eliminar el checkpoint')
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await fetch('/api/checkpoints', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteConfirm.checkpointId }),
+      })
+
+      if (response.ok) {
+        fetchCheckpoints()
+      } else {
+        const errorData = await response.json()
+        console.error('Error al eliminar:', errorData.error)
       }
+    } catch (error) {
+      console.error('Error deleting checkpoint:', error)
     }
   }
 
@@ -821,6 +977,9 @@ export default function CheckpointsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tipo
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Usuario
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -841,7 +1000,11 @@ export default function CheckpointsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {checkpoints.map((checkpoint) => (
+              {checkpoints.map((checkpoint) => {
+                const typeInfo = getCheckpointTypeInfo(checkpoint.type)
+                const TypeIcon = typeInfo.icon
+
+                return (
                 <tr
                   key={checkpoint.id}
                   onClick={(e) => {
@@ -849,6 +1012,12 @@ export default function CheckpointsPage() {
                     e.preventDefault()
                   }}
                 >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeInfo.bgColor} ${typeInfo.color} ${typeInfo.borderColor} border`}>
+                      <TypeIcon className="w-3 h-3 mr-1" />
+                      {typeInfo.label}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="font-medium text-gray-900">{checkpoint.user.name}</div>
@@ -898,11 +1067,27 @@ export default function CheckpointsPage() {
                     >
                       <MapPin className="h-4 w-4" />
                     </button>
+                    {checkpoint.type === 'JOURNEY_START' && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setShowJourneyLocationsModal(checkpoint)
+                        }}
+                        className="inline-flex items-center text-purple-600 hover:text-purple-900"
+                        title="Ver Ubicaciones de Jornada"
+                      >
+                        <Navigation className="h-4 w-4" />
+                        {checkpoint._count?.journeyLocations && (
+                          <span className="ml-1 text-xs">({checkpoint._count.journeyLocations})</span>
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        handleDelete(checkpoint.id)
+                        handleDeleteClick(checkpoint)
                       }}
                       className="inline-flex items-center text-red-600 hover:text-red-900"
                       title="Eliminar"
@@ -911,7 +1096,8 @@ export default function CheckpointsPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
           {checkpoints.length === 0 && (
@@ -944,6 +1130,32 @@ export default function CheckpointsPage() {
             onClose={() => setShowLocationModal(null)}
           />
         )}
+
+        {/* Modal de Ubicaciones de Jornada */}
+        {showJourneyLocationsModal && (
+          <JourneyLocationsModal
+            journeyCheckpoint={showJourneyLocationsModal}
+            onClose={() => setShowJourneyLocationsModal(null)}
+          />
+        )}
+
+        {/* Modal de Confirmación de Eliminación */}
+        <ConfirmModal
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm({ isOpen: false, checkpointId: '', checkpointName: '' })}
+          onConfirm={handleDeleteConfirm}
+          title="Eliminar Checkpoint"
+          message={
+            <div>
+              <p>¿Estás seguro de que quieres eliminar este checkpoint?</p>
+              <p className="font-medium mt-2 text-gray-900">"{deleteConfirm.checkpointName}"</p>
+              <p className="text-sm mt-2 text-gray-600">Esta acción no se puede deshacer.</p>
+            </div>
+          }
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          type="danger"
+        />
       </div>
     </DashboardLayout>
   )

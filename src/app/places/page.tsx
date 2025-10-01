@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface Place {
   id: string
@@ -28,6 +29,11 @@ export default function PlacesPage() {
     address: '',
     latitude: '',
     longitude: '',
+  })
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; placeId: string; placeName: string }>({
+    isOpen: false,
+    placeId: '',
+    placeName: ''
   })
 
   useEffect(() => {
@@ -85,21 +91,27 @@ export default function PlacesPage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este lugar?')) {
-      try {
-        const response = await fetch('/api/places', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
-        })
+  const handleDeleteClick = (place: Place) => {
+    setDeleteConfirm({
+      isOpen: true,
+      placeId: place.id,
+      placeName: place.name
+    })
+  }
 
-        if (response.ok) {
-          fetchPlaces()
-        }
-      } catch (error) {
-        console.error('Error deleting place:', error)
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await fetch('/api/places', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteConfirm.placeId }),
+      })
+
+      if (response.ok) {
+        fetchPlaces()
       }
+    } catch (error) {
+      console.error('Error deleting place:', error)
     }
   }
 
@@ -265,7 +277,7 @@ export default function PlacesPage() {
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(place.id)}
+                      onClick={() => handleDeleteClick(place)}
                       className="inline-flex items-center text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >
@@ -282,6 +294,24 @@ export default function PlacesPage() {
             </div>
           )}
         </div>
+
+        {/* Modal de Confirmación de Eliminación */}
+        <ConfirmModal
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm({ isOpen: false, placeId: '', placeName: '' })}
+          onConfirm={handleDeleteConfirm}
+          title="Eliminar Lugar"
+          message={
+            <div>
+              <p>¿Estás seguro de que quieres eliminar este lugar?</p>
+              <p className="font-medium mt-2 text-gray-900">"{deleteConfirm.placeName}"</p>
+              <p className="text-sm mt-2 text-gray-600">Esta acción no se puede deshacer.</p>
+            </div>
+          }
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          type="danger"
+        />
       </div>
     </DashboardLayout>
   )

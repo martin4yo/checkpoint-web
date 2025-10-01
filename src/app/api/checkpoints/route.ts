@@ -60,6 +60,11 @@ export async function GET(req: NextRequest) {
             address: true,
           },
         },
+        _count: {
+          select: {
+            journeyLocations: true,
+          },
+        },
       },
       orderBy: { timestamp: 'desc' },
     })

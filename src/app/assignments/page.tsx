@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Trash2, Users } from 'lucide-react'
+import ConfirmModal from '@/components/ConfirmModal'
 
 interface Assignment {
   id: string
@@ -42,6 +43,12 @@ export default function AssignmentsPage() {
   const [formData, setFormData] = useState({
     userId: '',
     placeId: '',
+  })
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assignmentId: string; userName: string; placeName: string }>({
+    isOpen: false,
+    assignmentId: '',
+    userName: '',
+    placeName: ''
   })
 
   useEffect(() => {
@@ -116,21 +123,28 @@ export default function AssignmentsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta asignación?')) {
-      try {
-        const response = await fetch('/api/assignments', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
-        })
+  const handleDeleteClick = (assignment: Assignment) => {
+    setDeleteConfirm({
+      isOpen: true,
+      assignmentId: assignment.id,
+      userName: assignment.user.name,
+      placeName: assignment.place.name
+    })
+  }
 
-        if (response.ok) {
-          fetchAssignments()
-        }
-      } catch (error) {
-        console.error('Error deleting assignment:', error)
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteConfirm.assignmentId }),
+      })
+
+      if (response.ok) {
+        fetchAssignments()
       }
+    } catch (error) {
+      console.error('Error deleting assignment:', error)
     }
   }
 
@@ -284,7 +298,7 @@ export default function AssignmentsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button
-                      onClick={() => handleDelete(assignment.id)}
+                      onClick={() => handleDeleteClick(assignment)}
                       className="inline-flex items-center text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >
@@ -335,6 +349,26 @@ export default function AssignmentsPage() {
             })}
           </div>
         </div>
+
+        {/* Modal de Confirmación de Eliminación */}
+        <ConfirmModal
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm({ isOpen: false, assignmentId: '', userName: '', placeName: '' })}
+          onConfirm={handleDeleteConfirm}
+          title="Eliminar Asignación"
+          message={
+            <div>
+              <p>¿Estás seguro de que quieres eliminar esta asignación?</p>
+              <p className="font-medium mt-2 text-gray-900">
+                {deleteConfirm.userName} → {deleteConfirm.placeName}
+              </p>
+              <p className="text-sm mt-2 text-gray-600">Esta acción no se puede deshacer.</p>
+            </div>
+          }
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          type="danger"
+        />
       </div>
     </DashboardLayout>
   )
