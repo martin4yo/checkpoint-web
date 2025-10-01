@@ -18,6 +18,8 @@ model User {
   checkpoints     Checkpoint[]
   assignments     UserPlaceAssignment[]
   journeyLocations JourneyLocation[]
+  pushTokens      PushToken[]
+  journeyMonitors JourneyMonitor[]
 
   @@map("users")
 }
@@ -80,6 +82,38 @@ model JourneyLocation {
   startCheckpoint Checkpoint @relation(fields: [startCheckpointId], references: [id], onDelete: Cascade)
 
   @@map("journey_locations")
+}
+
+model PushToken {
+  id             String    @id @default(cuid())
+  userId         String?   // Opcional: para tokens de usuarios específicos
+  deviceId       String    @unique // Identificador único del dispositivo
+  token          String    // Token FCM/APNS
+  platform       String    // 'android' | 'ios'
+  isActive       Boolean   @default(true)
+  isAdminDevice  Boolean   @default(false) // Para dispositivos que reciben alertas de monitoreo
+  description    String?   // Descripción opcional del dispositivo
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_tokens")
+}
+
+model JourneyMonitor {
+  id              String   @id @default(cuid())
+  userId          String
+  journeyId       String   // ID del checkpoint de inicio de jornada
+  lastHeartbeat   DateTime
+  lastLocation    Json?    // Última ubicación conocida
+  isMoving        Boolean  @default(false)
+  alertSent       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, journeyId])
+  @@map("journey_monitors")
 }
 
 enum CheckpointType {
