@@ -18,40 +18,53 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { place_id, place_name, latitude, longitude } = body
 
-    // Verificar si ya tiene una jornada activa
-    const activeJourney = await prisma.journey.findFirst({
+    // Verificar si ya tiene una jornada activa (checkpoint JOURNEY_START sin JOURNEY_END)
+    const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        status: 'ACTIVE'
-      }
+        type: 'JOURNEY_START'
+      },
+      orderBy: { timestamp: 'desc' }
     })
 
     if (activeJourney) {
-      return NextResponse.json({
-        success: false,
-        error: 'Ya tienes una jornada activa'
-      }, { status: 400 })
+      // Verificar si tiene un JOURNEY_END posterior
+      const journeyEnd = await prisma.checkpoint.findFirst({
+        where: {
+          userId: payload.userId,
+          type: 'JOURNEY_END',
+          timestamp: { gt: activeJourney.timestamp }
+        }
+      })
+
+      if (!journeyEnd) {
+        return NextResponse.json({
+          success: false,
+          error: 'Ya tienes una jornada activa'
+        }, { status: 400 })
+      }
     }
 
-    // Crear nueva jornada
-    const journey = await prisma.journey.create({
+    // Crear checkpoint de inicio de jornada
+    const startCheckpoint = await prisma.checkpoint.create({
       data: {
         userId: payload.userId,
         placeId: place_id || null,
         placeName: place_name,
-        startLatitude: latitude,
-        startLongitude: longitude,
-        startedAt: new Date(),
-        status: 'ACTIVE'
+        latitude,
+        longitude,
+        timestamp: new Date(),
+        type: 'JOURNEY_START',
+        notes: 'Inicio de jornada laboral'
       }
     })
 
     return NextResponse.json({
       success: true,
       data: {
-        journey_id: journey.id,
-        status: journey.status,
-        started_at: journey.startedAt.toISOString()
+        journey_id: startCheckpoint.id,
+        status: 'active',
+        started_at: startCheckpoint.timestamp.toISOString()
       }
     })
 

@@ -15,37 +15,54 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
-    // Buscar jornada activa
-    const journey = await prisma.journey.findFirst({
+    // Buscar jornada activa (último JOURNEY_START sin JOURNEY_END)
+    const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        status: 'ACTIVE'
+        type: 'JOURNEY_START'
       },
-      include: {
-        locations: {
-          orderBy: { recordedAt: 'asc' }
-        }
-      }
+      orderBy: { timestamp: 'desc' }
     })
 
-    if (!journey) {
+    if (!activeJourney) {
       return NextResponse.json({
         success: true,
         data: null
       })
     }
 
+    // Verificar si tiene un JOURNEY_END posterior
+    const journeyEnd = await prisma.checkpoint.findFirst({
+      where: {
+        userId: payload.userId,
+        type: 'JOURNEY_END',
+        timestamp: { gt: activeJourney.timestamp }
+      }
+    })
+
+    if (journeyEnd) {
+      return NextResponse.json({
+        success: true,
+        data: null
+      })
+    }
+
+    // Contar ubicaciones registradas
+    const totalLocations = await prisma.journeyLocation.count({
+      where: { startCheckpointId: activeJourney.id }
+    })
+
     const now = new Date()
-    const durationMinutes = Math.floor((now.getTime() - journey.startedAt.getTime()) / (1000 * 60))
+    const durationMinutes = Math.floor((now.getTime() - activeJourney.timestamp.getTime()) / (1000 * 60))
 
     return NextResponse.json({
       success: true,
       data: {
-        journey_id: journey.id,
-        place_name: journey.placeName,
-        started_at: journey.startedAt.toISOString(),
+        journey_id: activeJourney.id,
+        place_name: activeJourney.placeName,
+        started_at: activeJourney.timestamp.toISOString(),
         duration_minutes: durationMinutes,
-        total_locations: journey.locations.length
+        total_locations: totalLocations
       }
     })
 

@@ -18,15 +18,32 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { latitude, longitude } = body
 
-    // Buscar jornada activa
-    const journey = await prisma.journey.findFirst({
+    // Buscar jornada activa (último JOURNEY_START sin JOURNEY_END)
+    const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        status: 'ACTIVE'
+        type: 'JOURNEY_START'
+      },
+      orderBy: { timestamp: 'desc' }
+    })
+
+    if (!activeJourney) {
+      return NextResponse.json({
+        success: false,
+        error: 'No tienes jornada activa'
+      }, { status: 400 })
+    }
+
+    // Verificar si ya tiene un JOURNEY_END posterior
+    const journeyEnd = await prisma.checkpoint.findFirst({
+      where: {
+        userId: payload.userId,
+        type: 'JOURNEY_END',
+        timestamp: { gt: activeJourney.timestamp }
       }
     })
 
-    if (!journey) {
+    if (journeyEnd) {
       return NextResponse.json({
         success: false,
         error: 'No tienes jornada activa'
@@ -34,29 +51,31 @@ export async function POST(req: NextRequest) {
     }
 
     const endedAt = new Date()
-    const durationMinutes = Math.floor((endedAt.getTime() - journey.startedAt.getTime()) / (1000 * 60))
+    const durationMinutes = Math.floor((endedAt.getTime() - activeJourney.timestamp.getTime()) / (1000 * 60))
 
-    // Finalizar jornada
-    const updatedJourney = await prisma.journey.update({
-      where: { id: journey.id },
+    // Crear checkpoint de fin de jornada
+    const endCheckpoint = await prisma.checkpoint.create({
       data: {
-        endLatitude: latitude,
-        endLongitude: longitude,
-        endedAt: endedAt,
-        durationMinutes: durationMinutes,
-        status: 'COMPLETED'
+        userId: payload.userId,
+        placeId: activeJourney.placeId,
+        placeName: activeJourney.placeName,
+        latitude,
+        longitude,
+        timestamp: endedAt,
+        type: 'JOURNEY_END',
+        notes: `Fin de jornada laboral - Duración: ${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
       }
     })
 
-    // Contar ubicaciones registradas
+    // Contar ubicaciones registradas durante la jornada
     const totalLocations = await prisma.journeyLocation.count({
-      where: { journeyId: journey.id }
+      where: { startCheckpointId: activeJourney.id }
     })
 
     return NextResponse.json({
       success: true,
       data: {
-        journey_id: updatedJourney.id,
+        journey_id: activeJourney.id,
         duration_minutes: durationMinutes,
         total_locations: totalLocations
       }

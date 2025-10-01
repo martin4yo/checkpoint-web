@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface User {
   id: string
@@ -26,6 +27,7 @@ export default function UsersPage() {
     email: '',
     password: '',
   })
+  const { confirm, ConfirmDialog } = useConfirm()
 
   useEffect(() => {
     fetchUsers()
@@ -80,8 +82,29 @@ export default function UsersPage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres desactivar este usuario?')) {
+  const handleDelete = async (id: string, userName: string) => {
+    const confirmed = await confirm({
+      title: 'Desactivar Usuario',
+      message: (
+        <div>
+          ¿Estás seguro de que quieres desactivar al usuario <strong>{userName}</strong>?
+          <br />
+          <span className="text-sm text-gray-500 mt-2 block">
+            Esta acción se puede revertir posteriormente.
+          </span>
+        </div>
+      ),
+      confirmText: 'Desactivar',
+      cancelText: 'Cancelar',
+      type: 'warning',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+      )
+    })
+
+    if (confirmed) {
       try {
         const response = await fetch('/api/users', {
           method: 'DELETE',
@@ -273,7 +296,7 @@ export default function UsersPage() {
                       )}
                     </button>
                     <button
-                      onClick={() => handleDelete(user.id)}
+                      onClick={() => handleDelete(user.id, user.name)}
                       className="inline-flex items-center text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >
@@ -291,6 +314,7 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+      <ConfirmDialog />
     </DashboardLayout>
   )
 }

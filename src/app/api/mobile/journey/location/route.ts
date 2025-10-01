@@ -18,25 +18,43 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { latitude, longitude } = body
 
-    // Buscar jornada activa
-    const journey = await prisma.journey.findFirst({
+    // Buscar jornada activa (último JOURNEY_START sin JOURNEY_END)
+    const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        status: 'ACTIVE'
-      }
+        type: 'JOURNEY_START'
+      },
+      orderBy: { timestamp: 'desc' }
     })
 
-    if (!journey) {
+    if (!activeJourney) {
       return NextResponse.json({
         success: false,
         error: 'No tienes jornada activa'
       }, { status: 400 })
     }
 
-    // Agregar ubicación a la jornada
+    // Verificar si tiene un JOURNEY_END posterior
+    const journeyEnd = await prisma.checkpoint.findFirst({
+      where: {
+        userId: payload.userId,
+        type: 'JOURNEY_END',
+        timestamp: { gt: activeJourney.timestamp }
+      }
+    })
+
+    if (journeyEnd) {
+      return NextResponse.json({
+        success: false,
+        error: 'No tienes jornada activa'
+      }, { status: 400 })
+    }
+
+    // Agregar ubicación intermedia a la jornada
     await prisma.journeyLocation.create({
       data: {
-        journeyId: journey.id,
+        userId: payload.userId,
+        startCheckpointId: activeJourney.id,
         latitude,
         longitude,
         recordedAt: new Date()

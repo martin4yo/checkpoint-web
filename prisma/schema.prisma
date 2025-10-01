@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id          String                @id @default(cuid())
-  name        String
-  email       String                @unique
-  password    String
-  isActive    Boolean               @default(true)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  checkpoints Checkpoint[]
-  assignments UserPlaceAssignment[]
-  journeys    Journey[]
+  id              String                @id @default(cuid())
+  name            String
+  email           String                @unique
+  password        String
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  checkpoints     Checkpoint[]
+  assignments     UserPlaceAssignment[]
+  journeyLocations JourneyLocation[]
 
   @@map("users")
 }
@@ -33,7 +33,6 @@ model Place {
   updatedAt   DateTime              @updatedAt
   checkpoints Checkpoint[]
   assignments UserPlaceAssignment[]
-  journeys    Journey[]
 
   @@map("places")
 }
@@ -51,56 +50,34 @@ model UserPlaceAssignment {
 }
 
 model Checkpoint {
-  id        String            @id @default(cuid())
-  userId    String
-  placeId   String?
-  placeName String
-  latitude  Float
-  longitude Float
-  timestamp DateTime
-  notes     String?
-  imageUrl  String?
-  type      CheckpointType    @default(MANUAL)
-  journeyId String?
-  createdAt DateTime          @default(now())
-  place     Place?            @relation(fields: [placeId], references: [id])
-  user      User              @relation(fields: [userId], references: [id])
-  journey   Journey?          @relation(fields: [journeyId], references: [id])
+  id              String            @id @default(cuid())
+  userId          String
+  placeId         String?
+  placeName       String
+  latitude        Float
+  longitude       Float
+  timestamp       DateTime
+  notes           String?
+  imageUrl        String?
+  type            CheckpointType    @default(MANUAL)
+  createdAt       DateTime          @default(now())
+  place           Place?            @relation(fields: [placeId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+  journeyLocations JourneyLocation[]
 
   @@map("checkpoints")
 }
 
-model Journey {
-  id            String            @id @default(cuid())
-  userId        String
-  placeId       String?
-  placeName     String
-  startLatitude Float
-  startLongitude Float
-  endLatitude   Float?
-  endLongitude  Float?
-  startedAt     DateTime
-  endedAt       DateTime?
-  durationMinutes Int?
-  status        JourneyStatus     @default(ACTIVE)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  user          User              @relation(fields: [userId], references: [id])
-  place         Place?            @relation(fields: [placeId], references: [id])
-  locations     JourneyLocation[]
-  checkpoints   Checkpoint[]
-
-  @@map("journeys")
-}
-
 model JourneyLocation {
-  id         String   @id @default(cuid())
-  journeyId  String
-  latitude   Float
-  longitude  Float
-  recordedAt DateTime
-  createdAt  DateTime @default(now())
-  journey    Journey  @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  id              String     @id @default(cuid())
+  userId          String
+  startCheckpointId String   // Referencia al checkpoint de inicio de jornada
+  latitude        Float
+  longitude       Float
+  recordedAt      DateTime
+  createdAt       DateTime   @default(now())
+  user            User       @relation(fields: [userId], references: [id])
+  startCheckpoint Checkpoint @relation(fields: [startCheckpointId], references: [id], onDelete: Cascade)
 
   @@map("journey_locations")
 }
@@ -108,12 +85,5 @@ model JourneyLocation {
 enum CheckpointType {
   MANUAL
   JOURNEY_START
-  JOURNEY_UPDATE
   JOURNEY_END
-}
-
-enum JourneyStatus {
-  ACTIVE
-  COMPLETED
-  CANCELLED
 }

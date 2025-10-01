@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface Place {
   id: string
