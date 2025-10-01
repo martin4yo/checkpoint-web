@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, Clock } from 'lucide-react'
+import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 
 interface Checkpoint {
@@ -1148,7 +1148,7 @@ export default function CheckpointsPage() {
           message={
             <div>
               <p>¿Estás seguro de que quieres eliminar este checkpoint?</p>
-              <p className="font-medium mt-2 text-gray-900">"{deleteConfirm.checkpointName}"</p>
+              <p className="font-medium mt-2 text-gray-900">&quot;{deleteConfirm.checkpointName}&quot;</p>
               <p className="text-sm mt-2 text-gray-600">Esta acción no se puede deshacer.</p>
             </div>
           }

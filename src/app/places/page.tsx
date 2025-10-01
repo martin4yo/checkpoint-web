@@ -304,7 +304,7 @@ export default function PlacesPage() {
           message={
             <div>
               <p>¿Estás seguro de que quieres eliminar este lugar?</p>
-              <p className="font-medium mt-2 text-gray-900">"{deleteConfirm.placeName}"</p>
+              <p className="font-medium mt-2 text-gray-900">&quot;{deleteConfirm.placeName}&quot;</p>
               <p className="text-sm mt-2 text-gray-600">Esta acción no se puede deshacer.</p>
             </div>
           }
