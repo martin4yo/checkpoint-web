@@ -17,6 +17,16 @@ import {
   ChevronLeft
 } from 'lucide-react'
 
+const MapMarkerIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="w-6 h-6 text-red-500"
+  >
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+  </svg>
+)
+
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -78,9 +88,14 @@ export default function Sidebar() {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          {!isCollapsed && (
-            <Link href="/" className="text-xl font-bold text-black" onClick={closeMobile}>
-              Checkpoint
+          {!isCollapsed ? (
+            <Link href="/" className="flex items-center text-xl font-bold text-black" onClick={closeMobile}>
+              <MapMarkerIcon />
+              <span className="ml-2">Checkpoint</span>
+            </Link>
+          ) : (
+            <Link href="/" className="flex items-center justify-center w-full" onClick={closeMobile}>
+              <MapMarkerIcon />
             </Link>
           )}
 

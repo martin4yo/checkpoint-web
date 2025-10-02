@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Filter, X, Edit3, Save, Clock, MapPin, User } from 'lucide-react'
+import JourneyAdjustmentModal from '@/components/JourneyAdjustmentModal'
+import { Filter, X, Edit3, Clock, MapPin, User, Coffee, FileBarChart, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface JourneyReport {
   id: string
@@ -36,8 +38,8 @@ interface JourneyAdjustmentEdit {
 export default function JourneyReportsPage() {
   const [journeys, setJourneys] = useState<JourneyReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editData, setEditData] = useState<JourneyAdjustmentEdit | null>(null)
+  const [selectedJourney, setSelectedJourney] = useState<JourneyReport | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [filter, setFilter] = useState({
     dateFrom: '',
     dateTo: '',
@@ -87,40 +89,44 @@ export default function JourneyReportsPage() {
   }, [fetchJourneys])
 
   const handleEdit = (journey: JourneyReport) => {
-    setEditingId(journey.id)
-    setEditData({
-      checkpointId: journey.id,
-      manualStartTime: journey.adjustments?.manualStartTime || '',
-      manualEndTime: journey.adjustments?.manualEndTime || '',
-      lunchStartTime: journey.adjustments?.lunchStartTime || '',
-      lunchEndTime: journey.adjustments?.lunchEndTime || '',
-      notes: journey.adjustments?.notes || ''
-    })
+    setSelectedJourney(journey)
+    setIsModalOpen(true)
   }
 
-  const handleSave = async () => {
-    if (!editData) return
+  const handleSave = async (editData: JourneyAdjustmentEdit) => {
+    const response = await fetch('/api/journey-adjustments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData)
+    })
 
-    try {
-      const response = await fetch('/api/journey-adjustments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData)
-      })
-
-      if (response.ok) {
-        setEditingId(null)
-        setEditData(null)
-        fetchJourneys() // Recargar datos
-      }
-    } catch (error) {
-      console.error('Error saving adjustments:', error)
+    if (response.ok) {
+      fetchJourneys()
+    } else {
+      throw new Error('Error saving adjustments')
     }
   }
 
-  const handleCancel = () => {
-    setEditingId(null)
-    setEditData(null)
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedJourney(null)
+  }
+
+  const getFinalStartTime = (journey: JourneyReport) => {
+    if (journey.adjustments?.manualStartTime) {
+      return new Date(journey.adjustments.manualStartTime).toLocaleString()
+    }
+    return `${journey.startDate === journey.endDate ? '' : `${journey.startDate} `}${journey.startTime}`
+  }
+
+  const getFinalEndTime = (journey: JourneyReport) => {
+    if (journey.adjustments?.manualEndTime) {
+      return new Date(journey.adjustments.manualEndTime).toLocaleString()
+    }
+    if (journey.endDate && journey.endTime) {
+      return `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}`
+    }
+    return 'En curso'
   }
 
   const clearFilters = () => {
@@ -132,10 +138,66 @@ export default function JourneyReportsPage() {
     })
   }
 
+  const exportToExcel = () => {
+    const exportData = journeys.map((journey) => ({
+      'Usuario': journey.userName,
+      'Email': journey.userEmail,
+      'Lugar': journey.placeName,
+      'Fecha Inicio': journey.startDate,
+      'Hora Inicio Original': journey.startTime,
+      'Fecha Fin': journey.endDate || 'En curso',
+      'Hora Fin Original': journey.endTime || 'En curso',
+      'Hora Inicio Final': journey.adjustments?.manualStartTime ?
+        new Date(journey.adjustments.manualStartTime).toLocaleString() :
+        `${journey.startDate === journey.endDate ? '' : `${journey.startDate} `}${journey.startTime}`,
+      'Hora Fin Final': journey.adjustments?.manualEndTime ?
+        new Date(journey.adjustments.manualEndTime).toLocaleString() :
+        (journey.endDate && journey.endTime ?
+          `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}` :
+          'En curso'),
+      'Almuerzo Inicio': journey.adjustments?.lunchStartTime || '-',
+      'Almuerzo Fin': journey.adjustments?.lunchEndTime || '-',
+      'Duración': journey.duration,
+      'Notas': journey.adjustments?.notes || '-',
+      'Tiene Ajustes': (journey.adjustments?.manualStartTime || journey.adjustments?.manualEndTime ||
+                        journey.adjustments?.lunchStartTime || journey.adjustments?.notes) ? 'Sí' : 'No'
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+
+    // Ajustar el ancho de las columnas
+    const columnWidths = [
+      { wch: 20 }, // Usuario
+      { wch: 25 }, // Email
+      { wch: 20 }, // Lugar
+      { wch: 12 }, // Fecha Inicio
+      { wch: 15 }, // Hora Inicio Original
+      { wch: 12 }, // Fecha Fin
+      { wch: 15 }, // Hora Fin Original
+      { wch: 20 }, // Hora Inicio Final
+      { wch: 20 }, // Hora Fin Final
+      { wch: 12 }, // Almuerzo Inicio
+      { wch: 12 }, // Almuerzo Fin
+      { wch: 10 }, // Duración
+      { wch: 30 }, // Notas
+      { wch: 12 }  // Tiene Ajustes
+    ]
+    worksheet['!cols'] = columnWidths
+
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte de Jornadas')
+
+    // Generar nombre del archivo con fecha
+    const today = new Date().toISOString().split('T')[0]
+    const filename = `reporte_jornadas_${today}.xlsx`
+
+    XLSX.writeFile(workbook, filename)
+  }
+
 
   if (loading) {
     return (
-      <DashboardLayout title="Reporte de Jornadas">
+      <DashboardLayout title="Reporte de Jornadas" titleIcon={<FileBarChart className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>
@@ -144,12 +206,20 @@ export default function JourneyReportsPage() {
   }
 
   return (
-    <DashboardLayout title="Reporte de Jornadas">
+    <DashboardLayout title="Reporte de Jornadas" titleIcon={<FileBarChart className="h-8 w-8 text-gray-600" />}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
             Resumen de Jornadas ({journeys.length})
           </h2>
+          <button
+            onClick={exportToExcel}
+            disabled={journeys.length === 0}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar a Excel
+          </button>
         </div>
 
         {/* Filtros */}
@@ -223,16 +293,25 @@ export default function JourneyReportsPage() {
                     Lugar
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Inicio
+                    Inicio Original
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fin
+                    Fin Original
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Inicio Final
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fin Final
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Almuerzo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Duración
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ajustes
+                    Notas
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
@@ -258,62 +337,33 @@ export default function JourneyReportsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {editingId === journey.id ? (
-                        <div className="space-y-1">
-                          <input
-                            type="datetime-local"
-                            value={editData?.manualStartTime || ''}
-                            onChange={(e) => setEditData(prev => prev ? { ...prev, manualStartTime: e.target.value } : null)}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                            placeholder="Inicio manual"
-                          />
-                          <div className="text-xs text-gray-500">
-                            Original: {journey.startDate === journey.endDate ? '' : `${journey.startDate} `}{journey.startTime}
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <div>{journey.startDate === journey.endDate ? '' : `${journey.startDate} `}{journey.startTime}</div>
-                          {journey.adjustments?.manualStartTime && (
-                            <div className="text-xs text-blue-600">
-                              Ajustado: {new Date(journey.adjustments.manualStartTime).toLocaleString()}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {journey.startDate === journey.endDate ? '' : `${journey.startDate} `}{journey.startTime}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {editingId === journey.id ? (
-                        <div className="space-y-1">
-                          <input
-                            type="datetime-local"
-                            value={editData?.manualEndTime || ''}
-                            onChange={(e) => setEditData(prev => prev ? { ...prev, manualEndTime: e.target.value } : null)}
-                            className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                            placeholder="Fin manual"
-                          />
-                          <div className="text-xs text-gray-500">
-                            Original: {journey.endDate && journey.endTime ?
-                              `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}` :
-                              'En curso'
-                            }
-                          </div>
+                      {journey.endDate && journey.endTime ? (
+                        `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}`
+                      ) : (
+                        <span className="text-green-600 font-medium">En curso</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className={journey.adjustments?.manualStartTime ? 'text-blue-600 font-medium' : 'text-gray-900'}>
+                        {getFinalStartTime(journey)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className={journey.adjustments?.manualEndTime ? 'text-blue-600 font-medium' : 'text-gray-900'}>
+                        {getFinalEndTime(journey)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {journey.adjustments?.lunchStartTime && journey.adjustments?.lunchEndTime ? (
+                        <div className="flex items-center">
+                          <Coffee className="h-4 w-4 text-gray-400 mr-1" />
+                          <span>{journey.adjustments.lunchStartTime} - {journey.adjustments.lunchEndTime}</span>
                         </div>
                       ) : (
-                        <div>
-                          {journey.endDate && journey.endTime ? (
-                            <div>
-                              <div>{journey.startDate === journey.endDate ? '' : `${journey.endDate} `}{journey.endTime}</div>
-                              {journey.adjustments?.manualEndTime && (
-                                <div className="text-xs text-blue-600">
-                                  Ajustado: {new Date(journey.adjustments.manualEndTime).toLocaleString()}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-green-600 font-medium">En curso</span>
-                          )}
-                        </div>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -322,79 +372,23 @@ export default function JourneyReportsPage() {
                         <span className="font-medium text-gray-900">{journey.duration}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {editingId === journey.id ? (
-                        <div className="space-y-2">
-                          <div>
-                            <label className="text-xs text-gray-600">Almuerzo inicio:</label>
-                            <input
-                              type="time"
-                              value={editData?.lunchStartTime || ''}
-                              onChange={(e) => setEditData(prev => prev ? { ...prev, lunchStartTime: e.target.value } : null)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600">Almuerzo fin:</label>
-                            <input
-                              type="time"
-                              value={editData?.lunchEndTime || ''}
-                              onChange={(e) => setEditData(prev => prev ? { ...prev, lunchEndTime: e.target.value } : null)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600">Notas:</label>
-                            <input
-                              type="text"
-                              value={editData?.notes || ''}
-                              onChange={(e) => setEditData(prev => prev ? { ...prev, notes: e.target.value } : null)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                              placeholder="Notas del ajuste"
-                            />
-                          </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 max-w-xs">
+                      {journey.adjustments?.notes ? (
+                        <div className="truncate" title={journey.adjustments.notes}>
+                          {journey.adjustments.notes}
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-600">
-                          {journey.adjustments?.lunchStartTime && journey.adjustments?.lunchEndTime && (
-                            <div>Almuerzo: {journey.adjustments.lunchStartTime} - {journey.adjustments.lunchEndTime}</div>
-                          )}
-                          {journey.adjustments?.notes && (
-                            <div className="text-gray-500">{journey.adjustments.notes}</div>
-                          )}
-                          {!journey.adjustments?.lunchStartTime && !journey.adjustments?.notes && (
-                            <span className="text-gray-400">Sin ajustes</span>
-                          )}
-                        </div>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {editingId === journey.id ? (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={handleSave}
-                            className="text-green-600 hover:text-green-900"
-                            title="Guardar"
-                          >
-                            <Save className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={handleCancel}
-                            className="text-gray-600 hover:text-gray-900"
-                            title="Cancelar"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleEdit(journey)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar ajustes"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleEdit(journey)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Editar ajustes"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -407,6 +401,14 @@ export default function JourneyReportsPage() {
             </div>
           )}
         </div>
+
+        {/* Modal de ajustes */}
+        <JourneyAdjustmentModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+          journey={selectedJourney}
+        />
       </div>
     </DashboardLayout>
   )

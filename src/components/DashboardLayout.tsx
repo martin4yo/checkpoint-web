@@ -5,9 +5,10 @@ import Sidebar from './Sidebar'
 interface DashboardLayoutProps {
   children: React.ReactNode
   title?: string
+  titleIcon?: React.ReactNode
 }
 
-export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, title, titleIcon }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
@@ -15,7 +16,10 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 lg:pt-6 pt-16">
           {title && (
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                {titleIcon && <span className="mr-3">{titleIcon}</span>}
+                {title}
+              </h1>
             </div>
           )}
           {children}
