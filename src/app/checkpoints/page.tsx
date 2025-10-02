@@ -60,7 +60,11 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
       const response = await fetch(`/api/mobile/journey/${journeyCheckpoint.id}/locations`)
       if (response.ok) {
         const data = await response.json()
-        setLocations(data.locations || [])
+        // Ordenar ubicaciones por fecha
+        const sortedLocations = (data.locations || []).sort((a: JourneyLocation, b: JourneyLocation) =>
+          new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
+        )
+        setLocations(sortedLocations)
       }
     } catch (error) {
       console.error('Error fetching journey locations:', error)
@@ -72,6 +76,32 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
   useEffect(() => {
     fetchJourneyLocations()
   }, [fetchJourneyLocations])
+
+  // Función para calcular tiempo entre ubicaciones
+  const calculateTimeDifference = (currentLocation: JourneyLocation, previousLocation: JourneyLocation) => {
+    const currentTime = new Date(currentLocation.recordedAt).getTime()
+    const previousTime = new Date(previousLocation.recordedAt).getTime()
+    const diffMs = currentTime - previousTime
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60))
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+  }
+
+  // Calcular tiempo total de la jornada
+  const calculateTotalTime = () => {
+    if (locations.length < 2) return '00:00'
+
+    const firstLocation = locations[0]
+    const lastLocation = locations[locations.length - 1]
+    const totalMs = new Date(lastLocation.recordedAt).getTime() - new Date(firstLocation.recordedAt).getTime()
+
+    const hours = Math.floor(totalMs / (1000 * 60 * 60))
+    const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+  }
 
 
   return (
@@ -95,6 +125,13 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
           <div className="mb-4 text-sm text-gray-600">
             <p><strong>Usuario:</strong> {journeyCheckpoint.user.name}</p>
             <p><strong>Inicio:</strong> {new Date(journeyCheckpoint.timestamp).toLocaleString()}</p>
+            {locations.length >= 2 && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-blue-800 font-semibold">
+                  <strong>Tiempo Total de Jornada:</strong> {calculateTotalTime()}
+                </p>
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -110,26 +147,39 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {locations.map((location, index) => (
-                      <div key={location.id} className="flex items-center justify-between p-2 bg-white rounded border">
-                        <div className="flex items-center space-x-2">
-                          <Navigation className="h-4 w-4 text-purple-600" />
-                          <span className="text-sm font-medium">Ubicación #{index + 1}</span>
+                      <div key={location.id} className="bg-white rounded border">
+                        <div className="flex items-center justify-between p-3">
+                          <div className="flex items-center space-x-3">
+                            <Navigation className="h-4 w-4 text-purple-600" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último registro' : `Ubicación #${index + 1}`}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(location.recordedAt).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            {index > 0 && (
+                              <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                +{calculateTimeDifference(location, locations[index - 1])}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                            </div>
+                            <button
+                              onClick={() => {
+                                const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
+                                window.open(url, '_blank')
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(location.recordedAt).toLocaleTimeString()}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                        </div>
-                        <button
-                          onClick={() => {
-                            const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
-                            window.open(url, '_blank')
-                          }}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
