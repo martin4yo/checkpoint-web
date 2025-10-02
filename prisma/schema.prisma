@@ -73,6 +73,7 @@ model Checkpoint {
   place           Place?            @relation(fields: [placeId], references: [id])
   user            User              @relation(fields: [userId], references: [id])
   journeyLocations JourneyLocation[]
+  journeyAdjustments JourneyAdjustment?
 
   @@map("checkpoints")
 }
@@ -121,6 +122,22 @@ model JourneyMonitor {
 
   @@unique([userId, journeyId])
   @@map("journey_monitors")
+}
+
+model JourneyAdjustment {
+  id                    String    @id @default(cuid())
+  checkpointId          String    @unique // ID del checkpoint de jornada
+  manualStartTime       DateTime? // Horario de inicio manual
+  manualEndTime         DateTime? // Horario de fin manual
+  lunchStartTime        DateTime? // Inicio del almuerzo
+  lunchEndTime          DateTime? // Fin del almuerzo
+  notes                 String?   // Notas sobre los ajustes
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  checkpoint            Checkpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
+
+  @@map("journey_adjustments")
 }
 
 enum CheckpointType {

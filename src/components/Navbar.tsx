@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, MapPin, Users, CheckCircle, Link as LinkIcon, LogOut, Bell } from 'lucide-react'
+import { Home, MapPin, Users, CheckCircle, Link as LinkIcon, LogOut, Bell, FileBarChart } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -22,6 +22,7 @@ export default function Navbar() {
     { href: '/places', label: 'Lugares', icon: MapPin },
     { href: '/users', label: 'Usuarios', icon: Users },
     { href: '/checkpoints', label: 'Checkpoints', icon: CheckCircle },
+    { href: '/journey-reports', label: 'Reporte Jornadas', icon: FileBarChart },
     { href: '/assignments', label: 'Asignaciones', icon: LinkIcon },
     { href: '/push-devices', label: 'Notificaciones', icon: Bell },
   ]
