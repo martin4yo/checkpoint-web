@@ -16,32 +16,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
-    // Buscar jornada activa (último JOURNEY_START sin JOURNEY_END)
+    // Buscar jornada activa (JOURNEY_START sin endTimestamp)
     const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: CheckpointType.JOURNEY_START
-      },
-      orderBy: { timestamp: 'desc' }
-    })
-
-    if (!activeJourney) {
-      return NextResponse.json({
-        success: true,
-        data: null
-      })
-    }
-
-    // Verificar si tiene un JOURNEY_END posterior
-    const journeyEnd = await prisma.checkpoint.findFirst({
-      where: {
-        userId: payload.userId,
-        type: CheckpointType.JOURNEY_END,
-        timestamp: { gt: activeJourney.timestamp }
+        type: CheckpointType.JOURNEY_START,
+        endTimestamp: null
       }
     })
 
-    if (journeyEnd) {
+    if (!activeJourney) {
       return NextResponse.json({
         success: true,
         data: null

@@ -19,31 +19,20 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { place_id, place_name, latitude, longitude } = body
 
-    // Verificar si ya tiene una jornada activa (checkpoint JOURNEY_START sin JOURNEY_END)
+    // Verificar si ya tiene una jornada activa (checkpoint JOURNEY_START sin endTimestamp)
     const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: CheckpointType.JOURNEY_START
-      },
-      orderBy: { timestamp: 'desc' }
+        type: CheckpointType.JOURNEY_START,
+        endTimestamp: null
+      }
     })
 
     if (activeJourney) {
-      // Verificar si tiene un JOURNEY_END posterior
-      const journeyEnd = await prisma.checkpoint.findFirst({
-        where: {
-          userId: payload.userId,
-          type: CheckpointType.JOURNEY_END,
-          timestamp: { gt: activeJourney.timestamp }
-        }
-      })
-
-      if (!journeyEnd) {
-        return NextResponse.json({
-          success: false,
-          error: 'Ya tienes una jornada activa'
-        }, { status: 400 })
-      }
+      return NextResponse.json({
+        success: false,
+        error: 'Ya tienes una jornada activa'
+      }, { status: 400 })
     }
 
     // Crear checkpoint de inicio de jornada
@@ -57,6 +46,17 @@ export async function POST(req: NextRequest) {
         timestamp: new Date(),
         type: CheckpointType.JOURNEY_START,
         notes: 'Inicio de jornada laboral'
+      }
+    })
+
+    // Crear la primera ubicación de la jornada (ubicación de inicio)
+    await prisma.journeyLocation.create({
+      data: {
+        userId: payload.userId,
+        startCheckpointId: startCheckpoint.id,
+        latitude,
+        longitude,
+        recordedAt: startCheckpoint.timestamp
       }
     })
 

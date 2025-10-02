@@ -14,6 +14,10 @@ interface Checkpoint {
   notes?: string
   imageUrl?: string
   type: 'MANUAL' | 'JOURNEY_START' | 'JOURNEY_END'
+  endLatitude?: number | null
+  endLongitude?: number | null
+  endTimestamp?: string | null
+  endNotes?: string | null
   createdAt: string
   user: {
     id: string
@@ -70,10 +74,11 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
-        <div className="inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose}></div>
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <div className="relative inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">
               Ubicaciones de Jornada - {journeyCheckpoint.placeName}
@@ -140,9 +145,10 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
               Cerrar
             </button>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -719,20 +725,32 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
 }
 
 // Función para obtener el icono y estilo según el tipo de checkpoint
-const getCheckpointTypeInfo = (type: string) => {
-  switch (type) {
+const getCheckpointTypeInfo = (checkpoint: Checkpoint) => {
+  switch (checkpoint.type) {
     case 'JOURNEY_START':
-      return {
-        icon: Play,
-        label: 'Inicio Jornada',
-        color: 'text-green-600',
-        bgColor: 'bg-green-100',
-        borderColor: 'border-green-200'
+      const isComplete = checkpoint.endTimestamp !== null
+      if (isComplete) {
+        return {
+          icon: Navigation,
+          label: 'Jornada Completa',
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-100',
+          borderColor: 'border-purple-200'
+        }
+      } else {
+        return {
+          icon: Play,
+          label: 'Jornada Activa',
+          color: 'text-green-600',
+          bgColor: 'bg-green-100',
+          borderColor: 'border-green-200'
+        }
       }
     case 'JOURNEY_END':
+      // Mantener para compatibilidad con datos antiguos
       return {
         icon: Square,
-        label: 'Fin Jornada',
+        label: 'Fin Jornada (Antiguo)',
         color: 'text-red-600',
         bgColor: 'bg-red-100',
         borderColor: 'border-red-200'
@@ -1000,8 +1018,14 @@ export default function CheckpointsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {checkpoints.map((checkpoint) => {
-                const typeInfo = getCheckpointTypeInfo(checkpoint.type)
+              {checkpoints.filter(checkpoint => {
+                // Filtrar checkpoints JOURNEY_END antiguos que ya tienen su JOURNEY_START correspondiente
+                if (checkpoint.type === 'JOURNEY_END') {
+                  return false // No mostrar registros JOURNEY_END antiguos
+                }
+                return true
+              }).map((checkpoint) => {
+                const typeInfo = getCheckpointTypeInfo(checkpoint)
                 const TypeIcon = typeInfo.icon
 
                 return (
@@ -1049,11 +1073,37 @@ export default function CheckpointsPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
-                    <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                    {checkpoint.type === 'JOURNEY_START' && checkpoint.endTimestamp ? (
+                      <div>
+                        <div className="font-medium">Inicio:</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                        <div className="font-medium mt-1">Fin:</div>
+                        <div>{new Date(checkpoint.endTimestamp).toLocaleDateString()}</div>
+                        <div>{new Date(checkpoint.endTimestamp).toLocaleTimeString()}</div>
+                      </div>
+                    ) : checkpoint.type === 'JOURNEY_START' ? (
+                      <div>
+                        <div className="font-medium text-green-600">En curso desde:</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                    {checkpoint.notes || '-'}
+                    {checkpoint.type === 'JOURNEY_START' && checkpoint.endNotes ? (
+                      <div>
+                        <div>{checkpoint.notes}</div>
+                        <div className="text-xs text-gray-400 mt-1">{checkpoint.endNotes}</div>
+                      </div>
+                    ) : (
+                      checkpoint.notes || '-'
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
                     <button

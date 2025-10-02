@@ -62,6 +62,13 @@ model Checkpoint {
   notes           String?
   imageUrl        String?
   type            CheckpointType    @default(MANUAL)
+
+  // Campos para jornadas (cuando type es JOURNEY_START)
+  endLatitude     Float?
+  endLongitude    Float?
+  endTimestamp    DateTime?
+  endNotes        String?
+
   createdAt       DateTime          @default(now())
   place           Place?            @relation(fields: [placeId], references: [id])
   user            User              @relation(fields: [userId], references: [id])

@@ -19,13 +19,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { latitude, longitude } = body
 
-    // Buscar jornada activa (último JOURNEY_START sin JOURNEY_END)
+    // Buscar jornada activa (JOURNEY_START sin endTimestamp)
     const activeJourney = await prisma.checkpoint.findFirst({
       where: {
         userId: payload.userId,
-        type: CheckpointType.JOURNEY_START
-      },
-      orderBy: { timestamp: 'desc' }
+        type: CheckpointType.JOURNEY_START,
+        endTimestamp: null
+      }
     })
 
     if (!activeJourney) {
@@ -35,36 +35,28 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // Verificar si ya tiene un JOURNEY_END posterior
-    const journeyEnd = await prisma.checkpoint.findFirst({
-      where: {
-        userId: payload.userId,
-        type: CheckpointType.JOURNEY_END,
-        timestamp: { gt: activeJourney.timestamp }
-      }
-    })
-
-    if (journeyEnd) {
-      return NextResponse.json({
-        success: false,
-        error: 'No tienes jornada activa'
-      }, { status: 400 })
-    }
-
     const endedAt = new Date()
     const durationMinutes = Math.floor((endedAt.getTime() - activeJourney.timestamp.getTime()) / (1000 * 60))
 
-    // Crear checkpoint de fin de jornada
-    await prisma.checkpoint.create({
+    // Actualizar el checkpoint de jornada con los datos de finalización
+    await prisma.checkpoint.update({
+      where: { id: activeJourney.id },
+      data: {
+        endLatitude: latitude,
+        endLongitude: longitude,
+        endTimestamp: endedAt,
+        endNotes: `Duración: ${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
+      }
+    })
+
+    // Crear la última ubicación de la jornada (ubicación de fin)
+    await prisma.journeyLocation.create({
       data: {
         userId: payload.userId,
-        placeId: activeJourney.placeId,
-        placeName: activeJourney.placeName,
+        startCheckpointId: activeJourney.id,
         latitude,
         longitude,
-        timestamp: endedAt,
-        type: CheckpointType.JOURNEY_END,
-        notes: `Fin de jornada laboral - Duración: ${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
+        recordedAt: endedAt
       }
     })
 
