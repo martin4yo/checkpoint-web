@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
@@ -55,11 +55,7 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
   const [locations, setLocations] = useState<JourneyLocation[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchJourneyLocations()
-  }, [])
-
-  const fetchJourneyLocations = async () => {
+  const fetchJourneyLocations = useCallback(async () => {
     try {
       const response = await fetch(`/api/mobile/journey/${journeyCheckpoint.id}/locations`)
       if (response.ok) {
@@ -71,7 +67,12 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
     } finally {
       setLoading(false)
     }
-  }
+  }, [journeyCheckpoint.id])
+
+  useEffect(() => {
+    fetchJourneyLocations()
+  }, [fetchJourneyLocations])
+
 
   return (
     <>
@@ -266,7 +267,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
                   <div className="relative">
                     <img
                       src={`${window.location.origin}${checkpoint.imageUrl}`}
-                      alt="Checkpoint"
+                      alt={`Fotografía del checkpoint en ${checkpoint.placeName}`}
                       className="w-full h-64 object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={(e) => {
                         e.preventDefault()
@@ -384,7 +385,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
             </button>
             <img
               src={`${window.location.origin}${checkpoint.imageUrl}`}
-              alt="Checkpoint"
+              alt={`Fotografía completa del checkpoint en ${checkpoint.placeName}`}
               className="max-h-[90vh] max-w-full object-contain rounded-lg"
             />
             <div className="mt-4 text-center">
@@ -507,7 +508,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
               {checkpoint.imageUrl ? (
                 <img
                   src={`${window.location.origin}${checkpoint.imageUrl}`}
-                  alt="Checkpoint"
+                  alt={`Información de fotografía del checkpoint en ${checkpoint.placeName}`}
                   className="w-full h-64 object-cover rounded-lg shadow-md"
                 />
               ) : (
@@ -792,16 +793,11 @@ export default function CheckpointsPage() {
   console.log('Current selectedCheckpoint:', selectedCheckpoint)
 
   useEffect(() => {
-    fetchCheckpoints()
     fetchUsers()
     fetchPlaces()
   }, [])
 
-  useEffect(() => {
-    fetchCheckpoints()
-  }, [filter])
-
-  const fetchCheckpoints = async () => {
+  const fetchCheckpoints = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (filter.search) params.append('search', filter.search)
@@ -820,7 +816,12 @@ export default function CheckpointsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+
+  useEffect(() => {
+    fetchCheckpoints()
+  }, [fetchCheckpoints])
+
 
   const fetchUsers = async () => {
     try {
@@ -1058,7 +1059,7 @@ export default function CheckpointsPage() {
                     {checkpoint.imageUrl ? (
                       <img
                         src={`${window.location.origin}${checkpoint.imageUrl}`}
-                        alt="Checkpoint"
+                        alt={`Miniatura de ${checkpoint.placeName}`}
                         className="h-12 w-12 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => {
                           e.preventDefault()

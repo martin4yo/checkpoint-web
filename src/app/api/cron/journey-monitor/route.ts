@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { CheckpointType } from '@prisma/client'
 import { JourneyNotifications } from '@/lib/push-notifications'
@@ -7,7 +7,7 @@ import { JourneyNotifications } from '@/lib/push-notifications'
 const HEARTBEAT_TIMEOUT_MINUTES = 15 // Si no recibe heartbeat en 15 min -> alerta
 const NOT_MOVING_TIMEOUT_MINUTES = 45 // Si no se mueve en 45 min -> alerta
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     console.log('🔍 Iniciando monitoreo de jornadas...')
 
@@ -194,7 +194,5 @@ export async function POST(req: NextRequest) {
 
 // También permitir GET para testing manual
 export async function GET() {
-  // Crear un NextRequest mock para testing
-  const mockRequest = new Request('http://localhost:3000/api/cron/journey-monitor') as unknown as NextRequest
-  return POST(mockRequest)
+  return POST()
 }

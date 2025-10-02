@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { latitude, longitude, isMoving, type, timestamp } = body
+    const { latitude, longitude, isMoving, timestamp } = body
 
     // Buscar jornada activa
     const activeJourney = await prisma.checkpoint.findFirst({
