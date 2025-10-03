@@ -188,25 +188,6 @@ export class JourneyNotifications {
     return await PushNotificationService.sendToTokens(adminTokens, message)
   }
 
-  // Notificación de jornada sin movimiento
-  static async sendJourneyNotMovingAlert(
-    adminTokens: string[],
-    userInfo: { name: string; email: string },
-    journeyInfo: { duration: string; minutesWithoutMoving: number }
-  ) {
-    const message: PushMessage = {
-      title: '🚶‍♂️ Usuario Sin Movimiento',
-      body: `${userInfo.name} lleva ${journeyInfo.minutesWithoutMoving} min sin moverse. Jornada: ${journeyInfo.duration}`,
-      data: {
-        type: 'journey_not_moving',
-        userEmail: userInfo.email,
-        duration: journeyInfo.duration,
-        minutesWithoutMoving: journeyInfo.minutesWithoutMoving.toString()
-      }
-    }
-
-    return await PushNotificationService.sendToTokens(adminTokens, message)
-  }
 
   // Notificación de jornada recuperada
   static async sendJourneyRecoveredAlert(

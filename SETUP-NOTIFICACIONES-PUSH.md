@@ -7,7 +7,6 @@ Este documento explica cómo configurar el sistema de notificaciones push que de
 - **Monitorea jornadas activas** cada 10 minutos automáticamente
 - **Detecta problemas**:
   - 🚨 App cerrada/crasheada (>15 min sin heartbeat)
-  - 🚶‍♂️ Usuario sin movimiento (>45 min inmóvil)
 - **Envía notificaciones push** a dispositivos administrativos configurados
 - **Notifica recuperación** cuando la jornada vuelve a funcionar
 
@@ -197,13 +196,7 @@ Ejecutar: `chmod +x monitor.sh && ./monitor.sh &`
 3. **Espera 20 minutos**
 4. **Verifica** que llegue notificación push: *"Jornada Inactiva Detectada"*
 
-### Escenario 2: Usuario sin movimiento
-1. **Inicia jornada** en la app móvil
-2. **Deja el teléfono** en un lugar fijo (no mover)
-3. **Espera 50 minutos**
-4. **Verifica** que llegue notificación push: *"Usuario Sin Movimiento"*
-
-### Escenario 3: Jornada recuperada
+### Escenario 2: Jornada recuperada
 1. Después de recibir una alerta
 2. **Abre la app** y mueve el teléfono
 3. **Espera 5-10 minutos**
@@ -222,7 +215,6 @@ npm run dev
 Busca estos mensajes en los logs:
 - `🔍 Iniciando monitoreo de jornadas...`
 - `🚨 Jornada sin heartbeat: Usuario - X minutos`
-- `🚶‍♂️ Usuario sin movimiento: Usuario - X minutos`
 - `✅ Notificación enviada exitosamente`
 - `💓 Heartbeat registrado en monitor de jornada`
 
@@ -241,11 +233,9 @@ Editar `/checkpoint-web/src/app/api/cron/journey-monitor/route.ts`:
 ```javascript
 // Configuración actual
 const HEARTBEAT_TIMEOUT_MINUTES = 15 // App cerrada/crasheada
-const NOT_MOVING_TIMEOUT_MINUTES = 45 // Usuario sin movimiento
 
 // Ejemplo: Alertas más frecuentes
 const HEARTBEAT_TIMEOUT_MINUTES = 5  // 5 minutos
-const NOT_MOVING_TIMEOUT_MINUTES = 20 // 20 minutos
 ```
 
 ### Personalizar mensajes de notificación

@@ -218,7 +218,6 @@ export default function PushDevicesPage() {
               <div className="mt-2 text-sm text-blue-700">
                 <p>• Los dispositivos registrados aquí recibirán alertas cuando las jornadas se vuelvan inactivas</p>
                 <p>• Alerta por falta de heartbeat: 15 minutos sin señal de vida</p>
-                <p>• Alerta por falta de movimiento: 45 minutos sin cambio de ubicación</p>
                 <p>• Configurar Firebase Admin SDK en variables de entorno para activar</p>
               </div>
             </div>

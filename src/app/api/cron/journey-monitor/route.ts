@@ -5,7 +5,6 @@ import { JourneyNotifications } from '@/lib/push-notifications'
 
 // Configuración
 const HEARTBEAT_TIMEOUT_MINUTES = 15 // Si no recibe heartbeat en 15 min -> alerta
-const NOT_MOVING_TIMEOUT_MINUTES = 45 // Si no se mueve en 45 min -> alerta
 
 export async function POST() {
   try {
@@ -110,44 +109,8 @@ export async function POST() {
           continue
         }
 
-        // CASO 2: Usuario no se mueve por mucho tiempo (pero app funciona)
-        if (minutesSinceHeartbeat <= HEARTBEAT_TIMEOUT_MINUTES && !monitor.isMoving) {
-          // Calcular tiempo sin movimiento basado en última ubicación registrada
-          const lastLocationUpdate = await prisma.journeyLocation.findFirst({
-            where: { startCheckpointId: journey.id },
-            orderBy: { recordedAt: 'desc' }
-          })
 
-          const lastMovementTime = lastLocationUpdate?.recordedAt || journey.timestamp
-          const timeSinceMovement = now.getTime() - lastMovementTime.getTime()
-          const minutesSinceMovement = Math.floor(timeSinceMovement / (1000 * 60))
-
-          if (minutesSinceMovement > NOT_MOVING_TIMEOUT_MINUTES && !monitor.alertSent) {
-            console.log(`🚶‍♂️ Usuario sin movimiento: ${journey.user.name} - ${minutesSinceMovement} minutos`)
-
-            await JourneyNotifications.sendJourneyNotMovingAlert(
-              adminTokenList,
-              {
-                name: journey.user.name,
-                email: journey.user.email
-              },
-              {
-                duration: durationText,
-                minutesWithoutMoving: minutesSinceMovement
-              }
-            )
-
-            // Marcar alerta como enviada
-            await prisma.journeyMonitor.update({
-              where: { id: monitor.id },
-              data: { alertSent: true }
-            })
-
-            alertsSent++
-          }
-        }
-
-        // CASO 3: Jornada recuperada (heartbeat reciente después de alerta)
+        // CASO 2: Jornada recuperada (heartbeat reciente después de alerta)
         if (minutesSinceHeartbeat <= 5 && monitor.alertSent) {
           console.log(`✅ Jornada recuperada: ${journey.user.name}`)
 

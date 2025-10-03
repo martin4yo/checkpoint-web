@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { latitude, longitude, isMoving, timestamp } = body
+    const { latitude, longitude, timestamp } = body
 
     // Buscar jornada activa
     const activeJourney = await prisma.checkpoint.findFirst({
@@ -51,18 +51,16 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // Si el usuario se movió, guardar la ubicación
-    if (isMoving !== false) {
-      await prisma.journeyLocation.create({
-        data: {
-          userId: payload.userId,
-          startCheckpointId: activeJourney.id,
-          latitude,
-          longitude,
-          recordedAt: new Date(timestamp || Date.now())
-        }
-      })
-    }
+    // Guardar la ubicación
+    await prisma.journeyLocation.create({
+      data: {
+        userId: payload.userId,
+        startCheckpointId: activeJourney.id,
+        latitude,
+        longitude,
+        recordedAt: new Date(timestamp || Date.now())
+      }
+    })
 
     // Actualizar o crear registro de monitoreo de jornada
     await prisma.journeyMonitor.upsert({
@@ -75,7 +73,6 @@ export async function POST(req: NextRequest) {
       update: {
         lastHeartbeat: new Date(),
         lastLocation: { latitude, longitude },
-        isMoving,
         alertSent: false // Reset alert si recibimos heartbeat
       },
       create: {
@@ -83,30 +80,15 @@ export async function POST(req: NextRequest) {
         journeyId: activeJourney.id,
         lastHeartbeat: new Date(),
         lastLocation: { latitude, longitude },
-        isMoving,
         alertSent: false
       }
     })
 
     console.log('💓 Heartbeat registrado en monitor de jornada')
 
-    // Verificar si hace mucho que no se mueve (más de 30 minutos sin cambio de ubicación)
-    const lastLocationUpdate = await prisma.journeyLocation.findFirst({
-      where: { startCheckpointId: activeJourney.id },
-      orderBy: { recordedAt: 'desc' }
-    })
-
-    const minutesSinceLastMove = lastLocationUpdate
-      ? Math.floor((Date.now() - lastLocationUpdate.recordedAt.getTime()) / (1000 * 60))
-      : Math.floor((Date.now() - activeJourney.timestamp.getTime()) / (1000 * 60))
-
     return NextResponse.json({
       success: true,
-      message: 'Heartbeat registrado',
-      data: {
-        minutesSinceLastMove,
-        shouldSendNotification: minutesSinceLastMove > 30 && !isMoving
-      }
+      message: 'Heartbeat registrado'
     })
 
   } catch (error) {
