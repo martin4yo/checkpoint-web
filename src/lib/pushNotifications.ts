@@ -111,13 +111,21 @@ async function sendFCMNotification(
       });
     }
 
+    // Convertir data a formato string (requerido por FCM)
+    const stringData: Record<string, string> = {};
+    if (notification.data) {
+      Object.entries(notification.data).forEach(([key, value]) => {
+        stringData[key] = String(value);
+      });
+    }
+
     const message = {
       token: token,
       notification: {
         title: notification.title,
         body: notification.body,
       },
-      data: notification.data || {},
+      data: stringData,
     };
 
     console.log('🔥 Enviando notificación FCM:', message);
