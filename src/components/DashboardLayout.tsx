@@ -12,13 +12,13 @@ export default function DashboardLayout({ children, title, titleIcon }: Dashboar
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      <main className="flex-1 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 lg:pt-6 pt-16">
+      <main className="flex-1 overflow-x-hidden lg:ml-16">
+        <div className="py-6 px-6 lg:px-8 lg:pt-6 pt-16">
           {title && (
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                {titleIcon && <span className="mr-3">{titleIcon}</span>}
-                {title}
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                {titleIcon && titleIcon}
+                <span>{title}</span>
               </h1>
             </div>
           )}
