@@ -12,7 +12,7 @@ export default function DashboardLayout({ children, title, titleIcon }: Dashboar
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      <main className="flex-1 overflow-x-hidden lg:ml-64">
+      <main className="flex-1 overflow-x-hidden">
         <div className="py-6 px-6 lg:px-8 lg:pt-6 pt-16">
           {title && (
             <div className="mb-6 flex items-center">
