@@ -169,7 +169,7 @@ export default function PushDevicesPage() {
   }
 
   return (
-    <DashboardLayout title="Dispositivos de Notificación">
+    <DashboardLayout title="Dispositivos de Notificación" titleIcon={<Bell className="h-8 w-8 text-gray-600" />}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>

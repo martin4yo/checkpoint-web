@@ -132,7 +132,7 @@ export default function PlacesPage() {
   }
 
   return (
-    <DashboardLayout title="Gestión de Lugares">
+    <DashboardLayout title="Gestión de Lugares" titleIcon={<MapPin className="h-8 w-8 text-gray-600" />}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">

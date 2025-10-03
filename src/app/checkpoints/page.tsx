@@ -945,7 +945,7 @@ export default function CheckpointsPage() {
   }
 
   return (
-    <DashboardLayout title="Gestión de Checkpoints">
+    <DashboardLayout title="Gestión de Checkpoints" titleIcon={<CheckCircle className="h-8 w-8 text-gray-600" />}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
