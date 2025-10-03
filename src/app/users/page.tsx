@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 
 interface User {
@@ -145,7 +145,7 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Gestión de Usuarios">
+      <DashboardLayout title="Gestión de Usuarios" titleIcon={<Users className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>

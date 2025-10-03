@@ -160,7 +160,7 @@ export default function PushDevicesPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Dispositivos de Notificación">
+      <DashboardLayout title="Dispositivos de Notificación" titleIcon={<Bell className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>

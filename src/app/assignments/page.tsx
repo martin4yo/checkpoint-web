@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Trash2, Users } from 'lucide-react'
+import { Plus, Trash2, Users, Link as LinkIcon } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 
 interface Assignment {
@@ -164,7 +164,7 @@ export default function AssignmentsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Asignaciones Usuario-Lugar">
+      <DashboardLayout title="Asignaciones Usuario-Lugar" titleIcon={<LinkIcon className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>

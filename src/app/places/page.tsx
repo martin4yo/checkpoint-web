@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, MapPin } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 
 interface Place {
@@ -123,7 +123,7 @@ export default function PlacesPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Gestión de Lugares">
+      <DashboardLayout title="Gestión de Lugares" titleIcon={<MapPin className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation } from 'lucide-react'
+import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, CheckCircle } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 
 interface Checkpoint {
@@ -936,7 +936,7 @@ export default function CheckpointsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Gestión de Checkpoints">
+      <DashboardLayout title="Gestión de Checkpoints" titleIcon={<CheckCircle className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>

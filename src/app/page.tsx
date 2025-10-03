@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Users, MapPin, CheckCircle, Calendar } from 'lucide-react'
+import { Users, MapPin, CheckCircle, Calendar, Home } from 'lucide-react'
 
 interface DashboardStats {
   totalUsers: number
@@ -40,7 +40,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Dashboard">
+      <DashboardLayout title="Dashboard" titleIcon={<Home className="h-8 w-8 text-gray-600" />}>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Cargando...</div>
         </div>
@@ -49,7 +49,7 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout title="Dashboard" titleIcon={<Home className="h-8 w-8 text-gray-600" />}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
