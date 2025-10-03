@@ -138,6 +138,26 @@ export default function PushDevicesPage() {
     }
   }
 
+  const testNotification = async () => {
+    try {
+      const response = await fetch('/api/test-notification', {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const successCount = data.data.results.filter((r: { success: boolean }) => r.success).length
+        alert(`Notificación de prueba enviada: ${successCount}/${data.data.tokensFound} dispositivos`)
+      } else {
+        const errorData = await response.json()
+        alert(`Error: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error testing notification:', error)
+      alert('Error enviando notificación de prueba')
+    }
+  }
+
   if (loading) {
     return (
       <DashboardLayout title="Dispositivos de Notificación">
@@ -161,6 +181,13 @@ export default function PushDevicesPage() {
             </p>
           </div>
           <div className="flex space-x-3">
+            <button
+              onClick={testNotification}
+              className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              Probar Notificación
+            </button>
             <button
               onClick={testMonitoring}
               className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
