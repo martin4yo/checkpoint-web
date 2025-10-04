@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, CheckCircle } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
+import JourneyMap from '@/components/JourneyMap'
 
 interface Checkpoint {
   id: string
@@ -140,6 +141,20 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Mapa del recorrido */}
+              {locations.length > 0 && (
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-blue-600" />
+                    Mapa del Recorrido
+                  </h4>
+                  <JourneyMap
+                    locations={locations}
+                    journeyName={journeyCheckpoint.placeName}
+                  />
+                </div>
+              )}
+
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium mb-2">Ubicaciones Registradas ({locations.length})</h4>
                 {locations.length === 0 ? (
