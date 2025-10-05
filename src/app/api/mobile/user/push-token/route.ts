@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
         userId: payload.userId,
         platform: pushToken.startsWith('ExponentPushToken') ? 'expo' : 'fcm',
         isActive: true,
+        isAdminDevice: false, // Los dispositivos móviles rastreados NO son admin
         description: `Dispositivo móvil de ${payload.email}`,
       },
     });
