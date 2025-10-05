@@ -55,6 +55,7 @@ interface CheckpointDetailsModalProps {
 function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsModalProps) {
   const [locations, setLocations] = useState<JourneyLocation[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedLocation, setSelectedLocation] = useState<JourneyLocation | null>(null)
 
   const fetchJourneyLocations = useCallback(async () => {
     try {
@@ -151,6 +152,7 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                   <JourneyMap
                     locations={locations}
                     journeyName={journeyCheckpoint.placeName}
+                    selectedLocation={selectedLocation}
                   />
                 </div>
               )}
@@ -162,7 +164,13 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {locations.map((location, index) => (
-                      <div key={location.id} className="bg-white rounded border">
+                      <div
+                        key={location.id}
+                        className={`bg-white rounded border cursor-pointer transition-colors hover:bg-blue-50 ${
+                          selectedLocation?.id === location.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                        }`}
+                        onClick={() => setSelectedLocation(location)}
+                      >
                         <div className="flex items-center justify-between p-3">
                           <div className="flex items-center space-x-3">
                             <Navigation className="h-4 w-4 text-purple-600" />
@@ -185,7 +193,8 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                               {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                             </div>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation()
                                 const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
                                 window.open(url, '_blank')
                               }}

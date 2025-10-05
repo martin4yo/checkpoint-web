@@ -20,9 +20,10 @@ interface JourneyLocation {
 interface JourneyMapProps {
   locations: JourneyLocation[]
   journeyName: string
+  selectedLocation?: JourneyLocation | null
 }
 
-export default function JourneyMap({ locations }: JourneyMapProps) {
+export default function JourneyMap({ locations, selectedLocation }: JourneyMapProps) {
   const [leaflet, setLeaflet] = useState<typeof import('leaflet') | null>(null)
 
   useEffect(() => {
@@ -69,6 +70,15 @@ export default function JourneyMap({ locations }: JourneyMapProps) {
 
   const endIcon = leaflet ? new leaflet.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  }) : null
+
+  const selectedIcon = leaflet ? new leaflet.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -123,6 +133,22 @@ export default function JourneyMap({ locations }: JourneyMapProps) {
                 <strong>Último Registro</strong><br />
                 {new Date(locations[locations.length - 1].recordedAt).toLocaleString()}<br />
                 <small>{locations[locations.length - 1].latitude.toFixed(6)}, {locations[locations.length - 1].longitude.toFixed(6)}</small>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Marcador de ubicación seleccionada */}
+        {selectedLocation && selectedIcon && (
+          <Marker
+            position={[selectedLocation.latitude, selectedLocation.longitude]}
+            icon={selectedIcon}
+          >
+            <Popup>
+              <div>
+                <strong>Ubicación Seleccionada</strong><br />
+                {new Date(selectedLocation.recordedAt).toLocaleString()}<br />
+                <small>{selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}</small>
               </div>
             </Popup>
           </Marker>
