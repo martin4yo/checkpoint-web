@@ -23,6 +23,28 @@ interface JourneyMapProps {
   selectedLocation?: JourneyLocation | null
 }
 
+// Crear componente dinámico para manejar el centrado
+const MapCenterController = dynamic(() =>
+  import('react-leaflet').then(mod => {
+    function CenterController({ selectedLocation }: { selectedLocation?: JourneyLocation | null }) {
+      const map = mod.useMap()
+
+      useEffect(() => {
+        if (selectedLocation) {
+          map.setView([selectedLocation.latitude, selectedLocation.longitude], 16, {
+            animate: true,
+            duration: 0.5
+          })
+        }
+      }, [selectedLocation, map])
+
+      return null
+    }
+    return CenterController
+  }),
+  { ssr: false }
+)
+
 export default function JourneyMap({ locations, selectedLocation }: JourneyMapProps) {
   const [leaflet, setLeaflet] = useState<typeof import('leaflet') | null>(null)
 
@@ -51,9 +73,10 @@ export default function JourneyMap({ locations, selectedLocation }: JourneyMapPr
     )
   }
 
-  // Calcular el centro del mapa basado en las ubicaciones
-  const centerLat = locations.reduce((sum, loc) => sum + loc.latitude, 0) / locations.length
-  const centerLng = locations.reduce((sum, loc) => sum + loc.longitude, 0) / locations.length
+  // Centrar el mapa en la última ubicación (más reciente)
+  const lastLocation = locations[locations.length - 1]
+  const centerLat = lastLocation ? lastLocation.latitude : 0
+  const centerLng = lastLocation ? lastLocation.longitude : 0
 
   // Preparar coordenadas para la polilínea
   const pathCoordinates = locations.map(loc => [loc.latitude, loc.longitude] as [number, number])
@@ -153,6 +176,9 @@ export default function JourneyMap({ locations, selectedLocation }: JourneyMapPr
             </Popup>
           </Marker>
         )}
+
+        {/* Controlador para centrar el mapa */}
+        <MapCenterController selectedLocation={selectedLocation} />
       </MapContainer>
     </div>
   )
