@@ -110,7 +110,7 @@ export default function JourneyMap({ locations, selectedLocation }: JourneyMapPr
   }) : null
 
   return (
-    <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-200">
+    <div className="w-full h-full rounded-lg overflow-hidden">
       <MapContainer
         center={[centerLat, centerLng]}
         zoom={15}

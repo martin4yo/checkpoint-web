@@ -141,28 +141,36 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
               <div className="text-gray-500">Cargando ubicaciones...</div>
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Mapa del recorrido */}
+            <div className="flex gap-4 h-96">
+              {/* Mapa del recorrido - Lado izquierdo */}
               {locations.length > 0 && (
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <h4 className="font-medium mb-3 flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                    Mapa del Recorrido
-                  </h4>
-                  <JourneyMap
-                    locations={locations}
-                    journeyName={journeyCheckpoint.placeName}
-                    selectedLocation={selectedLocation}
-                  />
+                <div className="flex-1 bg-white rounded-lg border border-gray-200 flex flex-col">
+                  <div className="p-3 border-b border-gray-200">
+                    <h4 className="font-medium flex items-center">
+                      <MapPin className="h-4 w-4 mr-2 text-blue-600" />
+                      Mapa del Recorrido
+                    </h4>
+                  </div>
+                  <div className="flex-1">
+                    <JourneyMap
+                      locations={locations}
+                      journeyName={journeyCheckpoint.placeName}
+                      selectedLocation={selectedLocation}
+                    />
+                  </div>
                 </div>
               )}
 
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Ubicaciones Registradas ({locations.length})</h4>
+              {/* Lista de ubicaciones - Lado derecho */}
+              <div className="w-80 bg-gray-50 rounded-lg flex flex-col">
+                <div className="p-3 border-b border-gray-200">
+                  <h4 className="font-medium">Ubicaciones ({locations.length})</h4>
+                </div>
+                <div className="flex-1 p-3">
                 {locations.length === 0 ? (
                   <p className="text-gray-500">No hay ubicaciones registradas para esta jornada.</p>
                 ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-1 overflow-y-auto">
                     {locations.map((location, index) => (
                       <div
                         key={location.id}
@@ -171,26 +179,13 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                         }`}
                         onClick={() => setSelectedLocation(location)}
                       >
-                        <div className="flex items-center justify-between p-3">
-                          <div className="flex items-center space-x-3">
-                            <Navigation className="h-4 w-4 text-purple-600" />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">
-                                {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último registro' : `Ubicación #${index + 1}`}
+                        <div className="p-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center space-x-2">
+                              <Navigation className="h-3 w-3 text-purple-600" />
+                              <span className="text-xs font-medium">
+                                {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último' : `#${index + 1}`}
                               </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(location.recordedAt).toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            {index > 0 && (
-                              <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                +{calculateTimeDifference(location, locations[index - 1])}
-                              </div>
-                            )}
-                            <div className="text-xs text-gray-400">
-                              {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                             </div>
                             <button
                               onClick={(e) => {
@@ -200,14 +195,26 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                               }}
                               className="text-blue-600 hover:text-blue-800"
                             >
-                              <ExternalLink className="h-4 w-4" />
+                              <ExternalLink className="h-3 w-3" />
                             </button>
                           </div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            {new Date(location.recordedAt).toLocaleTimeString()}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                          </div>
+                          {index > 0 && (
+                            <div className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded mt-1 inline-block">
+                              +{calculateTimeDifference(location, locations[index - 1])}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )}
