@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import JourneyAdjustmentModal from '@/components/JourneyAdjustmentModal'
-import { Filter, X, Edit3, Clock, MapPin, User, Coffee, FileBarChart, Download } from 'lucide-react'
+import JourneyLocationsViewer from '@/components/JourneyLocationsViewer'
+import { Filter, X, Edit3, Clock, MapPin, User, Coffee, FileBarChart, Download, Navigation } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
 interface JourneyReport {
@@ -40,6 +41,7 @@ export default function JourneyReportsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedJourney, setSelectedJourney] = useState<JourneyReport | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showJourneyLocations, setShowJourneyLocations] = useState<JourneyReport | null>(null)
   const [filter, setFilter] = useState({
     dateFrom: '',
     dateTo: '',
@@ -382,13 +384,22 @@ export default function JourneyReportsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        onClick={() => handleEdit(journey)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Editar ajustes"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowJourneyLocations(journey)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Ver ubicaciones de jornada"
+                        >
+                          <Navigation className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(journey)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Editar ajustes"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -409,6 +420,19 @@ export default function JourneyReportsPage() {
           onSave={handleSave}
           journey={selectedJourney}
         />
+
+        {/* Modal de Ubicaciones de Jornada */}
+        {showJourneyLocations && (
+          <JourneyLocationsViewer
+            journeyId={showJourneyLocations.id}
+            journeyName={showJourneyLocations.placeName}
+            userName={showJourneyLocations.userName}
+            startTime={`${showJourneyLocations.startDate} ${showJourneyLocations.startTime}`}
+            endTime={showJourneyLocations.endDate && showJourneyLocations.endTime ?
+              `${showJourneyLocations.endDate} ${showJourneyLocations.endTime}` : null}
+            onClose={() => setShowJourneyLocations(null)}
+          />
+        )}
       </div>
     </DashboardLayout>
   )

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, CheckCircle } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
-import JourneyMap from '@/components/JourneyMap'
+import JourneyLocationsViewer from '@/components/JourneyLocationsViewer'
 
 interface Checkpoint {
   id: string
@@ -35,215 +35,12 @@ interface Checkpoint {
   }
 }
 
-interface JourneyLocation {
-  id: string
-  latitude: number
-  longitude: number
-  recordedAt: string
-}
-
-interface JourneyLocationsModalProps {
-  journeyCheckpoint: Checkpoint
-  onClose: () => void
-}
 
 interface CheckpointDetailsModalProps {
   checkpoint: Checkpoint
   onClose: () => void
 }
 
-function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsModalProps) {
-  const [locations, setLocations] = useState<JourneyLocation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedLocation, setSelectedLocation] = useState<JourneyLocation | null>(null)
-
-  const fetchJourneyLocations = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/mobile/journey/${journeyCheckpoint.id}/locations`)
-      if (response.ok) {
-        const data = await response.json()
-        // Ordenar ubicaciones por fecha
-        const sortedLocations = (data.locations || []).sort((a: JourneyLocation, b: JourneyLocation) =>
-          new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
-        )
-        setLocations(sortedLocations)
-      }
-    } catch (error) {
-      console.error('Error fetching journey locations:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [journeyCheckpoint.id])
-
-  useEffect(() => {
-    fetchJourneyLocations()
-  }, [fetchJourneyLocations])
-
-  // Función para calcular tiempo entre ubicaciones
-  const calculateTimeDifference = (currentLocation: JourneyLocation, previousLocation: JourneyLocation) => {
-    const currentTime = new Date(currentLocation.recordedAt).getTime()
-    const previousTime = new Date(previousLocation.recordedAt).getTime()
-    const diffMs = currentTime - previousTime
-
-    const hours = Math.floor(diffMs / (1000 * 60 * 60))
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-  }
-
-  // Calcular tiempo total de la jornada
-  const calculateTotalTime = () => {
-    if (locations.length < 2) return '00:00'
-
-    const firstLocation = locations[0]
-    const lastLocation = locations[locations.length - 1]
-    const totalMs = new Date(lastLocation.recordedAt).getTime() - new Date(firstLocation.recordedAt).getTime()
-
-    const hours = Math.floor(totalMs / (1000 * 60 * 60))
-    const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60))
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-  }
-
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose}></div>
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-          <div className="relative inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              Ubicaciones de Jornada - {journeyCheckpoint.placeName}
-            </h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <div className="mb-4 text-sm text-gray-600">
-            <p><strong>Usuario:</strong> {journeyCheckpoint.user.name}</p>
-            <p><strong>Inicio:</strong> {new Date(journeyCheckpoint.timestamp).toLocaleString()}</p>
-            {locations.length >= 2 && (
-              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-blue-800 font-semibold">
-                  <strong>Tiempo Total de Jornada:</strong> {calculateTotalTime()}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Cargando ubicaciones...</div>
-            </div>
-          ) : (
-            <div className="flex gap-4 h-96">
-              {/* Mapa del recorrido - Lado izquierdo */}
-              {locations.length > 0 && (
-                <div className="flex-1 bg-white rounded-lg border border-gray-200 flex flex-col">
-                  <div className="p-3 border-b border-gray-200">
-                    <h4 className="font-medium flex items-center">
-                      <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                      Mapa del Recorrido
-                    </h4>
-                  </div>
-                  <div className="flex-1">
-                    <JourneyMap
-                      locations={locations}
-                      journeyName={journeyCheckpoint.placeName}
-                      selectedLocation={selectedLocation}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Lista de ubicaciones - Lado derecho */}
-              <div className="w-64 bg-gray-50 rounded-lg flex flex-col">
-                <div className="p-3 border-b border-gray-200">
-                  <h4 className="font-medium text-sm">Ubicaciones ({locations.length})</h4>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                {locations.length === 0 ? (
-                  <p className="text-gray-500 p-3 text-sm">No hay ubicaciones registradas para esta jornada.</p>
-                ) : (
-                  <div className="h-full overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-gray-100 sticky top-0">
-                        <tr>
-                          <th className="text-left p-2 font-medium">ID</th>
-                          <th className="text-left p-2 font-medium">Hora</th>
-                          <th className="text-left p-2 font-medium">Min</th>
-                          <th className="text-center p-2 font-medium">Maps</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {locations.map((location, index) => (
-                          <tr
-                            key={location.id}
-                            className={`cursor-pointer transition-colors hover:bg-blue-50 border-b border-gray-200 ${
-                              selectedLocation?.id === location.id ? 'bg-blue-100' : 'bg-white'
-                            }`}
-                            onClick={() => setSelectedLocation(location)}
-                          >
-                            <td className="p-2">
-                              <div className="flex items-center space-x-1">
-                                <Navigation className="h-3 w-3 text-purple-600" />
-                                <span className="font-medium">
-                                  {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último' : `#${index + 1}`}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-2 text-gray-600">
-                              {new Date(location.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.{new Date(location.recordedAt).getMilliseconds().toString().padStart(3, '0')}
-                            </td>
-                            <td className="p-2">
-                              {index > 0 && (
-                                <span className="text-green-700 font-medium">
-                                  +{calculateTimeDifference(location, locations[index - 1])}
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-2 text-center">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
-                                  window.open(url, '_blank')
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Cerrar
-            </button>
-          </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
 
 function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalProps) {
   const [showFullImage, setShowFullImage] = useState(false)
@@ -1099,11 +896,8 @@ export default function CheckpointsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Foto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
                   Fecha/Hora
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Notas
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -1165,37 +959,43 @@ export default function CheckpointsPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-gray-500 w-64">
                     {checkpoint.type === 'JOURNEY_START' && checkpoint.endTimestamp ? (
                       <div>
                         <div className="font-medium">Inicio:</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                         <div className="font-medium mt-1">Fin:</div>
-                        <div>{new Date(checkpoint.endTimestamp).toLocaleDateString()}</div>
-                        <div>{new Date(checkpoint.endTimestamp).toLocaleTimeString()}</div>
+                        <div>{new Date(checkpoint.endTimestamp).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}</div>
+                        <div>{new Date(checkpoint.endTimestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
                     ) : checkpoint.type === 'JOURNEY_START' ? (
                       <div>
                         <div className="font-medium text-green-600">En curso desde:</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}</div>
+                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
                     ) : (
                       <div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleDateString()}</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString()}</div>
+                        <div className="font-medium">{new Date(checkpoint.timestamp).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })}</div>
+                        <div className="text-gray-600">{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                    {checkpoint.type === 'JOURNEY_START' && checkpoint.endNotes ? (
-                      <div>
-                        <div>{checkpoint.notes}</div>
-                        <div className="text-xs text-gray-400 mt-1">{checkpoint.endNotes}</div>
-                      </div>
-                    ) : (
-                      checkpoint.notes || '-'
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
@@ -1276,8 +1076,12 @@ export default function CheckpointsPage() {
 
         {/* Modal de Ubicaciones de Jornada */}
         {showJourneyLocationsModal && (
-          <JourneyLocationsModal
-            journeyCheckpoint={showJourneyLocationsModal}
+          <JourneyLocationsViewer
+            journeyId={showJourneyLocationsModal.id}
+            journeyName={showJourneyLocationsModal.placeName}
+            userName={showJourneyLocationsModal.user.name}
+            startTime={showJourneyLocationsModal.timestamp}
+            endTime={showJourneyLocationsModal.endTimestamp}
             onClose={() => setShowJourneyLocationsModal(null)}
           />
         )}
