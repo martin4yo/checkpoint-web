@@ -162,56 +162,67 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
               )}
 
               {/* Lista de ubicaciones - Lado derecho */}
-              <div className="w-80 bg-gray-50 rounded-lg flex flex-col">
+              <div className="w-64 bg-gray-50 rounded-lg flex flex-col">
                 <div className="p-3 border-b border-gray-200">
-                  <h4 className="font-medium">Ubicaciones ({locations.length})</h4>
+                  <h4 className="font-medium text-sm">Ubicaciones ({locations.length})</h4>
                 </div>
-                <div className="flex-1 p-3">
+                <div className="flex-1 overflow-hidden">
                 {locations.length === 0 ? (
-                  <p className="text-gray-500">No hay ubicaciones registradas para esta jornada.</p>
+                  <p className="text-gray-500 p-3 text-sm">No hay ubicaciones registradas para esta jornada.</p>
                 ) : (
-                  <div className="space-y-1 overflow-y-auto">
-                    {locations.map((location, index) => (
-                      <div
-                        key={location.id}
-                        className={`bg-white rounded border cursor-pointer transition-colors hover:bg-blue-50 ${
-                          selectedLocation?.id === location.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                        }`}
-                        onClick={() => setSelectedLocation(location)}
-                      >
-                        <div className="p-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-2">
-                              <Navigation className="h-3 w-3 text-purple-600" />
-                              <span className="text-xs font-medium">
-                                {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último' : `#${index + 1}`}
-                              </span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
-                                window.open(url, '_blank')
-                              }}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </button>
-                          </div>
-                          <div className="text-xs text-gray-500 mb-1">
-                            {new Date(location.recordedAt).toLocaleTimeString()}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                          </div>
-                          {index > 0 && (
-                            <div className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded mt-1 inline-block">
-                              +{calculateTimeDifference(location, locations[index - 1])}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="h-full overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-100 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 font-medium">ID</th>
+                          <th className="text-left p-2 font-medium">Hora</th>
+                          <th className="text-left p-2 font-medium">Min</th>
+                          <th className="text-center p-2 font-medium">Maps</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {locations.map((location, index) => (
+                          <tr
+                            key={location.id}
+                            className={`cursor-pointer transition-colors hover:bg-blue-50 border-b border-gray-200 ${
+                              selectedLocation?.id === location.id ? 'bg-blue-100' : 'bg-white'
+                            }`}
+                            onClick={() => setSelectedLocation(location)}
+                          >
+                            <td className="p-2">
+                              <div className="flex items-center space-x-1">
+                                <Navigation className="h-3 w-3 text-purple-600" />
+                                <span className="font-medium">
+                                  {index === 0 ? 'Inicio' : index === locations.length - 1 ? 'Último' : `#${index + 1}`}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-2 text-gray-600">
+                              {new Date(location.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="p-2">
+                              {index > 0 && (
+                                <span className="text-green-700 font-medium">
+                                  +{calculateTimeDifference(location, locations[index - 1])}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-2 text-center">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&t=satellite&z=18`
+                                  window.open(url, '_blank')
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
                 </div>
