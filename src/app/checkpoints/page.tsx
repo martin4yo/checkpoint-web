@@ -896,7 +896,7 @@ export default function CheckpointsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Foto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Fecha/Hora
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -959,7 +959,7 @@ export default function CheckpointsPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 w-64">
+                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                     {checkpoint.type === 'JOURNEY_START' && checkpoint.endTimestamp ? (
                       <div>
                         <div className="font-medium">Inicio:</div>
@@ -967,15 +967,13 @@ export default function CheckpointsPage() {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
-                        })}</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
+                        })} {new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                         <div className="font-medium mt-1">Fin:</div>
                         <div>{new Date(checkpoint.endTimestamp).toLocaleDateString('es-ES', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
-                        })}</div>
-                        <div>{new Date(checkpoint.endTimestamp).toLocaleTimeString('es-ES')}</div>
+                        })} {new Date(checkpoint.endTimestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
                     ) : checkpoint.type === 'JOURNEY_START' ? (
                       <div>
@@ -984,8 +982,7 @@ export default function CheckpointsPage() {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
-                        })}</div>
-                        <div>{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
+                        })} {new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
                     ) : (
                       <div>
@@ -993,8 +990,7 @@ export default function CheckpointsPage() {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
-                        })}</div>
-                        <div className="text-gray-600">{new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
+                        })} {new Date(checkpoint.timestamp).toLocaleTimeString('es-ES')}</div>
                       </div>
                     )}
                   </td>
