@@ -198,7 +198,7 @@ function JourneyLocationsModal({ journeyCheckpoint, onClose }: JourneyLocationsM
                               </div>
                             </td>
                             <td className="p-2 text-gray-600">
-                              {new Date(location.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              {new Date(location.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.{new Date(location.recordedAt).getMilliseconds().toString().padStart(3, '0')}
                             </td>
                             <td className="p-2">
                               {index > 0 && (
