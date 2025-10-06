@@ -79,10 +79,14 @@ export async function GET(req: NextRequest) {
 
         // Restar tiempo de almuerzo si está configurado
         if (journey.journeyAdjustments?.lunchStartTime && journey.journeyAdjustments?.lunchEndTime) {
-          const lunchStart = new Date(`${startDate}T${journey.journeyAdjustments.lunchStartTime}`)
-          const lunchEnd = new Date(`${startDate}T${journey.journeyAdjustments.lunchEndTime}`)
+          const lunchStartTime = journey.journeyAdjustments.lunchStartTime.toTimeString().slice(0, 5)
+          const lunchEndTime = journey.journeyAdjustments.lunchEndTime.toTimeString().slice(0, 5)
+          const lunchStart = new Date(`${startDate}T${lunchStartTime}`)
+          const lunchEnd = new Date(`${startDate}T${lunchEndTime}`)
           const lunchDuration = lunchEnd.getTime() - lunchStart.getTime()
-          totalMs -= lunchDuration
+          if (lunchDuration > 0) {
+            totalMs -= lunchDuration
+          }
         }
 
         const hours = Math.floor(totalMs / (1000 * 60 * 60))
@@ -96,10 +100,14 @@ export async function GET(req: NextRequest) {
 
         // Restar tiempo de almuerzo si está configurado
         if (journey.journeyAdjustments?.lunchStartTime && journey.journeyAdjustments?.lunchEndTime) {
-          const lunchStart = new Date(`${startDate}T${journey.journeyAdjustments.lunchStartTime}`)
-          const lunchEnd = new Date(`${startDate}T${journey.journeyAdjustments.lunchEndTime}`)
+          const lunchStartTime = journey.journeyAdjustments.lunchStartTime.toTimeString().slice(0, 5)
+          const lunchEndTime = journey.journeyAdjustments.lunchEndTime.toTimeString().slice(0, 5)
+          const lunchStart = new Date(`${startDate}T${lunchStartTime}`)
+          const lunchEnd = new Date(`${startDate}T${lunchEndTime}`)
           const lunchDuration = lunchEnd.getTime() - lunchStart.getTime()
-          totalMs -= lunchDuration
+          if (lunchDuration > 0) {
+            totalMs -= lunchDuration
+          }
         }
 
         const hours = Math.floor(totalMs / (1000 * 60 * 60))
