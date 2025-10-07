@@ -82,9 +82,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID es requerido' }, { status: 400 })
     }
 
-    await prisma.place.update({
+    await prisma.place.delete({
       where: { id },
-      data: { isActive: false },
     })
 
     return NextResponse.json({ success: true })

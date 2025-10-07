@@ -115,9 +115,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID es requerido' }, { status: 400 })
     }
 
-    await prisma.user.update({
+    await prisma.user.delete({
       where: { id },
-      data: { isActive: false },
     })
 
     return NextResponse.json({ success: true })
