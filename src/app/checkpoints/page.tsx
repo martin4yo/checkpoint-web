@@ -52,7 +52,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Overlay */}
         <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          className="fixed inset-0 transition-opacity backdrop-blur-sm"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -254,7 +254,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
       <div className="fixed inset-0 z-[60] overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen p-4">
           <div
-            className="fixed inset-0 transition-opacity bg-black bg-opacity-90"
+            className="fixed inset-0 transition-opacity backdrop-blur-sm"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -298,7 +298,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
       <div className="fixed inset-0 z-[60] overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen p-4">
           <div
-            className="fixed inset-0 transition-opacity bg-black bg-opacity-90"
+            className="fixed inset-0 transition-opacity backdrop-blur-sm"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -373,8 +373,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
     <>
       {/* Overlay con gris muy suave */}
       <div
-        className="fixed inset-0 z-50"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
+        className="fixed inset-0 z-50 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -494,8 +493,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
     <>
       {/* Overlay con gris muy suave */}
       <div
-        className="fixed inset-0 z-50"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
+        className="fixed inset-0 z-50 backdrop-blur-sm"
         onClick={onClose}
       />
 
