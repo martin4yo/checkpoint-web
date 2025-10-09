@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "tsx server.ts",
     "dev:old": "next dev --turbopack",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "NODE_ENV=production tsx server.ts",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",

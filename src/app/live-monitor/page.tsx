@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { MapPin, Wifi, WifiOff, Circle, RefreshCw, Navigation } from 'lucide-react'
+import { Wifi, WifiOff, Circle, RefreshCw, Navigation } from 'lucide-react'
 
 // Importar mapa dinámicamente para evitar SSR
 const Map = dynamic(() => import('@/components/LiveMonitorMap'), {
@@ -227,9 +227,13 @@ export default function LiveMonitorPage() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium text-gray-900">{device.userName}</h3>
                           {device.isConnectedViaWS ? (
-                            <Wifi className="w-4 h-4 text-green-500" title="Conectado via WebSocket" />
+                            <span title="Conectado via WebSocket">
+                              <Wifi className="w-4 h-4 text-green-500" />
+                            </span>
                           ) : (
-                            <WifiOff className="w-4 h-4 text-gray-400" title="No conectado via WebSocket" />
+                            <span title="No conectado via WebSocket">
+                              <WifiOff className="w-4 h-4 text-gray-400" />
+                            </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-500">{device.placeName}</p>

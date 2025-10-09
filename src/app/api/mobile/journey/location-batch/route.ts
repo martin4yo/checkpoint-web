@@ -4,15 +4,6 @@ import { verifyToken } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-interface LocationPoint {
-  latitude: number;
-  longitude: number;
-  timestamp: string;
-  accuracy?: number;
-  speed?: number;
-  heading?: number;
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticación

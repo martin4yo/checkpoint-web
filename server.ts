@@ -1,6 +1,7 @@
-const { createServer } = require('http')
-const { parse } = require('url')
-const next = require('next')
+import { createServer } from 'http'
+import { parse } from 'url'
+import next from 'next'
+import { journeyWebSocketServer } from './src/lib/websocket-server'
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
@@ -12,7 +13,7 @@ const handle = app.getRequestHandler()
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     try {
-      const parsedUrl = parse(req.url, true)
+      const parsedUrl = parse(req.url!, true)
       await handle(req, res, parsedUrl)
     } catch (err) {
       console.error('Error occurred handling', req.url, err)
@@ -22,10 +23,8 @@ app.prepare().then(() => {
   })
 
   // Inicializar WebSocket Server después de que el servidor HTTP esté listo
-  server.on('listening', async () => {
+  server.on('listening', () => {
     try {
-      // Importar dinámicamente el módulo ES
-      const { journeyWebSocketServer } = await import('./src/lib/websocket-server.js')
       journeyWebSocketServer.initialize(server)
       console.log(`✅ Servidor Next.js con WebSocket listo en http://${hostname}:${port}`)
     } catch (error) {
@@ -33,7 +32,7 @@ app.prepare().then(() => {
     }
   })
 
-  server.listen(port, (err) => {
+  server.listen(port, (err?: Error) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
   })
@@ -41,6 +40,7 @@ app.prepare().then(() => {
   // Manejo de cierre graceful
   process.on('SIGTERM', () => {
     console.log('SIGTERM recibido, cerrando servidor...')
+    journeyWebSocketServer.shutdown()
     server.close(() => {
       console.log('Servidor HTTP cerrado')
       process.exit(0)
@@ -49,6 +49,7 @@ app.prepare().then(() => {
 
   process.on('SIGINT', () => {
     console.log('SIGINT recibido, cerrando servidor...')
+    journeyWebSocketServer.shutdown()
     server.close(() => {
       console.log('Servidor HTTP cerrado')
       process.exit(0)

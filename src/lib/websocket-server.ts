@@ -1,5 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws'
-import { IncomingMessage } from 'http'
+import { IncomingMessage, Server } from 'http'
 import { verifyToken } from './auth'
 import { prisma } from './prisma'
 
@@ -11,7 +11,7 @@ interface AuthenticatedWebSocket extends WebSocket {
 
 interface WebSocketMessage {
   type: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 class JourneyWebSocketServer {
@@ -19,7 +19,7 @@ class JourneyWebSocketServer {
   private clients: Map<string, AuthenticatedWebSocket> = new Map()
   private heartbeatInterval: NodeJS.Timeout | null = null
 
-  initialize(server: any) {
+  initialize(server: Server) {
     this.wss = new WebSocketServer({
       server,
       path: '/ws/journey'
@@ -125,7 +125,7 @@ class JourneyWebSocketServer {
     }
   }
 
-  private async handlePing(ws: AuthenticatedWebSocket, message: any) {
+  private async handlePing(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
     const { app_state, timestamp } = message
 
     // Actualizar estado en base de datos
@@ -140,7 +140,7 @@ class JourneyWebSocketServer {
           },
           data: {
             lastHeartbeat: new Date(),
-            appState: app_state || 'unknown'
+            appState: (app_state as string) || 'unknown'
           }
         })
 
@@ -157,7 +157,7 @@ class JourneyWebSocketServer {
     })
   }
 
-  private async handleAppStateChange(ws: AuthenticatedWebSocket, message: any) {
+  private async handleAppStateChange(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
     const { app_state, timestamp } = message
 
     if (ws.userId && ws.journeyId) {
@@ -170,7 +170,7 @@ class JourneyWebSocketServer {
             }
           },
           data: {
-            appState: app_state,
+            appState: (app_state as string) || 'unknown',
             lastHeartbeat: new Date()
           }
         })
@@ -182,7 +182,7 @@ class JourneyWebSocketServer {
     }
   }
 
-  private async handleLocationUpdate(ws: AuthenticatedWebSocket, message: any) {
+  private async handleLocationUpdate(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
     const { latitude, longitude, timestamp } = message
 
     if (ws.userId && ws.journeyId) {
@@ -192,9 +192,9 @@ class JourneyWebSocketServer {
           data: {
             userId: ws.userId,
             startCheckpointId: ws.journeyId,
-            latitude,
-            longitude,
-            recordedAt: new Date(timestamp || Date.now())
+            latitude: latitude as number,
+            longitude: longitude as number,
+            recordedAt: new Date((timestamp as string) || Date.now())
           }
         })
 
@@ -207,7 +207,7 @@ class JourneyWebSocketServer {
             }
           },
           data: {
-            lastLocation: { latitude, longitude },
+            lastLocation: { latitude: latitude as number, longitude: longitude as number },
             lastHeartbeat: new Date()
           }
         })
@@ -237,7 +237,7 @@ class JourneyWebSocketServer {
   }
 
   // Enviar actualización de configuración
-  async sendConfigUpdate(userId: string, journeyId: string, config: any) {
+  async sendConfigUpdate(userId: string, journeyId: string, config: Record<string, unknown>) {
     const clientKey = `${userId}-${journeyId}`
     const ws = this.clients.get(clientKey)
 
@@ -277,7 +277,7 @@ class JourneyWebSocketServer {
     })
   }
 
-  private sendToClient(ws: WebSocket, message: any) {
+  private sendToClient(ws: WebSocket, message: WebSocketMessage) {
     try {
       ws.send(JSON.stringify(message))
     } catch (error) {

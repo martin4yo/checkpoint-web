@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
           latitude: lastLocation.latitude,
           longitude: lastLocation.longitude,
           recordedAt: lastLocation.recordedAt
-        } : (monitor?.lastLocation as any || null),
+        } : (monitor?.lastLocation as { latitude: number, longitude: number, recordedAt: string } | null || null),
         placeName: journey.placeName
       }
     }))
