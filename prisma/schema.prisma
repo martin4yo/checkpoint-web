@@ -114,6 +114,7 @@ model JourneyMonitor {
   journeyId       String   // ID del checkpoint de inicio de jornada
   lastHeartbeat   DateTime
   lastLocation    Json?    // Última ubicación conocida
+  appState        String   @default("unknown") // 'active', 'background', 'inactive', 'unknown'
   isMoving        Boolean  @default(false)
   alertSent       Boolean  @default(false)
   createdAt       DateTime @default(now())

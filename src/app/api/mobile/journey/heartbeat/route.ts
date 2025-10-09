@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { latitude, longitude, timestamp } = body
+    const { latitude, longitude, timestamp, app_state } = body
 
     // Buscar jornada activa
     const activeJourney = await prisma.checkpoint.findFirst({
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       update: {
         lastHeartbeat: new Date(),
         lastLocation: { latitude, longitude },
+        appState: app_state || 'unknown', // Estado de la app: 'active', 'background', 'inactive'
         alertSent: false // Reset alert si recibimos heartbeat
       },
       create: {
@@ -80,11 +81,12 @@ export async function POST(req: NextRequest) {
         journeyId: activeJourney.id,
         lastHeartbeat: new Date(),
         lastLocation: { latitude, longitude },
+        appState: app_state || 'unknown',
         alertSent: false
       }
     })
 
-    console.log('💓 Heartbeat registrado en monitor de jornada')
+    console.log('💓 Heartbeat registrado en monitor de jornada - Estado:', app_state || 'unknown')
 
     return NextResponse.json({
       success: true,

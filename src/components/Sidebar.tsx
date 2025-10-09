@@ -14,7 +14,8 @@ import {
   FileBarChart,
   Menu,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Radio
 } from 'lucide-react'
 
 const MapMarkerIcon = () => (
@@ -44,6 +45,7 @@ export default function Sidebar() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Home },
+    { href: '/live-monitor', label: 'Monitor en Vivo', icon: Radio },
     { href: '/places', label: 'Lugares', icon: MapPin },
     { href: '/users', label: 'Usuarios', icon: Users },
     { href: '/checkpoints', label: 'Checkpoints', icon: CheckCircle },

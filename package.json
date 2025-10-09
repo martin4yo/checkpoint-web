@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
+    "dev": "node server.js",
+    "dev:old": "next dev --turbopack",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -17,6 +18,7 @@
     "@prisma/client": "^6.16.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/multer": "^2.0.0",
+    "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "firebase-admin": "^13.5.0",
@@ -30,6 +32,7 @@
     "react-dom": "19.1.0",
     "react-leaflet": "^5.0.0",
     "tsx": "^4.20.6",
+    "ws": "^8.18.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
