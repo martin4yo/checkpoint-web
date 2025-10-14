@@ -115,7 +115,7 @@ export default function JourneyLocationsViewer({
                 <div className="text-gray-500">Cargando ubicaciones...</div>
               </div>
             ) : (
-              <div className="flex gap-4 h-[700px]">
+              <div className="flex gap-4 h-[525px]">
                 {locations.length > 0 && (
                   <div className="flex-1 bg-white rounded-lg border border-gray-200 flex flex-col">
                     <div className="p-3 border-b border-gray-200">
