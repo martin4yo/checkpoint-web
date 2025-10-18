@@ -15,7 +15,9 @@ import {
   Menu,
   X,
   ChevronLeft,
-  Radio
+  Building2,
+  FileText,
+  Tag
 } from 'lucide-react'
 
 const MapMarkerIcon = () => (
@@ -45,13 +47,15 @@ export default function Sidebar() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Home },
-    { href: '/live-monitor', label: 'Monitor en Vivo', icon: Radio },
     { href: '/places', label: 'Lugares', icon: MapPin },
     { href: '/users', label: 'Usuarios', icon: Users },
     { href: '/checkpoints', label: 'Checkpoints', icon: CheckCircle },
     { href: '/journey-reports', label: 'Reporte Jornadas', icon: FileBarChart },
     { href: '/assignments', label: 'Asignaciones', icon: LinkIcon },
+    { href: '/novelties', label: 'Novedades', icon: FileText },
+    { href: '/novelty-types', label: 'Tipos de Novedades', icon: Tag },
     { href: '/push-devices', label: 'Notificaciones', icon: Bell },
+    { href: '/tenants', label: 'Tenants', icon: Building2 },
   ]
 
   const closeMobile = () => setIsMobileOpen(false)

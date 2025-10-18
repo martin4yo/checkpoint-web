@@ -5,12 +5,21 @@ import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
+
 interface User {
   id: string
   name: string
   email: string
+  tenantId: string
+  superuser: boolean
   isActive: boolean
   createdAt: string
+  tenant: Tenant
   _count?: {
     assignments: number
     checkpoints: number
@@ -19,6 +28,8 @@ interface User {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -26,11 +37,14 @@ export default function UsersPage() {
     name: '',
     email: '',
     password: '',
+    tenantId: '',
+    superuser: false,
   })
   const { confirm, ConfirmDialog } = useConfirm()
 
   useEffect(() => {
     fetchUsers()
+    fetchTenants()
   }, [])
 
   const fetchUsers = async () => {
@@ -39,11 +53,27 @@ export default function UsersPage() {
       if (response.ok) {
         const data = await response.json()
         setUsers(data)
+
+        // Identify current user (first superuser found, or first user)
+        const superUser = data.find((u: User) => u.superuser)
+        setCurrentUser(superUser || data[0] || null)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
     }
   }
 
@@ -54,6 +84,8 @@ export default function UsersPage() {
       name: formData.name,
       email: formData.email,
       ...(formData.password && { password: formData.password }),
+      tenantId: formData.tenantId,
+      superuser: formData.superuser,
     }
 
     try {
@@ -66,9 +98,13 @@ export default function UsersPage() {
       if (response.ok) {
         fetchUsers()
         resetForm()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al guardar usuario')
       }
     } catch (error) {
       console.error('Error saving user:', error)
+      alert('Error al guardar usuario')
     }
   }
 
@@ -78,6 +114,8 @@ export default function UsersPage() {
       name: user.name,
       email: user.email,
       password: '',
+      tenantId: user.tenantId,
+      superuser: user.superuser,
     })
     setShowForm(true)
   }
@@ -138,10 +176,22 @@ export default function UsersPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', password: '' })
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      tenantId: tenants[0]?.id || '',
+      superuser: false,
+    })
     setEditingUser(null)
     setShowForm(false)
   }
+
+  // Check if there are any superusers
+  const hasSuperuser = users.some(u => u.superuser)
+  // Allow editing tenant and superuser if current user is superuser or if there are no superusers
+  const canEditTenant = currentUser?.superuser || !hasSuperuser
+  const canEditSuperuser = !hasSuperuser
 
   if (loading) {
     return (
@@ -161,7 +211,10 @@ export default function UsersPage() {
             Lista de Usuarios ({users.length})
           </h2>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              resetForm()
+              setShowForm(true)
+            }}
             className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -200,7 +253,7 @@ export default function UsersPage() {
                     required
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contraseña {editingUser && '(dejar vacío para mantener actual)'}
                   </label>
@@ -212,7 +265,42 @@ export default function UsersPage() {
                     required={!editingUser}
                   />
                 </div>
+                {canEditTenant && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tenant
+                    </label>
+                    <select
+                      value={formData.tenantId}
+                      onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar tenant...</option>
+                      {tenants.map((tenant) => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
+              {canEditSuperuser && editingUser && (
+                <div className="flex items-center pt-2 border-t border-gray-200 mt-4 pt-4">
+                  <input
+                    type="checkbox"
+                    id="superuser"
+                    checked={formData.superuser}
+                    onChange={(e) => setFormData({ ...formData, superuser: e.target.checked })}
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                  />
+                  <label htmlFor="superuser" className="ml-2 block text-sm font-medium text-gray-900">
+                    Super Usuario
+                  </label>
+                  <span className="ml-2 text-xs text-gray-500">(puede gestionar todos los tenants y usuarios)</span>
+                </div>
+              )}
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -243,10 +331,13 @@ export default function UsersPage() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
+                  Tenant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Creado
+                  Rol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -263,6 +354,21 @@ export default function UsersPage() {
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{user.tenant.name}</div>
+                    <div className="text-xs text-gray-500">{user.tenant.slug}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.superuser ? (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                        Superusuario
+                      </span>
+                    ) : (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        Usuario
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         user.isActive
@@ -272,9 +378,6 @@ export default function UsersPage() {
                     >
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
                     <button

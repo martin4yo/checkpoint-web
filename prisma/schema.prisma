@@ -7,19 +7,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Tenant {
   id              String                @id @default(cuid())
   name            String
-  email           String                @unique
-  password        String
+  slug            String                @unique
   isActive        Boolean               @default(true)
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
+  users           User[]
+  places          Place[]
   checkpoints     Checkpoint[]
   assignments     UserPlaceAssignment[]
   journeyLocations JourneyLocation[]
   pushTokens      PushToken[]
   journeyMonitors JourneyMonitor[]
+  journeyAdjustments JourneyAdjustment[]
+  noveltyTypes    NoveltyType[]
+  novelties       Novelty[]
+
+  @@map("tenants")
+}
+
+model User {
+  id              String                @id @default(cuid())
+  name            String
+  email           String                @unique
+  password        String
+  tenantId        String
+  superuser       Boolean               @default(false)
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  tenant          Tenant                @relation(fields: [tenantId], references: [id])
+  checkpoints     Checkpoint[]
+  assignments     UserPlaceAssignment[]
+  journeyLocations JourneyLocation[]
+  pushTokens      PushToken[]
+  journeyMonitors JourneyMonitor[]
+  novelties       Novelty[]
+  approvedNovelties Novelty[] @relation("ApprovedBy")
 
   @@map("users")
 }
@@ -30,9 +56,11 @@ model Place {
   address     String
   latitude    Float
   longitude   Float
+  tenantId    String
   isActive    Boolean               @default(true)
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  tenant      Tenant                @relation(fields: [tenantId], references: [id])
   checkpoints Checkpoint[]
   assignments UserPlaceAssignment[]
 
@@ -43,7 +71,9 @@ model UserPlaceAssignment {
   id        String   @id @default(cuid())
   userId    String
   placeId   String
+  tenantId  String
   createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -62,6 +92,7 @@ model Checkpoint {
   notes           String?
   imageUrl        String?
   type            CheckpointType    @default(MANUAL)
+  tenantId        String
 
   // Campos para jornadas (cuando type es JOURNEY_START)
   endLatitude     Float?
@@ -70,6 +101,7 @@ model Checkpoint {
   endNotes        String?
 
   createdAt       DateTime          @default(now())
+  tenant          Tenant            @relation(fields: [tenantId], references: [id])
   place           Place?            @relation(fields: [placeId], references: [id])
   user            User              @relation(fields: [userId], references: [id])
   journeyLocations JourneyLocation[]
@@ -85,7 +117,9 @@ model JourneyLocation {
   latitude        Float
   longitude       Float
   recordedAt      DateTime
+  tenantId        String
   createdAt       DateTime   @default(now())
+  tenant          Tenant     @relation(fields: [tenantId], references: [id])
   user            User       @relation(fields: [userId], references: [id])
   startCheckpoint Checkpoint @relation(fields: [startCheckpointId], references: [id], onDelete: Cascade)
 
@@ -101,8 +135,10 @@ model PushToken {
   isActive       Boolean   @default(true)
   isAdminDevice  Boolean   @default(false) // Para dispositivos que reciben alertas de monitoreo
   description    String?   // Descripción opcional del dispositivo
+  tenantId       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
   user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_tokens")
@@ -117,8 +153,10 @@ model JourneyMonitor {
   appState        String   @default("unknown") // 'active', 'background', 'inactive', 'unknown'
   isMoving        Boolean  @default(false)
   alertSent       Boolean  @default(false)
+  tenantId        String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
   user            User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, journeyId])
@@ -133,9 +171,10 @@ model JourneyAdjustment {
   lunchStartTime        DateTime? // Inicio del almuerzo
   lunchEndTime          DateTime? // Fin del almuerzo
   notes                 String?   // Notas sobre los ajustes
+  tenantId              String
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
+  tenant                Tenant    @relation(fields: [tenantId], references: [id])
   checkpoint            Checkpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
 
   @@map("journey_adjustments")
@@ -145,4 +184,74 @@ enum CheckpointType {
   MANUAL
   JOURNEY_START
   JOURNEY_END
+}
+
+model NoveltyType {
+  id                  String    @id @default(cuid())
+  name                String    // Ej: "Vacaciones", "Días de estudio", etc.
+  description         String?
+  color               String    @default("#3B82F6") // Color hex para el tipo
+  icon                String    @default("FileText") // Nombre del icono de Lucide React
+  requiresAmount      Boolean   @default(false) // Si requiere ingresar importe
+  requiresDate        Boolean   @default(false) // Si requiere fecha única
+  requiresDateRange   Boolean   @default(false) // Si requiere rango de fechas
+  allowsAttachments   Boolean   @default(false) // Si permite archivos adjuntos
+  isActive            Boolean   @default(true)
+  tenantId            String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  tenant              Tenant    @relation(fields: [tenantId], references: [id])
+  novelties           Novelty[]
+
+  @@map("novelty_types")
+}
+
+model Novelty {
+  id                  String              @id @default(cuid())
+  userId              String              // Usuario que crea la novedad
+  noveltyTypeId       String
+  status              NoveltyStatus       @default(PENDING)
+
+  // Campos opcionales según configuración del tipo
+  amount              Float?              // Importe (si requiresAmount = true)
+  date                DateTime?           // Fecha única (si requiresDate = true)
+  startDate           DateTime?           // Fecha inicio (si requiresDateRange = true)
+  endDate             DateTime?           // Fecha fin (si requiresDateRange = true)
+  notes               String?             // Descripción/notas
+
+  // Datos de aprobación
+  approvedById        String?             // Usuario que aprobó
+  approvedAt          DateTime?           // Fecha de aprobación
+
+  tenantId            String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  user                User                @relation(fields: [userId], references: [id])
+  noveltyType         NoveltyType         @relation(fields: [noveltyTypeId], references: [id])
+  approvedBy          User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
+  attachments         NoveltyAttachment[]
+
+  @@map("novelties")
+}
+
+model NoveltyAttachment {
+  id                  String    @id @default(cuid())
+  noveltyId           String
+  fileName            String
+  fileUrl             String
+  fileSize            Int       // Tamaño en bytes
+  mimeType            String
+  uploadedAt          DateTime  @default(now())
+
+  novelty             Novelty   @relation(fields: [noveltyId], references: [id], onDelete: Cascade)
+
+  @@map("novelty_attachments")
+}
+
+enum NoveltyStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

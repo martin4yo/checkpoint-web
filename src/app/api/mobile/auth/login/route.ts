@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
           id: user.id,
           name: user.name,
           email: user.email,
+          tenantId: user.tenantId,
         },
         token,
         places: user.assignments.map(a => ({

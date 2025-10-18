@@ -1,16 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
+import { hashPassword, verifyToken } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const token = req.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const payload = await verifyToken(token)
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, tenantId: true, superuser: true }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    // Superusers can see all users, regular users only see users from their tenant
+    const whereClause = currentUser.superuser ? {} : { tenantId: currentUser.tenantId }
+
     const users = await prisma.user.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
         email: true,
+        tenantId: true,
+        superuser: true,
         isActive: true,
         createdAt: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
         _count: {
           select: {
             assignments: true,
@@ -30,10 +58,36 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json()
+    const token = req.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const payload = await verifyToken(token)
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, tenantId: true, superuser: true }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    const { name, email, password, tenantId } = await req.json()
 
     if (!name || !email || !password) {
-      return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
+      return NextResponse.json({ error: 'Nombre, email y contraseña son requeridos' }, { status: 400 })
+    }
+
+    // Check if there are any superusers in the system
+    const existingSuperusers = await prisma.user.findMany({
+      where: { superuser: true }
+    })
+
+    // Determine tenant: use provided tenantId if superuser or if no superusers exist, otherwise use current user's tenant
+    let finalTenantId = currentUser.tenantId
+    if (tenantId && (currentUser.superuser || existingSuperusers.length === 0)) {
+      finalTenantId = tenantId
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -51,13 +105,24 @@ export async function POST(req: NextRequest) {
         name,
         email,
         password: hashedPassword,
+        tenantId: finalTenantId,
+        superuser: false, // New users are not superusers by default
       },
       select: {
         id: true,
         name: true,
         email: true,
+        tenantId: true,
+        superuser: true,
         isActive: true,
         createdAt: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        }
       },
     })
 
@@ -70,7 +135,22 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, name, email, password } = await req.json()
+    const token = req.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const payload = await verifyToken(token)
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, tenantId: true, superuser: true }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    const { id, name, email, password, tenantId, superuser } = await req.json()
 
     if (!id || !name || !email) {
       return NextResponse.json(
@@ -88,6 +168,21 @@ export async function PUT(req: NextRequest) {
       updateData.password = await hashPassword(password)
     }
 
+    // Check if there are any superusers in the system
+    const existingSuperusers = await prisma.user.findMany({
+      where: { superuser: true }
+    })
+
+    // Only superusers can change tenant, OR anyone can if there are no superusers
+    if (tenantId && (currentUser.superuser || existingSuperusers.length === 0)) {
+      updateData.tenantId = tenantId
+    }
+
+    // Allow setting superuser only if there are no existing superusers
+    if (superuser !== undefined && existingSuperusers.length === 0) {
+      updateData.superuser = superuser
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -95,8 +190,17 @@ export async function PUT(req: NextRequest) {
         id: true,
         name: true,
         email: true,
+        tenantId: true,
+        superuser: true,
         isActive: true,
         createdAt: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        }
       },
     })
 
