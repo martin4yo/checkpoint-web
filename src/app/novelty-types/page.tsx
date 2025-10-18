@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Tag, DollarSign, Calendar, CalendarRange, Paperclip } from 'lucide-react'
+import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon, availableIcons, availableColors } from '@/lib/lucide-icons'
 

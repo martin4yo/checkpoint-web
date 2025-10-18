@@ -5,8 +5,9 @@ import { verifyToken } from '@/lib/auth'
 // POST /api/novelties/[id]/approve - Approve or reject a novelty
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {

@@ -136,8 +136,7 @@ export async function POST(
 
 // DELETE /api/novelties/[id]/attachments - Delete attachment
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  req: NextRequest
 ) {
   try {
     const token = req.cookies.get('token')?.value
