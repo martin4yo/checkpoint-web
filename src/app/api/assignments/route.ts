@@ -41,6 +41,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Get user's tenantId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      )
+    }
+
     // Verificar que no existe ya la asignación
     const existingAssignment = await prisma.userPlaceAssignment.findUnique({
       where: {
@@ -62,6 +75,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId,
         placeId,
+        tenantId: user.tenantId,
       },
       include: {
         user: {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { verifyToken } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const places = await prisma.place.findMany({
       include: {
@@ -24,6 +25,21 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = req.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const payload = await verifyToken(token)
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const { name, address, latitude, longitude } = await req.json()
 
     if (!name || !address || latitude === undefined || longitude === undefined) {
@@ -36,6 +52,7 @@ export async function POST(req: NextRequest) {
         address,
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
+        tenantId: user.tenantId,
       },
     })
 

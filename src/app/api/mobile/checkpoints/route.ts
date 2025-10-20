@@ -17,6 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
+    // Get user's tenantId
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const formData = await req.formData()
     const placeId = formData.get('placeId') as string | null
     const placeName = formData.get('placeName') as string
@@ -63,6 +73,7 @@ export async function POST(req: NextRequest) {
         timestamp: new Date(timestamp),
         notes: notes || null,
         imageUrl,
+        tenantId: user.tenantId,
       },
     })
 
