@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         email: true,
         tenantId: true,
         superuser: true,
+        authorizesNovelties: true,
         isActive: true,
         createdAt: true,
         tenant: {
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { name, email, password, tenantId } = await req.json()
+    const { name, email, password, tenantId, authorizesNovelties } = await req.json()
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Nombre, email y contraseña son requeridos' }, { status: 400 })
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         tenantId: finalTenantId,
         superuser: false, // New users are not superusers by default
+        authorizesNovelties: authorizesNovelties || false,
       },
       select: {
         id: true,
@@ -122,6 +124,7 @@ export async function POST(req: NextRequest) {
         email: true,
         tenantId: true,
         superuser: true,
+        authorizesNovelties: true,
         isActive: true,
         createdAt: true,
         tenant: {
@@ -162,7 +165,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { id, name, email, password, tenantId, superuser } = await req.json()
+    const { id, name, email, password, tenantId, superuser, authorizesNovelties } = await req.json()
 
     if (!id || !name || !email) {
       return NextResponse.json(
@@ -195,6 +198,11 @@ export async function PUT(req: NextRequest) {
       updateData.superuser = superuser
     }
 
+    // Anyone can update authorizesNovelties
+    if (authorizesNovelties !== undefined) {
+      updateData.authorizesNovelties = authorizesNovelties
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -204,6 +212,7 @@ export async function PUT(req: NextRequest) {
         email: true,
         tenantId: true,
         superuser: true,
+        authorizesNovelties: true,
         isActive: true,
         createdAt: true,
         tenant: {

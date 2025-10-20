@@ -17,6 +17,7 @@ interface User {
   email: string
   tenantId: string
   superuser: boolean
+  authorizesNovelties: boolean
   isActive: boolean
   createdAt: string
   tenant: Tenant
@@ -39,6 +40,7 @@ export default function UsersPage() {
     password: '',
     tenantId: '',
     superuser: false,
+    authorizesNovelties: false,
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [filterTenantId, setFilterTenantId] = useState('')
@@ -118,6 +120,7 @@ export default function UsersPage() {
       password: '',
       tenantId: user.tenantId,
       superuser: user.superuser,
+      authorizesNovelties: user.authorizesNovelties || false,
     })
     setShowForm(true)
   }
@@ -184,6 +187,7 @@ export default function UsersPage() {
       password: '',
       tenantId: tenants[0]?.id || '',
       superuser: false,
+      authorizesNovelties: false,
     })
     setEditingUser(null)
     setShowForm(false)
@@ -345,21 +349,36 @@ export default function UsersPage() {
                   </div>
                 )}
               </div>
-              {canEditSuperuser && editingUser && (
-                <div className="flex items-center pt-2 border-t border-gray-200 mt-4 pt-4">
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                {canEditSuperuser && editingUser && (
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="superuser"
+                      checked={formData.superuser}
+                      onChange={(e) => setFormData({ ...formData, superuser: e.target.checked })}
+                      className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                    />
+                    <label htmlFor="superuser" className="ml-2 block text-sm font-medium text-gray-900">
+                      Super Usuario
+                    </label>
+                    <span className="ml-2 text-xs text-gray-500">(puede gestionar todos los tenants y usuarios)</span>
+                  </div>
+                )}
+                <div className="flex items-center">
                   <input
                     type="checkbox"
-                    id="superuser"
-                    checked={formData.superuser}
-                    onChange={(e) => setFormData({ ...formData, superuser: e.target.checked })}
+                    id="authorizesNovelties"
+                    checked={formData.authorizesNovelties}
+                    onChange={(e) => setFormData({ ...formData, authorizesNovelties: e.target.checked })}
                     className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
                   />
-                  <label htmlFor="superuser" className="ml-2 block text-sm font-medium text-gray-900">
-                    Super Usuario
+                  <label htmlFor="authorizesNovelties" className="ml-2 block text-sm font-medium text-gray-900">
+                    Autoriza Novedades
                   </label>
-                  <span className="ml-2 text-xs text-gray-500">(puede gestionar todos los tenants y usuarios)</span>
+                  <span className="ml-2 text-xs text-gray-500">(puede aprobar o rechazar novedades)</span>
                 </div>
-              )}
+              </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"

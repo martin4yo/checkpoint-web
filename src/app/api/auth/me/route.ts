@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         name: true,
         email: true,
         superuser: true,
+        authorizesNovelties: true,
         tenant: {
           select: {
             id: true,

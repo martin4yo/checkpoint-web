@@ -29,23 +29,24 @@ model Tenant {
 }
 
 model User {
-  id              String                @id @default(cuid())
-  name            String
-  email           String                @unique
-  password        String
-  tenantId        String
-  superuser       Boolean               @default(false)
-  isActive        Boolean               @default(true)
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  tenant          Tenant                @relation(fields: [tenantId], references: [id])
-  checkpoints     Checkpoint[]
-  assignments     UserPlaceAssignment[]
-  journeyLocations JourneyLocation[]
-  pushTokens      PushToken[]
-  journeyMonitors JourneyMonitor[]
-  novelties       Novelty[]
-  approvedNovelties Novelty[] @relation("ApprovedBy")
+  id                  String                @id @default(cuid())
+  name                String
+  email               String                @unique
+  password            String
+  tenantId            String
+  superuser           Boolean               @default(false)
+  authorizesNovelties Boolean               @default(false)
+  isActive            Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  checkpoints         Checkpoint[]
+  assignments         UserPlaceAssignment[]
+  journeyLocations    JourneyLocation[]
+  pushTokens          PushToken[]
+  journeyMonitors     JourneyMonitor[]
+  novelties           Novelty[]
+  approvedNovelties   Novelty[]             @relation("ApprovedBy")
 
   @@map("users")
 }

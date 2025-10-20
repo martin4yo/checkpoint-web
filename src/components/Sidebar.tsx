@@ -32,6 +32,7 @@ interface CurrentUser {
   name: string
   email: string
   superuser: boolean
+  authorizesNovelties: boolean
   tenant: Tenant
 }
 

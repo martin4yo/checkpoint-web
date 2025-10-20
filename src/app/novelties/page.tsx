@@ -34,6 +34,7 @@ interface CurrentUser {
   id: string
   tenantId: string
   superuser: boolean
+  authorizesNovelties: boolean
 }
 
 interface Novelty {
@@ -851,27 +852,37 @@ export default function NoveltiesPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     {novelty.status === 'PENDING' ? (
                       <>
-                        <button
-                          onClick={() => handleEdit(novelty)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar"
-                        >
-                          <Edit2 className="h-4 w-4 inline" />
-                        </button>
-                        <button
-                          onClick={() => handleApprove(novelty.id, 'APPROVED')}
-                          className="text-green-600 hover:text-green-900"
-                          title="Aprobar"
-                        >
-                          <Check className="h-4 w-4 inline" />
-                        </button>
-                        <button
-                          onClick={() => handleApprove(novelty.id, 'REJECTED')}
-                          className="text-red-600 hover:text-red-900"
-                          title="Rechazar"
-                        >
-                          <X className="h-4 w-4 inline" />
-                        </button>
+                        {/* Show edit button only if user created this novelty */}
+                        {novelty.userId === currentUser?.id && (
+                          <button
+                            onClick={() => handleEdit(novelty)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Editar"
+                          >
+                            <Edit2 className="h-4 w-4 inline" />
+                          </button>
+                        )}
+
+                        {/* Show approve/reject buttons only if user authorizes novelties */}
+                        {currentUser?.authorizesNovelties && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(novelty.id, 'APPROVED')}
+                              className="text-green-600 hover:text-green-900"
+                              title="Aprobar"
+                            >
+                              <Check className="h-4 w-4 inline" />
+                            </button>
+                            <button
+                              onClick={() => handleApprove(novelty.id, 'REJECTED')}
+                              className="text-red-600 hover:text-red-900"
+                              title="Rechazar"
+                            >
+                              <X className="h-4 w-4 inline" />
+                            </button>
+                          </>
+                        )}
+
                         <button
                           onClick={() => handleDelete(novelty.id, novelty.status)}
                           className="text-red-600 hover:text-red-900"
