@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Home,
   MapPin,
@@ -17,8 +17,23 @@ import {
   ChevronLeft,
   Building2,
   FileText,
-  Tag
+  Tag,
+  User
 } from 'lucide-react'
+
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
+
+interface CurrentUser {
+  id: string
+  name: string
+  email: string
+  superuser: boolean
+  tenant: Tenant
+}
 
 const MapMarkerIcon = () => (
   <svg
@@ -35,6 +50,26 @@ export default function Sidebar() {
   const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+
+  useEffect(() => {
+    // Only fetch user if not on login page
+    if (pathname !== '/login') {
+      fetchCurrentUser()
+    }
+  }, [pathname])
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me')
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentUser(data)
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error)
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -162,21 +197,62 @@ export default function Sidebar() {
           </ul>
         </nav>
 
-        {/* Footer - Logout Button */}
-        <div className="border-t border-gray-200 p-3">
-          <button
-            onClick={handleLogout}
-            className={`
-              flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg
-              hover:bg-red-50 hover:text-red-700 transition-colors group
-            `}
-            title={isCollapsed ? 'Cerrar Sesión' : undefined}
-          >
-            <LogOut className="h-5 w-5 flex-shrink-0 text-gray-500 group-hover:text-red-600" />
-            {!isCollapsed && (
-              <span className="ml-3 truncate">Cerrar Sesión</span>
-            )}
-          </button>
+        {/* Footer - User Info & Logout */}
+        <div className="border-t border-gray-200">
+          {/* User Info */}
+          {currentUser && (
+            <div className={`p-3 border-b border-gray-200 ${isCollapsed ? 'flex justify-center' : ''}`}>
+              {!isCollapsed ? (
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center">
+                      <User className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {currentUser.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {currentUser.email}
+                    </p>
+                    <div className="flex items-center mt-1">
+                      <Building2 className="h-3 w-3 text-gray-400 mr-1" />
+                      <p className="text-xs text-gray-600 truncate">
+                        {currentUser.tenant.name}
+                      </p>
+                    </div>
+                    {currentUser.superuser && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+                        Superusuario
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center" title={currentUser.name}>
+                  <User className="h-5 w-5" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <div className="p-3">
+            <button
+              onClick={handleLogout}
+              className={`
+                flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg
+                hover:bg-red-50 hover:text-red-700 transition-colors group
+              `}
+              title={isCollapsed ? 'Cerrar Sesión' : undefined}
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0 text-gray-500 group-hover:text-red-600" />
+              {!isCollapsed && (
+                <span className="ml-3 truncate">Cerrar Sesión</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
