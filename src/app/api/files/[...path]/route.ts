@@ -43,7 +43,7 @@ export async function GET(
 
     const mimeType = mimeTypes[ext || ''] || 'application/octet-stream'
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': mimeType,
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
