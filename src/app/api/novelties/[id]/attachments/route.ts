@@ -7,8 +7,9 @@ import { join } from 'path'
 // GET /api/novelties/[id]/attachments - List attachments for a novelty
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {
@@ -53,8 +54,9 @@ export async function GET(
 // POST /api/novelties/[id]/attachments - Upload attachment
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {

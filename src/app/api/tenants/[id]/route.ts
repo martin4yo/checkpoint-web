@@ -5,8 +5,9 @@ import { verifyToken } from '@/lib/auth'
 // GET /api/tenants/[id] - Get a single tenant
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {
@@ -55,8 +56,9 @@ export async function GET(
 // PUT /api/tenants/[id] - Update a tenant
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {
@@ -116,8 +118,9 @@ export async function PUT(
 // DELETE /api/tenants/[id] - Delete a tenant
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const token = req.cookies.get('token')?.value
     if (!token) {
