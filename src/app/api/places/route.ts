@@ -25,23 +25,37 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('POST /api/places - Starting...')
     const token = req.cookies.get('token')?.value
+    console.log('Token found:', !!token)
+
     if (!token) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+      console.log('No token in cookies')
+      return NextResponse.json({ error: 'No autenticado - no hay token' }, { status: 401 })
     }
 
     const payload = await verifyToken(token)
+    console.log('Token payload:', payload)
+
     if (!payload) {
+      console.log('Token verification failed')
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { tenantId: true }
+      select: { id: true, tenantId: true, name: true }
     })
+    console.log('User found:', user)
 
     if (!user) {
+      console.log('User not found for userId:', payload.userId)
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
+    if (!user.tenantId) {
+      console.log('User has no tenantId:', user)
+      return NextResponse.json({ error: 'Usuario no tiene tenant asignado' }, { status: 400 })
     }
 
     const { name, address, latitude, longitude } = await req.json()
@@ -50,6 +64,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
     }
 
+    console.log('Creating place with tenantId:', user.tenantId)
     const place = await prisma.place.create({
       data: {
         name,
@@ -60,10 +75,11 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    console.log('Place created successfully:', place.id)
     return NextResponse.json(place, { status: 201 })
   } catch (error) {
     console.error('Create place error:', error)
-    return NextResponse.json({ error: 'Error al crear lugar' }, { status: 500 })
+    return NextResponse.json({ error: 'Error al crear lugar: ' + (error as Error).message }, { status: 500 })
   }
 }
 
