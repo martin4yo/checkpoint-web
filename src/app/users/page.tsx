@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react'
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users, Search } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 
 interface Tenant {
@@ -40,6 +40,8 @@ export default function UsersPage() {
     tenantId: '',
     superuser: false,
   })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterTenantId, setFilterTenantId] = useState('')
   const { confirm, ConfirmDialog } = useConfirm()
 
   useEffect(() => {
@@ -187,6 +189,33 @@ export default function UsersPage() {
     setShowForm(false)
   }
 
+  // Filter users based on search term and tenant filter
+  const filteredUsers = users.filter(user => {
+    // Filter by tenant
+    if (filterTenantId && user.tenantId !== filterTenantId) {
+      return false
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      const matchesName = user.name.toLowerCase().includes(searchLower)
+      const matchesEmail = user.email.toLowerCase().includes(searchLower)
+      const matchesTenantName = user.tenant.name.toLowerCase().includes(searchLower)
+      const matchesTenantSlug = user.tenant.slug.toLowerCase().includes(searchLower)
+      const matchesRole = user.superuser
+        ? 'superusuario'.includes(searchLower)
+        : 'usuario'.includes(searchLower)
+      const matchesStatus = user.isActive
+        ? 'activo'.includes(searchLower)
+        : 'inactivo'.includes(searchLower)
+
+      return matchesName || matchesEmail || matchesTenantName || matchesTenantSlug || matchesRole || matchesStatus
+    }
+
+    return true
+  })
+
   // Check if there are any superusers
   const hasSuperuser = users.some(u => u.superuser)
   // Allow editing tenant and superuser if current user is superuser or if there are no superusers
@@ -208,7 +237,7 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
-            Lista de Usuarios ({users.length})
+            Lista de Usuarios ({filteredUsers.length}{filteredUsers.length !== users.length && ` de ${users.length}`})
           </h2>
           <button
             onClick={() => {
@@ -220,6 +249,36 @@ export default function UsersPage() {
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Usuario
           </button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, email, tenant, rol o estado..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              />
+            </div>
+            <div>
+              <select
+                value={filterTenantId}
+                onChange={(e) => setFilterTenantId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Todos los tenants</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {showForm && (
@@ -345,7 +404,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{user.name}</div>
@@ -410,9 +469,11 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
-          {users.length === 0 && (
+          {filteredUsers.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay usuarios registrados
+              {users.length === 0
+                ? 'No hay usuarios registrados'
+                : 'No se encontraron usuarios con los filtros aplicados'}
             </div>
           )}
         </div>

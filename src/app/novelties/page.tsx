@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload } from 'lucide-react'
+import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, Building2 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon } from '@/lib/lucide-icons'
 
@@ -17,10 +17,23 @@ interface NoveltyType {
   allowsAttachments: boolean
 }
 
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
+
 interface User {
   id: string
   name: string
   email: string
+  tenant?: Tenant
+}
+
+interface CurrentUser {
+  id: string
+  tenantId: string
+  superuser: boolean
 }
 
 interface Novelty {
@@ -55,6 +68,9 @@ interface Attachment {
 export default function NoveltiesPage() {
   const [novelties, setNovelties] = useState<Novelty[]>([])
   const [noveltyTypes, setNoveltyTypes] = useState<NoveltyType[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [filterTenantId, setFilterTenantId] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingNovelty, setEditingNovelty] = useState<Novelty | null>(null)
@@ -77,14 +93,23 @@ export default function NoveltiesPage() {
   useEffect(() => {
     fetchNovelties()
     fetchNoveltyTypes()
-  }, [])
+  }, [filterTenantId])
 
   const fetchNovelties = async () => {
     try {
-      const response = await fetch('/api/novelties')
+      const url = filterTenantId
+        ? `/api/novelties?tenantId=${filterTenantId}`
+        : '/api/novelties'
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        setNovelties(data)
+        setNovelties(data.novelties)
+        setCurrentUser(data.currentUser)
+
+        // Fetch tenants if user is superuser (only on first load)
+        if (data.currentUser.superuser && tenants.length === 0) {
+          fetchTenants()
+        }
       }
     } catch (error) {
       console.error('Error fetching novelties:', error)
@@ -98,11 +123,23 @@ export default function NoveltiesPage() {
       const response = await fetch('/api/novelty-types')
       if (response.ok) {
         const data = await response.json()
-        const activeTypes = data.filter((t: NoveltyType & { isActive: boolean }) => t.isActive)
+        const activeTypes = data.noveltyTypes.filter((t: NoveltyType & { isActive: boolean }) => t.isActive)
         setNoveltyTypes(activeTypes)
       }
     } catch (error) {
       console.error('Error fetching novelty types:', error)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
     }
   }
 
@@ -423,7 +460,7 @@ export default function NoveltiesPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
-            Mis Novedades ({novelties.length})
+            {currentUser?.superuser ? 'Novedades' : 'Mis Novedades'} ({novelties.length})
           </h2>
           <button
             onClick={() => {
@@ -436,6 +473,27 @@ export default function NoveltiesPage() {
             Nueva Novedad
           </button>
         </div>
+
+        {/* Tenant Filter - Only for Superusers */}
+        {currentUser?.superuser && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center space-x-3">
+              <Building2 className="h-5 w-5 text-gray-400" />
+              <select
+                value={filterTenantId}
+                onChange={(e) => setFilterTenantId(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Mi tenant ({currentUser?.tenantId ? tenants.find(t => t.id === currentUser.tenantId)?.name || 'Actual' : 'Actual'})</option>
+                {tenants.filter(t => t.id !== currentUser?.tenantId).map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Form Modal */}
         {showForm && (
@@ -714,6 +772,11 @@ export default function NoveltiesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tipo / Usuario
                 </th>
+                {currentUser?.superuser && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tenant
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Detalles
                 </th>
@@ -745,6 +808,12 @@ export default function NoveltiesPage() {
                       </div>
                     </div>
                   </td>
+                  {currentUser?.superuser && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{novelty.user.tenant?.name}</div>
+                      <div className="text-xs text-gray-500">{novelty.user.tenant?.slug}</div>
+                    </td>
+                  )}
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
                       {novelty.amount && <div>Importe: ${novelty.amount}</div>}

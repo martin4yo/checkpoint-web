@@ -24,9 +24,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Superusers can see all novelties from their tenant, regular users only see their own
-    const whereClause = currentUser.superuser
-      ? { tenantId: currentUser.tenantId }
+    // Superusers can see all novelties from their tenant or filter by specific tenant, regular users only see their own
+    const { searchParams } = new URL(req.url)
+    const filterTenantId = searchParams.get('tenantId')
+
+    let whereClause: any = currentUser.superuser
+      ? (filterTenantId ? { tenantId: filterTenantId } : { tenantId: currentUser.tenantId })
       : { tenantId: currentUser.tenantId, userId: currentUser.id }
 
     const novelties = await prisma.novelty.findMany({
@@ -36,7 +39,14 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            tenant: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
           }
         },
         noveltyType: {
@@ -67,7 +77,14 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(novelties)
+    return NextResponse.json({
+      novelties,
+      currentUser: {
+        id: currentUser.id,
+        tenantId: currentUser.tenantId,
+        superuser: currentUser.superuser
+      }
+    })
   } catch (error) {
     console.error('Error fetching novelties:', error)
     return NextResponse.json({ error: 'Error al obtener novedades' }, { status: 500 })

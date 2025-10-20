@@ -24,7 +24,8 @@
       "Bash(done)",
       "Bash(for file in src/app/api/tenants/route.ts src/app/api/mobile/places/route.ts)",
       "Bash(echo \"=== $file ===\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(wait)"
     ],
     "deny": [],
     "ask": []

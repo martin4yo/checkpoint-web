@@ -24,12 +24,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Filter by tenant (superusers can see all)
-    const whereClause = currentUser.superuser ? {} : { tenantId: currentUser.tenantId }
+    // Filter by tenant (superusers can see all or filter by specific tenant)
+    const { searchParams } = new URL(req.url)
+    const filterTenantId = searchParams.get('tenantId')
+
+    let whereClause: any = currentUser.superuser
+      ? (filterTenantId ? { tenantId: filterTenantId } : {})
+      : { tenantId: currentUser.tenantId }
 
     const noveltyTypes = await prisma.noveltyType.findMany({
       where: whereClause,
       include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
         _count: {
           select: {
             novelties: true
@@ -39,7 +51,14 @@ export async function GET(req: NextRequest) {
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(noveltyTypes)
+    return NextResponse.json({
+      noveltyTypes,
+      currentUser: {
+        id: currentUser.id,
+        tenantId: currentUser.tenantId,
+        superuser: currentUser.superuser
+      }
+    })
   } catch (error) {
     console.error('Error fetching novelty types:', error)
     return NextResponse.json({ error: 'Error al obtener tipos de novedades' }, { status: 500 })

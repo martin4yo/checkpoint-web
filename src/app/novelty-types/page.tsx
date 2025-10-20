@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip } from 'lucide-react'
+import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip, Building2 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon, availableIcons, availableColors } from '@/lib/lucide-icons'
+
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
 
 interface NoveltyType {
   id: string
@@ -18,13 +24,23 @@ interface NoveltyType {
   allowsAttachments: boolean
   isActive: boolean
   createdAt: string
+  tenant: Tenant
   _count?: {
     novelties: number
   }
 }
 
+interface CurrentUser {
+  id: string
+  tenantId: string
+  superuser: boolean
+}
+
 export default function NoveltyTypesPage() {
   const [noveltyTypes, setNoveltyTypes] = useState<NoveltyType[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [filterTenantId, setFilterTenantId] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingType, setEditingType] = useState<NoveltyType | null>(null)
@@ -43,19 +59,40 @@ export default function NoveltyTypesPage() {
 
   useEffect(() => {
     fetchNoveltyTypes()
-  }, [])
+  }, [filterTenantId])
 
   const fetchNoveltyTypes = async () => {
     try {
-      const response = await fetch('/api/novelty-types')
+      const url = filterTenantId
+        ? `/api/novelty-types?tenantId=${filterTenantId}`
+        : '/api/novelty-types'
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        setNoveltyTypes(data)
+        setNoveltyTypes(data.noveltyTypes)
+        setCurrentUser(data.currentUser)
+
+        // Fetch tenants if user is superuser (only on first load)
+        if (data.currentUser.superuser && tenants.length === 0) {
+          fetchTenants()
+        }
       }
     } catch (error) {
       console.error('Error fetching novelty types:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
     }
   }
 
@@ -176,6 +213,27 @@ export default function NoveltyTypesPage() {
             Nuevo Tipo
           </button>
         </div>
+
+        {/* Tenant Filter - Only for Superusers */}
+        {currentUser?.superuser && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center space-x-3">
+              <Building2 className="h-5 w-5 text-gray-400" />
+              <select
+                value={filterTenantId}
+                onChange={(e) => setFilterTenantId(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Todos los tenants</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Form Modal */}
         {showForm && (
@@ -362,6 +420,11 @@ export default function NoveltyTypesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tipo
                 </th>
+                {currentUser?.superuser && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tenant
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Campos Configurados
                 </th>
@@ -395,6 +458,12 @@ export default function NoveltyTypesPage() {
                       </div>
                     </div>
                   </td>
+                  {currentUser?.superuser && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{type.tenant.name}</div>
+                      <div className="text-xs text-gray-500">{type.tenant.slug}</div>
+                    </td>
+                  )}
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
                       {type.requiresAmount && (
