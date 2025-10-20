@@ -569,7 +569,7 @@ export default function NoveltiesPage() {
                             </div>
                             <div className="flex items-center space-x-2 ml-2">
                               <a
-                                href={attachment.fileUrl}
+                                href={`/api/files${attachment.fileUrl}`}
                                 download
                                 className="text-blue-600 hover:text-blue-800"
                                 title="Descargar"
@@ -686,10 +686,8 @@ export default function NoveltiesPage() {
                         </div>
                       </div>
                       <a
-                        href={attachment.fileUrl}
+                        href={`/api/files${attachment.fileUrl}`}
                         download
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="ml-3 inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                         title="Descargar archivo"
                       >
