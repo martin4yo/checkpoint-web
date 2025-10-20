@@ -27,7 +27,8 @@
       "Bash(npx tsc:*)",
       "Bash(wait)",
       "Bash(echo:*)",
-      "Bash(PGPASSWORD=Q27G4B98 psql -h 149.50.148.198 -U postgres -d checkpoint_db -f prisma/migrations/20251020144919_add_authorizes_novelties_to_user/migration.sql)"
+      "Bash(PGPASSWORD=Q27G4B98 psql -h 149.50.148.198 -U postgres -d checkpoint_db -f prisma/migrations/20251020144919_add_authorizes_novelties_to_user/migration.sql)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

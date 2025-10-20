@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { sendNoveltyStatusEmail } from '@/lib/email'
 
 // POST /api/novelties/[id]/approve - Approve or reject a novelty
 export async function POST(
@@ -21,17 +22,17 @@ export async function POST(
 
     const currentUser = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, tenantId: true, superuser: true }
+      select: { id: true, name: true, tenantId: true, superuser: true, authorizesNovelties: true }
     })
 
     if (!currentUser) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Only superusers can approve/reject
-    if (!currentUser.superuser) {
+    // Only users with authorizesNovelties permission can approve/reject
+    if (!currentUser.authorizesNovelties && !currentUser.superuser) {
       return NextResponse.json(
-        { error: 'Solo los administradores pueden aprobar/rechazar novedades' },
+        { error: 'No tienes permisos para aprobar/rechazar novedades' },
         { status: 403 }
       )
     }
@@ -90,6 +91,21 @@ export async function POST(
         }
       }
     })
+
+    // Send email notification to the user who created the novelty
+    try {
+      const webAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+      await sendNoveltyStatusEmail(updatedNovelty.user.email, {
+        noveltyTypeName: updatedNovelty.noveltyType.name,
+        status: status as 'APPROVED' | 'REJECTED',
+        approverName: currentUser.name,
+        webAppUrl
+      })
+    } catch (emailError) {
+      console.error('Error sending novelty status email:', emailError)
+      // Don't fail the request if email fails
+    }
 
     return NextResponse.json(updatedNovelty)
   } catch (error) {

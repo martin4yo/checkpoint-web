@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { sendNoveltyCreatedEmail } from '@/lib/email'
 
 // GET /api/novelties - List novelties
 export async function GET(req: NextRequest) {
@@ -158,6 +159,41 @@ export async function POST(req: NextRequest) {
         noveltyType: true
       }
     })
+
+    // Send email notification to users who can authorize novelties
+    try {
+      const authorizingUsers = await prisma.user.findMany({
+        where: {
+          tenantId: currentUser.tenantId,
+          authorizesNovelties: true,
+          isActive: true
+        },
+        select: {
+          email: true
+        }
+      })
+
+      if (authorizingUsers.length > 0) {
+        const emails = authorizingUsers.map(u => u.email)
+        const webAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+        await sendNoveltyCreatedEmail(emails, {
+          noveltyId: novelty.id,
+          noveltyTypeName: novelty.noveltyType.name,
+          userName: novelty.user.name,
+          userEmail: novelty.user.email,
+          amount: novelty.amount || undefined,
+          date: novelty.date?.toISOString(),
+          startDate: novelty.startDate?.toISOString(),
+          endDate: novelty.endDate?.toISOString(),
+          notes: novelty.notes || undefined,
+          webAppUrl
+        })
+      }
+    } catch (emailError) {
+      console.error('Error sending novelty notification email:', emailError)
+      // Don't fail the request if email fails
+    }
 
     return NextResponse.json(novelty, { status: 201 })
   } catch (error) {
