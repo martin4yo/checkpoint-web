@@ -13,7 +13,18 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nAdd multitenancy and novelties features, remove WebSocket functionality\n\n- Add Tenant model and multitenancy support across all models\n- Add Novelty and NoveltyType models for tracking employee requests\n- Remove WebSocket server and live monitoring features\n- Update API routes to support tenant isolation\n- Add migrations for multitenancy schema changes\n- Remove ws and @types/ws dependencies from package.json\n- Update Claude permissions in settings.local.json\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(for file in src/app/api/novelties/[id]/attachments/route.ts src/app/api/novelties/route.ts src/app/api/novelty-types/route.ts src/app/api/users/route.ts)",
+      "Bash(do)",
+      "Bash(if grep -q \"const payload = await verifyToken(token)\" \"$file\")",
+      "Bash(then)",
+      "Bash(echo \"Processing $file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for file in src/app/api/tenants/route.ts src/app/api/mobile/places/route.ts)",
+      "Bash(echo \"=== $file ===\")",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

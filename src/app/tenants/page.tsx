@@ -89,11 +89,11 @@ export default function TenantsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    const confirmed = await confirm(
-      '¿Estás seguro de que quieres eliminar este tenant?',
-      'Confirmar eliminación',
-      'danger'
-    )
+    const confirmed = await confirm({
+      title: 'Confirmar eliminación',
+      message: '¿Estás seguro de que quieres eliminar este tenant?',
+      type: 'danger'
+    })
 
     if (!confirmed) return
 

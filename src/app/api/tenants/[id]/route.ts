@@ -15,6 +15,10 @@ export async function GET(
     }
 
     const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: payload.userId }
     })
@@ -66,6 +70,10 @@ export async function PUT(
     }
 
     const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: payload.userId }
     })
@@ -128,6 +136,10 @@ export async function DELETE(
     }
 
     const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: payload.userId }
     })

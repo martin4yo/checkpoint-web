@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const places = await prisma.place.findMany({
       include: {
@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: { tenantId: true }

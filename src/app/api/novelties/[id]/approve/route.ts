@@ -15,6 +15,10 @@ export async function POST(
     }
 
     const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
     const currentUser = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: { id: true, tenantId: true, superuser: true }

@@ -19,6 +19,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user's tenantId
+    const user = await prisma.user.findUnique({
+      where: { id: tokenData.userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const body = await request.json();
     const { journey_id, locations } = body;
 
@@ -66,6 +76,7 @@ export async function POST(request: NextRequest) {
           latitude: location.latitude,
           longitude: location.longitude,
           recordedAt: new Date(location.timestamp),
+          tenantId: user.tenantId,
           createdAt: new Date()
         }
       });
