@@ -93,29 +93,37 @@ export default function Sidebar() {
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="relative flex items-center justify-between p-4 border-b border-gray-200">
           {!isCollapsed ? (
-            <Link href="/" className="flex items-center text-xl font-bold text-black" onClick={closeMobile}>
-              <MapMarkerIcon />
-              <span className="ml-2">Checkpoint</span>
-            </Link>
-          ) : (
-            <Link href="/" className="flex items-center justify-center w-full" onClick={closeMobile}>
-              <MapMarkerIcon />
-            </Link>
-          )}
+            <>
+              <Link href="/" className="flex items-center text-xl font-bold text-black" onClick={closeMobile}>
+                <MapMarkerIcon />
+                <span className="ml-2">Checkpoint</span>
+              </Link>
 
-          {/* Collapse button (desktop only) */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-          >
-            <ChevronLeft
-              className={`h-5 w-5 text-gray-600 transition-transform duration-200 ${
-                isCollapsed ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
+              {/* Collapse button (desktop only) - expanded state */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600 transition-transform duration-200" />
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center w-full space-y-2">
+              <Link href="/" className="flex items-center justify-center" onClick={closeMobile}>
+                <MapMarkerIcon />
+              </Link>
+
+              {/* Collapse button (desktop only) - collapsed state */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex p-1 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4 text-gray-600 transition-transform duration-200 rotate-180" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
