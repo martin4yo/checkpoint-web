@@ -70,6 +70,8 @@ export default function NoveltiesPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [uploadingFile, setUploadingFile] = useState(false)
+  const [viewingAttachments, setViewingAttachments] = useState<Novelty | null>(null)
+  const [viewAttachments, setViewAttachments] = useState<Attachment[]>([])
   const { confirm, ConfirmDialog } = useConfirm()
 
   useEffect(() => {
@@ -358,6 +360,20 @@ export default function NoveltiesPage() {
     }
   }
 
+  const handleViewAttachments = async (novelty: Novelty) => {
+    try {
+      const response = await fetch(`/api/novelties/${novelty.id}/attachments`)
+      if (response.ok) {
+        const data = await response.json()
+        setViewAttachments(data)
+        setViewingAttachments(novelty)
+      }
+    } catch (error) {
+      console.error('Error fetching attachments:', error)
+      alert('Error al cargar archivos adjuntos')
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       noveltyTypeId: '',
@@ -637,6 +653,61 @@ export default function NoveltiesPage() {
           </div>
         )}
 
+        {/* View Attachments Modal */}
+        {viewingAttachments && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">
+                  Archivos Adjuntos - {viewingAttachments.noveltyType.name}
+                </h3>
+                <button
+                  onClick={() => {
+                    setViewingAttachments(null)
+                    setViewAttachments([])
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {viewAttachments.length > 0 ? (
+                <div className="space-y-2">
+                  {viewAttachments.map((attachment) => (
+                    <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center flex-1 min-w-0">
+                        <Paperclip className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-gray-900 truncate">{attachment.fileName}</div>
+                          <div className="text-xs text-gray-500">
+                            {formatFileSize(attachment.fileSize)} • {new Date(attachment.uploadedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <a
+                        href={attachment.fileUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-3 inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                        title="Descargar archivo"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Descargar
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No hay archivos adjuntos
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Novelties Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
@@ -688,10 +759,14 @@ export default function NoveltiesPage() {
                       )}
                       {novelty.notes && <div className="text-xs text-gray-500 mt-1">{novelty.notes}</div>}
                       {novelty._count.attachments > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <button
+                          onClick={() => handleViewAttachments(novelty)}
+                          className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center"
+                          title="Ver archivos adjuntos"
+                        >
                           <Paperclip className="h-3 w-3 inline mr-1" />
                           {novelty._count.attachments} archivo(s)
-                        </div>
+                        </button>
                       )}
                     </div>
                   </td>
