@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const filterTenantId = searchParams.get('tenantId')
 
-    let whereClause: any = currentUser.superuser
+    const whereClause = currentUser.superuser
       ? (filterTenantId ? { tenantId: filterTenantId } : { tenantId: currentUser.tenantId })
       : { tenantId: currentUser.tenantId, userId: currentUser.id }
 
