@@ -220,11 +220,9 @@ export default function UsersPage() {
     return true
   })
 
-  // Check if there are any superusers
-  const hasSuperuser = users.some(u => u.superuser)
-  // Allow editing tenant and superuser if current user is superuser or if there are no superusers
-  const canEditTenant = currentUser?.superuser || !hasSuperuser
-  const canEditSuperuser = currentUser?.superuser || !hasSuperuser
+  // Only superusers can edit tenant and superuser fields
+  const canEditTenant = currentUser?.superuser
+  const canEditSuperuser = currentUser?.superuser
 
   if (loading) {
     return (
