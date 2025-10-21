@@ -140,87 +140,90 @@ export default function PlacesPage() {
           </h2>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center bg-secondary text-text-white px-4 py-2 rounded-lg hover:bg-secondary-hover transition-colors"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Lugar
           </button>
         </div>
 
+        {/* Form Modal */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {editingPlace ? 'Editar Lugar' : 'Nuevo Lugar'}
-            </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    required
-                  />
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-2xl mx-4">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingPlace ? 'Editar Lugar' : 'Nuevo Lugar'}
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dirección
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Latitud
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Longitud
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dirección
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    required
-                  />
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-text-primary hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-secondary text-text-white rounded-md hover:bg-secondary-hover transition-colors"
+                  >
+                    {editingPlace ? 'Actualizar' : 'Crear'}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Latitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Longitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-                >
-                  {editingPlace ? 'Actualizar' : 'Crear'}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         )}
 

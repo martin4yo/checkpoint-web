@@ -36,16 +36,6 @@ interface CurrentUser {
   tenant: Tenant
 }
 
-const MapMarkerIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-6 h-6 text-red-500"
-  >
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-  </svg>
-)
-
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -132,9 +122,14 @@ export default function Sidebar() {
         <div className="relative flex items-center justify-between p-4 border-b border-sidebar-hover">
           {!isCollapsed ? (
             <>
-              <Link href="/" className="flex items-center text-xl font-bold text-primary" onClick={closeMobile}>
-                <MapMarkerIcon />
-                <span className="ml-2">Checkpoint</span>
+              <Link href="/" className="flex items-center space-x-2" onClick={closeMobile}>
+                <img
+                  src="/axioma_logo.png"
+                  alt="Axioma"
+                  width={120}
+                  height={40}
+                  className="object-contain"
+                />
               </Link>
 
               {/* Collapse button (desktop only) - expanded state */}
@@ -148,7 +143,13 @@ export default function Sidebar() {
           ) : (
             <div className="flex flex-col items-center w-full space-y-2">
               <Link href="/" className="flex items-center justify-center" onClick={closeMobile}>
-                <MapMarkerIcon />
+                <img
+                  src="/axioma_logo.png"
+                  alt="Axioma"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </Link>
 
               {/* Collapse button (desktop only) - collapsed state */}
@@ -211,15 +212,15 @@ export default function Sidebar() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary truncate">
+                    <p className="text-sm font-medium text-text-white truncate">
                       {currentUser.name}
                     </p>
-                    <p className="text-xs text-text-light truncate">
+                    <p className="text-xs text-palette-cream truncate">
                       {currentUser.email}
                     </p>
                     <div className="flex items-center mt-1">
                       <Building2 className="h-3 w-3 text-accent mr-1" />
-                      <p className="text-xs text-primary truncate">
+                      <p className="text-xs text-text-white truncate">
                         {currentUser.tenant.name}
                       </p>
                     </div>
@@ -243,12 +244,12 @@ export default function Sidebar() {
             <button
               onClick={handleLogout}
               className={`
-                flex items-center w-full px-3 py-2.5 text-sm font-medium text-primary rounded-lg
+                flex items-center w-full px-3 py-2.5 text-sm font-medium text-text-white rounded-lg
                 hover:bg-danger hover:text-text-white transition-colors group
               `}
               title={isCollapsed ? 'Cerrar Sesión' : undefined}
             >
-              <LogOut className="h-5 w-5 flex-shrink-0 text-accent group-hover:text-text-white" />
+              <LogOut className="h-5 w-5 flex-shrink-0 text-text-white group-hover:text-text-white" />
               {!isCollapsed && (
                 <span className="ml-3 truncate">Cerrar Sesión</span>
               )}

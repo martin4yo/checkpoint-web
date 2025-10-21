@@ -7,7 +7,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Checkpoint - Panel de Administración",
+  title: "AxiomaCloud - Checkpoint",
   description: "Sistema de gestión de checkpoints y ubicaciones",
 };
 

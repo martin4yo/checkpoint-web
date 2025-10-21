@@ -43,11 +43,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full mx-4">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <MapMarkerIcon size={48} color="#EA4335" />
-          </div>
-          <h1 className="text-4xl font-bold text-black mb-2">Checkpoint</h1>
-          <p className="text-gray-600">Panel de administración</p>
+          <h1 className="text-4xl font-bold text-palette-dark mb-2">Checkpoint</h1>
+          <p className="text-palette-purple">Panel de administración</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
