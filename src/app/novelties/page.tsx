@@ -498,7 +498,7 @@ export default function NoveltiesPage() {
 
         {/* Form Modal */}
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-20 flex items-center justify-center z-50 overflow-y-auto">
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl my-8 mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">
                 {editingNovelty ? 'Editar Novedad' : 'Nueva Novedad'}
@@ -714,7 +714,7 @@ export default function NoveltiesPage() {
 
         {/* View Attachments Modal */}
         {viewingAttachments && (
-          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-20 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">
