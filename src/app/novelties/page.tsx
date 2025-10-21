@@ -253,16 +253,32 @@ export default function NoveltiesPage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string, status: string) => {
+  const handleDelete = async (novelty: Novelty) => {
     // Prevent deleting approved or rejected novelties
-    if (status !== 'PENDING') {
+    if (novelty.status !== 'PENDING') {
       alert('No se pueden eliminar novedades aprobadas o rechazadas')
       return
     }
 
     const confirmed = await confirm({
       title: 'Eliminar Novedad',
-      message: '¿Estás seguro de que quieres eliminar esta novedad?',
+      message: (
+        <div>
+          <div className="flex items-center space-x-3 mb-3 p-3 bg-gray-50 rounded-lg">
+            <div
+              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: novelty.noveltyType.color }}
+            >
+              <DynamicIcon name={novelty.noveltyType.icon} className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{novelty.noveltyType.name}</div>
+              <div className="text-xs text-gray-500">{novelty.user.name}</div>
+            </div>
+          </div>
+          <p>¿Estás seguro de que quieres eliminar esta novedad?</p>
+        </div>
+      ),
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       type: 'danger'
@@ -273,7 +289,7 @@ export default function NoveltiesPage() {
         const response = await fetch('/api/novelties', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
+          body: JSON.stringify({ id: novelty.id }),
         })
 
         if (response.ok) {
@@ -289,11 +305,27 @@ export default function NoveltiesPage() {
     }
   }
 
-  const handleApprove = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+  const handleApprove = async (novelty: Novelty, status: 'APPROVED' | 'REJECTED') => {
     const action = status === 'APPROVED' ? 'aprobar' : 'rechazar'
     const confirmed = await confirm({
       title: status === 'APPROVED' ? 'Aprobar Novedad' : 'Rechazar Novedad',
-      message: `¿Estás seguro de que quieres ${action} esta novedad?`,
+      message: (
+        <div>
+          <div className="flex items-center space-x-3 mb-3 p-3 bg-gray-50 rounded-lg">
+            <div
+              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: novelty.noveltyType.color }}
+            >
+              <DynamicIcon name={novelty.noveltyType.icon} className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-900">{novelty.noveltyType.name}</div>
+              <div className="text-xs text-gray-500">{novelty.user.name}</div>
+            </div>
+          </div>
+          <p>¿Estás seguro de que quieres {action} esta novedad?</p>
+        </div>
+      ),
       confirmText: action === 'aprobar' ? 'Aprobar' : 'Rechazar',
       cancelText: 'Cancelar',
       type: status === 'APPROVED' ? 'info' : 'danger'
@@ -301,7 +333,7 @@ export default function NoveltiesPage() {
 
     if (confirmed) {
       try {
-        const response = await fetch(`/api/novelties/${id}/approve`, {
+        const response = await fetch(`/api/novelties/${novelty.id}/approve`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status }),
@@ -499,7 +531,7 @@ export default function NoveltiesPage() {
         {/* Form Modal */}
         {showForm && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl my-8 mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-2xl my-8 mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">
                 {editingNovelty ? 'Editar Novedad' : 'Nueva Novedad'}
               </h3>
@@ -715,7 +747,7 @@ export default function NoveltiesPage() {
         {/* View Attachments Modal */}
         {viewingAttachments && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-lg border-2 border-gray-300 shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">
                   Archivos Adjuntos - {viewingAttachments.noveltyType.name}
@@ -867,14 +899,14 @@ export default function NoveltiesPage() {
                         {currentUser?.authorizesNovelties && (
                           <>
                             <button
-                              onClick={() => handleApprove(novelty.id, 'APPROVED')}
+                              onClick={() => handleApprove(novelty, 'APPROVED')}
                               className="text-green-600 hover:text-green-900"
                               title="Aprobar"
                             >
                               <Check className="h-4 w-4 inline" />
                             </button>
                             <button
-                              onClick={() => handleApprove(novelty.id, 'REJECTED')}
+                              onClick={() => handleApprove(novelty, 'REJECTED')}
                               className="text-red-600 hover:text-red-900"
                               title="Rechazar"
                             >
@@ -884,7 +916,7 @@ export default function NoveltiesPage() {
                         )}
 
                         <button
-                          onClick={() => handleDelete(novelty.id, novelty.status)}
+                          onClick={() => handleDelete(novelty)}
                           className="text-red-600 hover:text-red-900"
                           title="Eliminar"
                         >
