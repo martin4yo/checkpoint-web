@@ -463,11 +463,11 @@ export default function NoveltiesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aprobado</span>
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-success/10 text-success">Aprobado</span>
       case 'REJECTED':
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rechazado</span>
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-danger/10 text-danger">Rechazado</span>
       default:
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-warning/10 text-warning">Pendiente</span>
     }
   }
 
@@ -500,7 +500,7 @@ export default function NoveltiesPage() {
               resetForm()
               setShowForm(true)
             }}
-            className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center bg-secondary text-text-white px-4 py-2 rounded-lg hover:bg-secondary-hover transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
             Nueva Novedad
@@ -511,11 +511,11 @@ export default function NoveltiesPage() {
         {currentUser?.superuser && (
           <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center space-x-3">
-              <Building2 className="h-5 w-5 text-gray-400" />
+              <Building2 className="h-5 w-5 text-secondary" />
               <select
                 value={filterTenantId}
                 onChange={(e) => setFilterTenantId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
               >
                 <option value="">Mi tenant ({currentUser?.tenantId ? tenants.find(t => t.id === currentUser.tenantId)?.name || 'Actual' : 'Actual'})</option>
                 {tenants.filter(t => t.id !== currentUser?.tenantId).map((tenant) => (
@@ -543,7 +543,7 @@ export default function NoveltiesPage() {
                   <select
                     value={formData.noveltyTypeId}
                     onChange={(e) => handleTypeChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                     required
                     disabled={!!editingNovelty}
                   >
@@ -566,7 +566,7 @@ export default function NoveltiesPage() {
                       step="0.01"
                       value={formData.amount}
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                       placeholder="0.00"
                     />
                   </div>
@@ -581,7 +581,7 @@ export default function NoveltiesPage() {
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                     />
                   </div>
                 )}
@@ -596,7 +596,7 @@ export default function NoveltiesPage() {
                         type="date"
                         value={formData.startDate}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                       />
                     </div>
                     <div>
@@ -607,7 +607,7 @@ export default function NoveltiesPage() {
                         type="date"
                         value={formData.endDate}
                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                       />
                     </div>
                   </div>
@@ -620,7 +620,7 @@ export default function NoveltiesPage() {
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
                     rows={3}
                     placeholder="Descripción o notas adicionales..."
                   />
@@ -727,14 +727,14 @@ export default function NoveltiesPage() {
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors"
+                    className="flex-1 bg-secondary text-text-white px-4 py-2 rounded-md hover:bg-secondary-hover transition-colors"
                   >
                     {editingNovelty ? 'Actualizar' : 'Crear'}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-gray-200 text-text-primary px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
                   >
                     Cancelar
                   </button>
@@ -779,7 +779,7 @@ export default function NoveltiesPage() {
                       <a
                         href={`/api/files${attachment.fileUrl}`}
                         download
-                        className="ml-3 inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                        className="ml-3 inline-flex items-center px-3 py-2 bg-secondary text-text-white text-sm rounded-md hover:bg-secondary-hover transition-colors"
                         title="Descargar archivo"
                       >
                         <Download className="h-4 w-4 mr-1" />

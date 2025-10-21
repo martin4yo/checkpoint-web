@@ -60,9 +60,9 @@ export default function ConfirmModal({
     switch (type) {
       case 'danger':
         return {
-          iconBg: 'bg-red-100',
-          iconColor: 'text-red-600',
-          confirmBg: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
+          iconBg: 'bg-danger/10',
+          iconColor: 'text-danger',
+          confirmBg: 'bg-danger hover:bg-danger-hover focus:ring-danger',
           defaultIcon: (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -71,9 +71,9 @@ export default function ConfirmModal({
         }
       case 'warning':
         return {
-          iconBg: 'bg-yellow-100',
-          iconColor: 'text-yellow-600',
-          confirmBg: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
+          iconBg: 'bg-warning/10',
+          iconColor: 'text-warning',
+          confirmBg: 'bg-warning hover:bg-warning/90 focus:ring-warning',
           defaultIcon: (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -82,9 +82,9 @@ export default function ConfirmModal({
         }
       case 'info':
         return {
-          iconBg: 'bg-blue-100',
-          iconColor: 'text-blue-600',
-          confirmBg: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+          iconBg: 'bg-secondary/10',
+          iconColor: 'text-secondary',
+          confirmBg: 'bg-secondary hover:bg-secondary-hover focus:ring-secondary',
           defaultIcon: (
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
@@ -117,11 +117,11 @@ export default function ConfirmModal({
               </div>
             </div>
             <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-              <h3 className="text-base font-semibold leading-6 text-gray-900">
+              <h3 className="text-base font-semibold leading-6 text-text-primary">
                 {title}
               </h3>
               <div className="mt-2">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-text-secondary">
                   {message}
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function ConfirmModal({
             </button>
             <button
               type="button"
-              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
               onClick={onClose}
             >
               {cancelText}
