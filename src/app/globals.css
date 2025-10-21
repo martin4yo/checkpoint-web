@@ -2,22 +2,57 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #352151;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Base colors */
+  --color-background: #fafafa;
+  --color-foreground: #352151;
+
+  /* Sidebar colors */
+  --color-sidebar: #352151;
+  --color-sidebar-hover: #4a2d6b;
+  --color-sidebar-active: #8E6AAA;
+
+  /* Primary colors */
+  --color-primary: #FCE5B7;
+  --color-primary-hover: #e6c41d;
+
+  /* Secondary colors */
+  --color-secondary: #8E6AAA;
+  --color-secondary-hover: #7a5a95;
+
+  /* Accent colors */
+  --color-accent: #F1ABB5;
+  --color-accent-light: #FCE5B7;
+
+  /* Border */
+  --color-border: #e5e7eb;
+
+  /* Text colors */
+  --color-text-primary: #352151;
+  --color-text-secondary: #64748b;
+  --color-text-light: #94a3b8;
+  --color-text-white: #ffffff;
+
+  /* Status colors */
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+
+  /* Palette specific colors */
+  --color-palette-yellow: #FCE5B7;
+  --color-palette-cream: #FCE5B7;
+  --color-palette-pink: #F1ABB5;
+  --color-palette-purple: #8E6AAA;
+  --color-palette-dark: #352151;
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
