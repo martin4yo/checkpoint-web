@@ -90,6 +90,7 @@ export default function UsersPage() {
       ...(formData.password && { password: formData.password }),
       tenantId: formData.tenantId,
       superuser: formData.superuser,
+      authorizesNovelties: formData.authorizesNovelties,
     }
 
     try {
