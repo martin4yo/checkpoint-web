@@ -34,12 +34,15 @@ model User {
   email               String                @unique
   password            String
   tenantId            String
+  supervisorId        String?
   superuser           Boolean               @default(false)
   authorizesNovelties Boolean               @default(false)
   isActive            Boolean               @default(true)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  supervisor          User?                 @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  subordinates        User[]                @relation("UserSupervisor")
   checkpoints         Checkpoint[]
   assignments         UserPlaceAssignment[]
   journeyLocations    JourneyLocation[]

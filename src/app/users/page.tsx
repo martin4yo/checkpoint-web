@@ -16,11 +16,17 @@ interface User {
   name: string
   email: string
   tenantId: string
+  supervisorId?: string | null
   superuser: boolean
   authorizesNovelties: boolean
   isActive: boolean
   createdAt: string
   tenant: Tenant
+  supervisor?: {
+    id: string
+    name: string
+    email: string
+  } | null
   _count?: {
     assignments: number
     checkpoints: number
@@ -39,6 +45,7 @@ export default function UsersPage() {
     email: '',
     password: '',
     tenantId: '',
+    supervisorId: '',
     superuser: false,
     authorizesNovelties: false,
   })
@@ -89,6 +96,7 @@ export default function UsersPage() {
       email: formData.email,
       ...(formData.password && { password: formData.password }),
       tenantId: formData.tenantId,
+      supervisorId: formData.supervisorId || null,
       superuser: formData.superuser,
       authorizesNovelties: formData.authorizesNovelties,
     }
@@ -120,6 +128,7 @@ export default function UsersPage() {
       email: user.email,
       password: '',
       tenantId: user.tenantId,
+      supervisorId: user.supervisorId || '',
       superuser: user.superuser,
       authorizesNovelties: user.authorizesNovelties || false,
     })
@@ -187,6 +196,7 @@ export default function UsersPage() {
       email: '',
       password: '',
       tenantId: tenants[0]?.id || '',
+      supervisorId: '',
       superuser: false,
       authorizesNovelties: false,
     })
@@ -347,6 +357,25 @@ export default function UsersPage() {
                     </select>
                   </div>
                 )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supervisor
+                  </label>
+                  <select
+                    value={formData.supervisorId}
+                    onChange={(e) => setFormData({ ...formData, supervisorId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  >
+                    <option value="">Sin supervisor</option>
+                    {users
+                      .filter(u => u.id !== editingUser?.id && u.tenantId === formData.tenantId)
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               </div>
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 {canEditSuperuser && editingUser && (
@@ -411,6 +440,9 @@ export default function UsersPage() {
                   Tenant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Supervisor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Rol
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -433,6 +465,16 @@ export default function UsersPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{user.tenant.name}</div>
                     <div className="text-xs text-gray-500">{user.tenant.slug}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.supervisor ? (
+                      <div>
+                        <div className="text-sm text-gray-900">{user.supervisor.name}</div>
+                        <div className="text-xs text-gray-500">{user.supervisor.email}</div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">Sin supervisor</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.superuser ? (

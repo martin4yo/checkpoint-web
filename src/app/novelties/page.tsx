@@ -70,8 +70,14 @@ export default function NoveltiesPage() {
   const [novelties, setNovelties] = useState<Novelty[]>([])
   const [noveltyTypes, setNoveltyTypes] = useState<NoveltyType[]>([])
   const [tenants, setTenants] = useState<Tenant[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [filterTenantId, setFilterTenantId] = useState('')
+  const [filterNoveltyTypeId, setFilterNoveltyTypeId] = useState('')
+  const [filterUserId, setFilterUserId] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterStartDate, setFilterStartDate] = useState('')
+  const [filterEndDate, setFilterEndDate] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingNovelty, setEditingNovelty] = useState<Novelty | null>(null)
@@ -94,6 +100,7 @@ export default function NoveltiesPage() {
   useEffect(() => {
     fetchNovelties()
     fetchNoveltyTypes()
+    fetchUsers()
   }, [filterTenantId])
 
   const fetchNovelties = async () => {
@@ -141,6 +148,18 @@ export default function NoveltiesPage() {
       }
     } catch (error) {
       console.error('Error fetching tenants:', error)
+    }
+  }
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data.users)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
     }
   }
 
@@ -477,6 +496,22 @@ export default function NoveltiesPage() {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
 
+  // Filter novelties based on selected filters
+  const filteredNovelties = novelties.filter((novelty) => {
+    if (filterNoveltyTypeId && novelty.noveltyTypeId !== filterNoveltyTypeId) return false
+    if (filterUserId && novelty.userId !== filterUserId) return false
+    if (filterStatus && novelty.status !== filterStatus) return false
+
+    // Filter by date range
+    if (filterStartDate || filterEndDate) {
+      const noveltyDate = new Date(novelty.createdAt)
+      if (filterStartDate && noveltyDate < new Date(filterStartDate)) return false
+      if (filterEndDate && noveltyDate > new Date(filterEndDate)) return false
+    }
+
+    return true
+  })
+
   if (loading) {
     return (
       <DashboardLayout title="Novedades" titleIcon={<FileText className="h-8 w-8 text-gray-600" />}>
@@ -493,7 +528,7 @@ export default function NoveltiesPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
-            {currentUser?.superuser ? 'Novedades' : 'Mis Novedades'} ({novelties.length})
+            {currentUser?.superuser ? 'Novedades' : 'Mis Novedades'} ({filteredNovelties.length} de {novelties.length})
           </h2>
           <button
             onClick={() => {
@@ -527,6 +562,109 @@ export default function NoveltiesPage() {
             </div>
           </div>
         )}
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Novelty Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo de Novedad
+              </label>
+              <select
+                value={filterNoveltyTypeId}
+                onChange={(e) => setFilterNoveltyTypeId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              >
+                <option value="">Todos los tipos</option>
+                {noveltyTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* User Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Empleado
+              </label>
+              <select
+                value={filterUserId}
+                onChange={(e) => setFilterUserId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              >
+                <option value="">Todos los empleados</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              >
+                <option value="">Todos los estados</option>
+                <option value="PENDING">Pendiente</option>
+                <option value="APPROVED">Aprobado</option>
+                <option value="REJECTED">Rechazado</option>
+              </select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha desde
+              </label>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => setFilterStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              />
+            </div>
+
+            <div className="lg:col-start-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha hasta
+              </label>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => setFilterEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          {(filterNoveltyTypeId || filterUserId || filterStatus || filterStartDate || filterEndDate) && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setFilterNoveltyTypeId('')
+                  setFilterUserId('')
+                  setFilterStatus('')
+                  setFilterStartDate('')
+                  setFilterEndDate('')
+                }}
+                className="text-sm text-secondary hover:text-secondary-hover font-medium"
+              >
+                Limpiar Filtros
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Form Modal */}
         {showForm && (
@@ -825,7 +963,7 @@ export default function NoveltiesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {novelties.map((novelty) => (
+              {filteredNovelties.map((novelty) => (
                 <tr key={novelty.id}>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
@@ -933,9 +1071,9 @@ export default function NoveltiesPage() {
               ))}
             </tbody>
           </table>
-          {novelties.length === 0 && (
+          {filteredNovelties.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay novedades registradas
+              {novelties.length === 0 ? 'No hay novedades registradas' : 'No hay novedades que coincidan con los filtros'}
             </div>
           )}
         </div>

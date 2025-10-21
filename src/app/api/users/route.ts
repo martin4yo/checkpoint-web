@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
         name: true,
         email: true,
         tenantId: true,
+        supervisorId: true,
         superuser: true,
         authorizesNovelties: true,
         isActive: true,
@@ -42,6 +43,13 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             slug: true
+          }
+        },
+        supervisor: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         },
         _count: {
@@ -82,7 +90,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { name, email, password, tenantId, authorizesNovelties } = await req.json()
+    const { name, email, password, tenantId, supervisorId, authorizesNovelties } = await req.json()
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Nombre, email y contraseña son requeridos' }, { status: 400 })
@@ -115,6 +123,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         tenantId: finalTenantId,
+        supervisorId: supervisorId || null,
         superuser: false, // New users are not superusers by default
         authorizesNovelties: authorizesNovelties || false,
       },
@@ -123,6 +132,7 @@ export async function POST(req: NextRequest) {
         name: true,
         email: true,
         tenantId: true,
+        supervisorId: true,
         superuser: true,
         authorizesNovelties: true,
         isActive: true,
@@ -132,6 +142,13 @@ export async function POST(req: NextRequest) {
             id: true,
             name: true,
             slug: true
+          }
+        },
+        supervisor: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         }
       },
@@ -165,7 +182,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { id, name, email, password, tenantId, superuser, authorizesNovelties } = await req.json()
+    const { id, name, email, password, tenantId, supervisorId, superuser, authorizesNovelties } = await req.json()
 
     if (!id || !name || !email) {
       return NextResponse.json(
@@ -203,6 +220,11 @@ export async function PUT(req: NextRequest) {
       updateData.authorizesNovelties = authorizesNovelties
     }
 
+    // Anyone can update supervisorId
+    if (supervisorId !== undefined) {
+      updateData.supervisorId = supervisorId || null
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: updateData,
@@ -211,6 +233,7 @@ export async function PUT(req: NextRequest) {
         name: true,
         email: true,
         tenantId: true,
+        supervisorId: true,
         superuser: true,
         authorizesNovelties: true,
         isActive: true,
@@ -220,6 +243,13 @@ export async function PUT(req: NextRequest) {
             id: true,
             name: true,
             slug: true
+          }
+        },
+        supervisor: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         }
       },

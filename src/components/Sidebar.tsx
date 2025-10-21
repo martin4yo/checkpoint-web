@@ -122,7 +122,7 @@ export default function Sidebar() {
         <div className="relative flex items-center justify-between p-4 border-b border-sidebar-hover">
           {!isCollapsed ? (
             <>
-              <Link href="/" className="flex items-center space-x-2" onClick={closeMobile}>
+              <Link href="/" className="flex flex-col items-center" onClick={closeMobile}>
                 <img
                   src="/axioma_logo.png"
                   alt="Axioma"
@@ -130,6 +130,7 @@ export default function Sidebar() {
                   height={40}
                   className="object-contain"
                 />
+                <span className="text-sm font-semibold text-text-white mt-1">Checkpoint</span>
               </Link>
 
               {/* Collapse button (desktop only) - expanded state */}
