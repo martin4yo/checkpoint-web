@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     const currentUser = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, tenantId: true, superuser: true }
+      select: { id: true, tenantId: true, superuser: true, authorizesNovelties: true }
     })
 
     if (!currentUser) {
@@ -83,7 +83,8 @@ export async function GET(req: NextRequest) {
       currentUser: {
         id: currentUser.id,
         tenantId: currentUser.tenantId,
-        superuser: currentUser.superuser
+        superuser: currentUser.superuser,
+        authorizesNovelties: currentUser.authorizesNovelties
       }
     })
   } catch (error) {
