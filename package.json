@@ -20,6 +20,7 @@
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.2",
     "bcryptjs": "^3.0.2",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase-admin": "^13.5.0",
     "jose": "^6.1.0",

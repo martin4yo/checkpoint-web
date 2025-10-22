@@ -1,9 +1,11 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
+  Menu,
+  X,
   Home,
   MapPin,
   Users,
@@ -12,79 +14,314 @@ import {
   LogOut,
   Bell,
   FileBarChart,
-  Menu,
-  X,
-  ChevronLeft,
   Building2,
   FileText,
   Tag,
-  User
-} from 'lucide-react'
-
-interface Tenant {
-  id: string
-  name: string
-  slug: string
-}
+  User,
+  Settings,
+  ChevronRight
+} from 'lucide-react';
+import Image from 'next/image';
+import { clsx } from 'clsx';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface CurrentUser {
-  id: string
-  name: string
-  email: string
-  superuser: boolean
-  authorizesNovelties: boolean
-  tenant: Tenant
+  id: string;
+  name: string;
+  email: string;
+  superuser: boolean;
+  authorizesNovelties: boolean;
+}
+
+interface SubMenuItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface MenuSection {
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href?: string;
+  children?: SubMenuItem[];
 }
 
 export default function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const { isCollapsed, setIsCollapsed } = useSidebar();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
-    // Only fetch user if not on login page
     if (pathname !== '/login') {
-      fetchCurrentUser()
+      fetchCurrentUser();
     }
-  }, [pathname])
+  }, [pathname]);
+
+  // Auto-expand section based on current path
+  useEffect(() => {
+    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants'];
+    if (configPaths.some(path => pathname.startsWith(path))) {
+      setExpandedSection('Configuración');
+    }
+  }, [pathname]);
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/me')
+      const response = await fetch('/api/auth/me');
       if (response.ok) {
-        const data = await response.json()
-        setCurrentUser(data)
+        const data = await response.json();
+        setCurrentUser(data);
       }
     } catch (error) {
-      console.error('Error fetching current user:', error)
+      console.error('Error fetching current user:', error);
     }
-  }
+  };
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/login')
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error)
+      console.error('Error al cerrar sesión:', error);
     }
-  }
+  };
 
-  const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home },
-    { href: '/places', label: 'Lugares', icon: MapPin },
-    { href: '/users', label: 'Usuarios', icon: Users },
-    { href: '/checkpoints', label: 'Checkpoints', icon: CheckCircle },
-    { href: '/journey-reports', label: 'Reporte Jornadas', icon: FileBarChart },
-    { href: '/assignments', label: 'Asignaciones', icon: LinkIcon },
-    { href: '/novelties', label: 'Novedades', icon: FileText },
-    { href: '/novelty-types', label: 'Tipos de Novedades', icon: Tag },
-    { href: '/push-devices', label: 'Notificaciones', icon: Bell },
-    { href: '/tenants', label: 'Tenants', icon: Building2 },
-  ]
+  const menuSections: MenuSection[] = [
+    {
+      name: 'Dashboard',
+      icon: Home,
+      href: '/'
+    },
+    {
+      name: 'Checkpoints',
+      icon: CheckCircle,
+      href: '/checkpoints'
+    },
+    {
+      name: 'Reporte Jornadas',
+      icon: FileBarChart,
+      href: '/journey-reports'
+    },
+    {
+      name: 'Novedades',
+      icon: FileText,
+      href: '/novelties'
+    },
+    {
+      name: 'Configuración',
+      icon: Settings,
+      children: [
+        {
+          name: 'Usuarios',
+          href: '/users',
+          icon: Users
+        },
+        {
+          name: 'Lugares',
+          href: '/places',
+          icon: MapPin
+        },
+        {
+          name: 'Asignaciones',
+          href: '/assignments',
+          icon: LinkIcon
+        },
+        {
+          name: 'Tipos de Novedades',
+          href: '/novelty-types',
+          icon: Tag
+        },
+        {
+          name: 'Notificaciones',
+          href: '/push-devices',
+          icon: Bell
+        },
+        {
+          name: 'Tenants',
+          href: '/tenants',
+          icon: Building2
+        }
+      ]
+    }
+  ];
 
-  const closeMobile = () => setIsMobileOpen(false)
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col bg-sidebar overflow-hidden">
+      {/* Header */}
+      <div className="flex h-16 items-center justify-center px-4 border-b border-sidebar-hover relative flex-shrink-0">
+        <div className={clsx(
+          "flex items-center space-x-3 transition-opacity duration-200 absolute left-4",
+          isCollapsed && "opacity-0 pointer-events-none"
+        )}>
+          <div className="w-8 h-8 bg-palette-yellow rounded-lg flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-palette-dark" />
+          </div>
+          <h1 className="text-text-white font-semibold text-lg">Checkpoint</h1>
+        </div>
+
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={clsx(
+            "text-text-white hover:bg-sidebar-hover hidden lg:flex flex-shrink-0 transition-all duration-200 p-2 rounded-lg",
+            isCollapsed ? "absolute" : "absolute right-4"
+          )}
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className={clsx(
+        "flex-1 py-2 space-y-1 overflow-y-auto scrollbar-thin min-h-0",
+        isCollapsed ? "px-2" : "px-4"
+      )}>
+        {menuSections.map((section) => {
+          const Icon = section.icon;
+          const isExpanded = expandedSection === section.name;
+          const hasChildren = section.children && section.children.length > 0;
+          const isActive = section.href && pathname === section.href;
+
+          return (
+            <div key={section.name} className="space-y-1">
+              {/* Sección principal */}
+              {section.href ? (
+                // Sección con enlace directo
+                <Link
+                  href={section.href}
+                  onClick={() => setIsMobileOpen(false)}
+                  className={clsx(
+                    'flex items-center text-text-white rounded-lg cursor-pointer select-none w-full pointer-events-auto relative',
+                    isActive && 'bg-sidebar-active',
+                    isCollapsed ? 'justify-center h-12 p-2' : 'px-4 py-3'
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className={clsx(
+                      'truncate whitespace-nowrap font-medium',
+                      isCollapsed && 'opacity-0 pointer-events-none w-0 overflow-hidden'
+                    )}>
+                      {section.name}
+                    </span>
+                  </div>
+                </Link>
+              ) : (
+                // Sección con hijos - botón para expandir/contraer
+                <button
+                  onClick={() => {
+                    if (isCollapsed) {
+                      setIsCollapsed(false);
+                      if (hasChildren) {
+                        setExpandedSection(section.name);
+                      }
+                    } else {
+                      setExpandedSection(isExpanded ? null : section.name);
+                    }
+                  }}
+                  className={clsx(
+                    'flex items-center text-text-white rounded-lg cursor-pointer select-none w-full pointer-events-auto relative',
+                    isCollapsed ? 'justify-center h-12 p-2' : 'justify-between px-4 py-3'
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className={clsx(
+                      'truncate whitespace-nowrap font-medium',
+                      isCollapsed && 'opacity-0 pointer-events-none w-0 overflow-hidden'
+                    )}>
+                      {section.name}
+                    </span>
+                  </div>
+                  {!isCollapsed && hasChildren && (
+                    <div className="flex-shrink-0">
+                      <ChevronRight className={clsx(
+                        "w-4 h-4 transition-transform duration-300 ease-in-out",
+                        isExpanded && "rotate-90"
+                      )} />
+                    </div>
+                  )}
+                </button>
+              )}
+
+              {/* Elementos hijos */}
+              {!isCollapsed && hasChildren && (
+                <div className={clsx(
+                  "ml-8 space-y-1 overflow-hidden transition-all duration-300 ease-in-out",
+                  isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                )}>
+                  {section.children!.map((child) => {
+                    const isChildActive = pathname === child.href;
+                    const ChildIcon = child.icon;
+
+                    return (
+                      <Link
+                        key={child.name}
+                        href={child.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={clsx(
+                          'flex items-center text-text-white rounded-lg cursor-pointer select-none px-4 py-2 w-full pointer-events-auto relative',
+                          isChildActive && 'bg-sidebar-active'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <ChildIcon className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm truncate whitespace-nowrap">
+                            {child.name}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* User section */}
+      <div className={clsx(
+        "border-t border-sidebar-hover transition-all duration-200",
+        isCollapsed ? "px-2 py-6" : "p-4"
+      )}>
+        <div className={clsx(
+          'mb-4 transition-all duration-200',
+          isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'flex items-center space-x-3 opacity-100'
+        )}>
+          <div className="w-8 h-8 bg-palette-yellow rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-palette-dark" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-text-white truncate">
+              {currentUser?.name}
+            </p>
+            <p className="text-xs text-text-light truncate">
+              {currentUser?.email}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className={clsx(
+            'text-text-white flex items-center transition-all duration-200 rounded-lg cursor-pointer',
+            isCollapsed ? 'justify-center w-12 h-12 mx-auto px-0' : 'justify-start space-x-3 w-full py-3 px-4'
+          )}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <span className={clsx(
+            'transition-opacity duration-200 whitespace-nowrap',
+            isCollapsed && 'opacity-0 pointer-events-none w-0 overflow-hidden'
+          )}>
+            Cerrar Sesión
+          </span>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -92,7 +329,7 @@ export default function Sidebar() {
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={closeMobile}
+          onClick={() => setIsMobileOpen(false)}
         />
       )}
 
@@ -110,157 +347,54 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed top-0 left-0 h-full bg-sidebar shadow-lg border-r border-sidebar-hover z-50 transition-all duration-300 ease-in-out
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-          ${isCollapsed ? 'w-16' : 'w-64'}
-        `}
-      >
-        {/* Header */}
-        <div className="relative flex items-center justify-between p-4 border-b border-sidebar-hover">
-          {!isCollapsed ? (
-            <>
-              <Link href="/" className="flex flex-col items-center" onClick={closeMobile}>
-                <img
-                  src="/axioma_logo.png"
-                  alt="Axioma"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <span className="text-sm font-semibold text-text-white mt-1">Checkpoint</span>
-              </Link>
-
-              {/* Collapse button (desktop only) - expanded state */}
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden lg:flex p-1.5 rounded-md hover:bg-sidebar-hover transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5 text-primary transition-transform duration-200" />
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center w-full space-y-2">
-              <Link href="/" className="flex items-center justify-center" onClick={closeMobile}>
-                <img
-                  src="/axioma_logo.png"
-                  alt="Axioma"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-              </Link>
-
-              {/* Collapse button (desktop only) - collapsed state */}
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden lg:flex p-1 rounded-md hover:bg-sidebar-hover transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4 text-primary transition-transform duration-200 rotate-180" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 py-4">
-          <ul className="space-y-1 px-3">
-            {navItems.map((item) => {
-              const IconComponent = item.icon
-              const isActive = pathname === item.href
-
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={closeMobile}
-                    className={`
-                      flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group
-                      ${isActive
-                        ? 'bg-sidebar-active text-text-white'
-                        : 'text-primary hover:bg-sidebar-hover hover:text-text-white'
-                      }
-                    `}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    <IconComponent
-                      className={`h-5 w-5 flex-shrink-0 ${
-                        isActive ? 'text-text-white' : 'text-accent group-hover:text-text-white'
-                      }`}
-                    />
-                    {!isCollapsed && (
-                      <span className="ml-3 truncate">{item.label}</span>
-                    )}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-
-        {/* Footer - User Info & Logout */}
-        <div className="border-t border-sidebar-hover">
-          {/* User Info */}
-          {currentUser && (
-            <div className={`p-3 border-b border-sidebar-hover ${isCollapsed ? 'flex justify-center' : ''}`}>
-              {!isCollapsed ? (
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-secondary text-text-white flex items-center justify-center">
-                      <User className="h-5 w-5" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-white truncate">
-                      {currentUser.name}
-                    </p>
-                    <p className="text-xs text-palette-cream truncate">
-                      {currentUser.email}
-                    </p>
-                    <div className="flex items-center mt-1">
-                      <Building2 className="h-3 w-3 text-accent mr-1" />
-                      <p className="text-xs text-text-white truncate">
-                        {currentUser.tenant.name}
-                      </p>
-                    </div>
-                    {currentUser.superuser && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-text-white mt-1">
-                        Superusuario
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-secondary text-text-white flex items-center justify-center" title={currentUser.name}>
-                  <User className="h-5 w-5" />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Logout Button */}
-          <div className="p-3">
-            <button
-              onClick={handleLogout}
-              className={`
-                flex items-center w-full px-3 py-2.5 text-sm font-medium text-text-white rounded-lg
-                hover:bg-danger hover:text-text-white transition-colors group
-              `}
-              title={isCollapsed ? 'Cerrar Sesión' : undefined}
-            >
-              <LogOut className="h-5 w-5 flex-shrink-0 text-text-white group-hover:text-text-white" />
-              {!isCollapsed && (
-                <span className="ml-3 truncate">Cerrar Sesión</span>
-              )}
-            </button>
+      {/* Desktop Sidebar */}
+      <div className={clsx(
+        'hidden lg:flex flex-col transition-all duration-300 ease-in-out flex-shrink-0 fixed top-0 left-0 h-full bg-sidebar shadow-lg border-r border-sidebar-hover z-50',
+        isCollapsed ? 'w-20' : 'w-64'
+      )}>
+        {/* Logo Section */}
+        <div className="bg-sidebar py-0">
+          <div className="relative h-16 w-full flex items-center justify-center">
+            <img
+              src="/axioma_logo_invertido.png"
+              alt="Axioma Logo"
+              className="h-full w-auto object-contain p-3"
+            />
           </div>
         </div>
+        <div className="bg-sidebar border-b border-sidebar-hover" />
+        <SidebarContent />
       </div>
 
+      {/* Mobile Sidebar Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-64 bg-sidebar flex flex-col">
+            {/* Logo Section for mobile */}
+            <div className="bg-sidebar py-2">
+              <div className="relative h-12 w-full flex items-center justify-center">
+                <img
+                  src="/axioma_logo_invertido.png"
+                  alt="Axioma Logo"
+                  className="h-full w-auto object-contain p-2"
+                />
+              </div>
+            </div>
+            <div className="bg-sidebar border-b border-sidebar-hover" />
+            <SidebarContent />
+          </div>
+        </div>
+      )}
+
       {/* Sidebar spacer for desktop */}
-      <div className={`hidden lg:block transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`} />
+      <div className={clsx(
+        'hidden lg:block transition-all duration-300',
+        isCollapsed ? 'w-20' : 'w-64'
+      )} />
     </>
-  )
+  );
 }
