@@ -76,7 +76,7 @@ export default function AssignmentsPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.filter((u: { isActive: boolean }) => u.isActive))
+        setUsers((data.users || []).filter((u: { isActive: boolean }) => u.isActive))
       }
     } catch (error) {
       console.error('Error fetching users:', error)

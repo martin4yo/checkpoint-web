@@ -63,11 +63,11 @@ export default function UsersPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data)
+        setUsers(data.users || [])
 
         // Identify current user (first superuser found, or first user)
-        const superUser = data.find((u: User) => u.superuser)
-        setCurrentUser(superUser || data[0] || null)
+        const superUser = (data.users || []).find((u: User) => u.superuser)
+        setCurrentUser(superUser || data.users?.[0] || null)
       }
     } catch (error) {
       console.error('Error fetching users:', error)

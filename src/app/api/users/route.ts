@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(users)
+    return NextResponse.json({ users })
   } catch (error) {
     console.error('Get users error:', error)
     return NextResponse.json({ error: 'Error al obtener usuarios' }, { status: 500 })
