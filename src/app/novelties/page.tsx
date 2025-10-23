@@ -156,7 +156,7 @@ export default function NoveltiesPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.users)
+        setUsers(data.users || [])
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -596,11 +596,11 @@ export default function NoveltiesPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
               >
                 <option value="">Todos los empleados</option>
-                {users.map((user) => (
+                {users?.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}
                   </option>
-                ))}
+                )) || []}
               </select>
             </div>
 

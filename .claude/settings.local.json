@@ -34,7 +34,8 @@
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
       "Bash(PGPASSWORD=Q27G4B98 psql:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
