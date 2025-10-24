@@ -2,7 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { FileText, User, Users, Edit2 } from 'lucide-react'
+import {
+  FileText,
+  User,
+  Users,
+  Edit2,
+  X,
+  UserCircle,
+  UsersIcon,
+  Briefcase,
+  DollarSign,
+  GraduationCap,
+  FileArchive,
+  Settings
+} from 'lucide-react'
 
 interface Legajo {
   id: string
@@ -201,8 +214,8 @@ export default function LegajosPage() {
 
         {/* Modal de Edición/Creación */}
         {showModal && selectedUser && (
-          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-5xl my-8 mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-7xl h-[80vh] flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold">
                   {selectedLegajo
@@ -214,41 +227,45 @@ export default function LegajosPage() {
                   onClick={closeModal}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  ✕
+                  <X className="h-6 w-6" />
                 </button>
               </div>
 
               {/* Tabs */}
-              <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-4 overflow-x-auto">
+              <div className="border-b border-gray-200 mb-4 flex-shrink-0">
+                <nav className="-mb-px flex space-x-2">
                   {[
-                    { id: 'personal', label: '📋 Datos Personales', icon: '📋' },
-                    { id: 'familiares', label: '👨‍👩‍👧‍👦 Datos Familiares', icon: '👨‍👩‍👧‍👦' },
-                    { id: 'laborales', label: '💼 Datos Laborales', icon: '💼' },
-                    { id: 'remuneracion', label: '💰 Remuneración', icon: '💰' },
-                    { id: 'formacion', label: '🎓 Formación', icon: '🎓' },
-                    { id: 'documentos', label: '📄 Documentos', icon: '📄' },
-                    { id: 'administrativos', label: '⚙️ Administrativos', icon: '⚙️' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`
-                        py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap
-                        ${activeTab === tab.id
-                          ? 'border-secondary text-secondary'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }
-                      `}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                    { id: 'personal', label: 'Datos Personales', icon: UserCircle },
+                    { id: 'familiares', label: 'Datos Familiares', icon: UsersIcon },
+                    { id: 'laborales', label: 'Datos Laborales', icon: Briefcase },
+                    { id: 'remuneracion', label: 'Remuneración', icon: DollarSign },
+                    { id: 'formacion', label: 'Formación', icon: GraduationCap },
+                    { id: 'documentos', label: 'Documentos', icon: FileArchive },
+                    { id: 'administrativos', label: 'Administrativos', icon: Settings },
+                  ].map((tab) => {
+                    const IconComponent = tab.icon
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                          py-2 px-3 border-b-2 font-medium text-sm whitespace-nowrap flex items-center space-x-2
+                          ${activeTab === tab.id
+                            ? 'border-secondary text-secondary'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }
+                        `}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    )
+                  })}
                 </nav>
               </div>
 
               {/* Contenido de las Tabs */}
-              <div className="mt-4">
+              <div className="flex-1 overflow-y-auto px-1">
                 {activeTab === 'personal' && (
                   <div className="space-y-4">
                     <p className="text-gray-500">Formulario de datos personales (en desarrollo)</p>
@@ -287,7 +304,7 @@ export default function LegajosPage() {
               </div>
 
               {/* Botones de Acción */}
-              <div className="mt-6 flex justify-end space-x-3">
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end space-x-3 flex-shrink-0">
                 <button
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
