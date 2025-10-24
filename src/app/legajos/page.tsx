@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import {
   FileText,
@@ -79,7 +79,7 @@ export default function LegajosPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [selectedLegajo, setSelectedLegajo] = useState<any>(null)
+  const [selectedLegajo, setSelectedLegajo] = useState<LegajoCompleto | null>(null)
   const [activeTab, setActiveTab] = useState('personal')
   const [saving, setSaving] = useState(false)
 
@@ -95,11 +95,7 @@ export default function LegajosPage() {
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [datosAdministrativos, setDatosAdministrativos] = useState<LegajoDatosAdministrativos>({})
 
-  useEffect(() => {
-    fetchUsers()
-  }, [filterTenantId])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const url = filterTenantId
         ? `/api/legajos?tenantId=${filterTenantId}`
@@ -120,7 +116,7 @@ export default function LegajosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterTenantId, tenants.length])
 
   const fetchTenants = async () => {
     try {
@@ -133,6 +129,10 @@ export default function LegajosPage() {
       console.error('Error fetching tenants:', error)
     }
   }
+
+  useEffect(() => {
+    fetchUsers()
+  }, [filterTenantId, fetchUsers])
 
   const handleEdit = async (user: User) => {
     setSelectedUser(user)

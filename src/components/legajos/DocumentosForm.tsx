@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Documento } from '@/types/legajo'
-import { Plus, Trash2, Download, FileText, Upload, AlertCircle, CheckCircle } from 'lucide-react'
+import { Trash2, Download, FileText, Upload, AlertCircle, CheckCircle } from 'lucide-react'
 
 interface Props {
   documentos: Documento[]
@@ -249,7 +249,7 @@ export default function DocumentosForm({ documentos, onChange }: Props) {
           <div className="text-sm text-blue-800">
             <p className="font-medium mb-1">Notas sobre documentos:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
-              <li>Los documentos se guardarán cuando presiones "Guardar Cambios"</li>
+              <li>Los documentos se guardarán cuando presiones &quot;Guardar Cambios&quot;</li>
               <li>Los documentos con fecha de vencimiento mostrarán su estado automáticamente</li>
               <li>Tamaño máximo por archivo: 10MB</li>
               <li>Formatos aceptados: PDF, JPG, PNG, DOCX</li>
