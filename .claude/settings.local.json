@@ -35,7 +35,13 @@
       "Bash(xargs kill:*)",
       "Bash(PGPASSWORD=Q27G4B98 psql:*)",
       "Bash(mkdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebSearch",
+      "Bash(while read f)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(ls:*)",
+      "Bash(for dir in prisma/migrations/*/)",
+      "Bash(do echo \"=== $dir ===\")"
     ],
     "deny": [],
     "ask": []

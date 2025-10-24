@@ -19,7 +19,8 @@ import {
   Tag,
   User,
   Settings,
-  ChevronRight
+  ChevronRight,
+  Briefcase
 } from 'lucide-react';
 import Image from 'next/image';
 import { clsx } from 'clsx';
@@ -109,6 +110,11 @@ export default function Sidebar() {
       name: 'Novedades',
       icon: FileText,
       href: '/novelties'
+    },
+    {
+      name: 'Legajos',
+      icon: Briefcase,
+      href: '/legajos'
     },
     {
       name: 'Configuración',
