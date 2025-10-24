@@ -4,18 +4,9 @@ import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { FileText, User, Users, Edit2 } from 'lucide-react'
 
-interface User {
-  id: string
-  name: string
-  email: string
-  isActive: boolean
-}
-
 interface Legajo {
   id: string
-  userId: string
   numeroLegajo: string
-  user: User
   datosPersonales?: {
     dni?: string
     cuil?: string
@@ -27,47 +18,65 @@ interface Legajo {
   }
 }
 
+interface User {
+  id: string
+  name: string
+  email: string
+  isActive: boolean
+  legajo?: Legajo | null
+}
+
 export default function LegajosPage() {
-  const [legajos, setLegajos] = useState<Legajo[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [selectedLegajo, setSelectedLegajo] = useState<Legajo | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedLegajo, setSelectedLegajo] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('personal')
 
   useEffect(() => {
-    fetchLegajos()
+    fetchUsers()
   }, [])
 
-  const fetchLegajos = async () => {
+  const fetchUsers = async () => {
     try {
       const response = await fetch('/api/legajos')
       if (response.ok) {
         const data = await response.json()
-        setLegajos(data.legajos || [])
+        setUsers(data.users || [])
       }
     } catch (error) {
-      console.error('Error fetching legajos:', error)
+      console.error('Error fetching users:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleEdit = async (legajo: Legajo) => {
-    // Fetch full legajo data
-    try {
-      const response = await fetch(`/api/legajos?legajoId=${legajo.id}`)
-      if (response.ok) {
-        const fullLegajo = await response.json()
-        setSelectedLegajo(fullLegajo)
-        setShowModal(true)
+  const handleEdit = async (user: User) => {
+    setSelectedUser(user)
+
+    // Si el usuario tiene legajo, traer todos sus datos
+    if (user.legajo) {
+      try {
+        const response = await fetch(`/api/legajos?legajoId=${user.legajo.id}`)
+        if (response.ok) {
+          const fullLegajo = await response.json()
+          setSelectedLegajo(fullLegajo)
+        }
+      } catch (error) {
+        console.error('Error fetching legajo details:', error)
       }
-    } catch (error) {
-      console.error('Error fetching legajo details:', error)
+    } else {
+      // Si no tiene legajo, inicializar vacío
+      setSelectedLegajo(null)
     }
+
+    setShowModal(true)
   }
 
   const closeModal = () => {
     setShowModal(false)
+    setSelectedUser(null)
     setSelectedLegajo(null)
     setActiveTab('personal')
   }
@@ -88,11 +97,11 @@ export default function LegajosPage() {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
             <Users className="inline h-5 w-5 mr-2" />
-            Legajos de Empleados ({legajos.length})
+            Legajos de Empleados ({users.length})
           </h2>
         </div>
 
-        {/* Grilla de Legajos */}
+        {/* Grilla de Usuarios/Legajos */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -124,11 +133,11 @@ export default function LegajosPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {legajos.map((legajo) => (
-                <tr key={legajo.id} className="hover:bg-gray-50">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {legajo.numeroLegajo}
+                      {user.legajo?.numeroLegajo || '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -136,45 +145,45 @@ export default function LegajosPage() {
                       <User className="h-8 w-8 rounded-full bg-gray-200 p-2 text-gray-600 mr-3" />
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {legajo.user.name}
+                          {user.name}
                         </div>
-                        <div className="text-xs text-gray-500">{legajo.user.email}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {legajo.datosPersonales?.dni || '-'}
+                      {user.legajo?.datosPersonales?.dni || '-'}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {legajo.datosPersonales?.cuil || '-'}
+                      {user.legajo?.datosPersonales?.cuil || '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {legajo.datosLaborales?.puesto || '-'}
+                    {user.legajo?.datosLaborales?.puesto || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {legajo.datosLaborales?.area || '-'}
+                    {user.legajo?.datosLaborales?.area || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {legajo.datosLaborales?.fechaIngreso
-                      ? new Date(legajo.datosLaborales.fechaIngreso).toLocaleDateString()
+                    {user.legajo?.datosLaborales?.fechaIngreso
+                      ? new Date(user.legajo.datosLaborales.fechaIngreso).toLocaleDateString()
                       : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      legajo.user.isActive
+                      user.isActive
                         ? 'bg-success/10 text-success'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {legajo.user.isActive ? 'Activo' : 'Inactivo'}
+                      {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => handleEdit(legajo)}
+                      onClick={() => handleEdit(user)}
                       className="text-secondary hover:text-secondary-hover"
-                      title="Editar Legajo"
+                      title={user.legajo ? 'Editar Legajo' : 'Crear Legajo'}
                     >
                       <Edit2 className="h-4 w-4 inline" />
                     </button>
@@ -183,20 +192,23 @@ export default function LegajosPage() {
               ))}
             </tbody>
           </table>
-          {legajos.length === 0 && (
+          {users.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay legajos registrados
+              No hay usuarios registrados
             </div>
           )}
         </div>
 
-        {/* Modal de Edición */}
-        {showModal && selectedLegajo && (
+        {/* Modal de Edición/Creación */}
+        {showModal && selectedUser && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
             <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-5xl my-8 mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold">
-                  Legajo N° {selectedLegajo.numeroLegajo} - {selectedLegajo.user.name}
+                  {selectedLegajo
+                    ? `Legajo N° ${selectedLegajo.numeroLegajo} - ${selectedUser.name}`
+                    : `Crear Legajo - ${selectedUser.name}`
+                  }
                 </h3>
                 <button
                   onClick={closeModal}

@@ -58,35 +58,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(legajo)
     }
 
-    // Si no, devolver todos los legajos (solo info básica)
-    const legajos = await prisma.legajo.findMany({
+    // Si no, devolver todos los usuarios con sus legajos (si existen)
+    const users = await prisma.user.findMany({
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            isActive: true,
-          }
-        },
-        datosPersonales: {
-          select: {
-            dni: true,
-            cuil: true,
-          }
-        },
-        datosLaborales: {
-          select: {
-            puesto: true,
-            area: true,
-            fechaIngreso: true,
+        legajo: {
+          include: {
+            datosPersonales: {
+              select: {
+                dni: true,
+                cuil: true,
+              }
+            },
+            datosLaborales: {
+              select: {
+                puesto: true,
+                area: true,
+                fechaIngreso: true,
+              }
+            }
           }
         }
       },
-      orderBy: { numeroLegajo: 'asc' }
+      orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json({ legajos })
+    return NextResponse.json({ users })
   } catch (error) {
     console.error('Get legajos error:', error)
     return NextResponse.json({ error: 'Error al obtener legajos' }, { status: 500 })
