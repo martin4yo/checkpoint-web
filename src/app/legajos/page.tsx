@@ -14,8 +14,34 @@ import {
   DollarSign,
   GraduationCap,
   FileArchive,
-  Settings
+  Settings,
+  Building2
 } from 'lucide-react'
+import DatosPersonalesForm from '@/components/legajos/DatosPersonalesForm'
+import DatosFamiliaresForm from '@/components/legajos/DatosFamiliaresForm'
+import DatosLaboralesForm from '@/components/legajos/DatosLaboralesForm'
+import RemuneracionForm from '@/components/legajos/RemuneracionForm'
+import FormacionForm from '@/components/legajos/FormacionForm'
+import DocumentosForm from '@/components/legajos/DocumentosForm'
+import DatosAdministrativosForm from '@/components/legajos/DatosAdministrativosForm'
+import {
+  LegajoCompleto,
+  LegajoDatosPersonales,
+  LegajoDatosFamiliares,
+  ContactoEmergencia,
+  LegajoDatosLaborales,
+  LegajoDatosRemuneracion,
+  Formacion,
+  Capacitacion,
+  Documento,
+  LegajoDatosAdministrativos
+} from '@/types/legajo'
+
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
 
 interface Legajo {
   id: string
@@ -39,29 +65,72 @@ interface User {
   legajo?: Legajo | null
 }
 
+interface CurrentUser {
+  id: string
+  tenantId: string
+  superuser: boolean
+}
+
 export default function LegajosPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [filterTenantId, setFilterTenantId] = useState('')
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [selectedLegajo, setSelectedLegajo] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('personal')
+  const [saving, setSaving] = useState(false)
+
+  // Form data states
+  const [numeroLegajo, setNumeroLegajo] = useState('')
+  const [datosPersonales, setDatosPersonales] = useState<LegajoDatosPersonales>({})
+  const [datosFamiliares, setDatosFamiliares] = useState<LegajoDatosFamiliares>({ grupoFamiliarACargo: [] })
+  const [contactosEmergencia, setContactosEmergencia] = useState<ContactoEmergencia[]>([])
+  const [datosLaborales, setDatosLaborales] = useState<LegajoDatosLaborales>({})
+  const [datosRemuneracion, setDatosRemuneracion] = useState<LegajoDatosRemuneracion>({ adicionales: [], beneficios: [] })
+  const [formacion, setFormacion] = useState<Formacion[]>([])
+  const [capacitaciones, setCapacitaciones] = useState<Capacitacion[]>([])
+  const [documentos, setDocumentos] = useState<Documento[]>([])
+  const [datosAdministrativos, setDatosAdministrativos] = useState<LegajoDatosAdministrativos>({})
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [filterTenantId])
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/legajos')
+      const url = filterTenantId
+        ? `/api/legajos?tenantId=${filterTenantId}`
+        : '/api/legajos'
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setUsers(data.users || [])
+        setCurrentUser(data.currentUser)
+
+        // Fetch tenants if user is superuser (only on first load)
+        if (data.currentUser.superuser && tenants.length === 0) {
+          fetchTenants()
+        }
       }
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
     }
   }
 
@@ -75,6 +144,18 @@ export default function LegajosPage() {
         if (response.ok) {
           const fullLegajo = await response.json()
           setSelectedLegajo(fullLegajo)
+
+          // Populate all form states
+          setNumeroLegajo(fullLegajo.numeroLegajo || '')
+          setDatosPersonales(fullLegajo.datosPersonales || {})
+          setDatosFamiliares(fullLegajo.datosFamiliares || { grupoFamiliarACargo: [] })
+          setContactosEmergencia(fullLegajo.contactosEmergencia || [])
+          setDatosLaborales(fullLegajo.datosLaborales || {})
+          setDatosRemuneracion(fullLegajo.datosRemuneracion || { adicionales: [], beneficios: [] })
+          setFormacion(fullLegajo.formacion || [])
+          setCapacitaciones(fullLegajo.capacitaciones || [])
+          setDocumentos(fullLegajo.documentos || [])
+          setDatosAdministrativos(fullLegajo.datosAdministrativos || {})
         }
       } catch (error) {
         console.error('Error fetching legajo details:', error)
@@ -82,6 +163,20 @@ export default function LegajosPage() {
     } else {
       // Si no tiene legajo, inicializar vacío
       setSelectedLegajo(null)
+      // Generate new legajo number (simple auto-increment based on user count)
+      const newNumero = String(users.length + 1).padStart(3, '0')
+      setNumeroLegajo(newNumero)
+
+      // Reset all form states
+      setDatosPersonales({})
+      setDatosFamiliares({ grupoFamiliarACargo: [] })
+      setContactosEmergencia([])
+      setDatosLaborales({})
+      setDatosRemuneracion({ adicionales: [], beneficios: [] })
+      setFormacion([])
+      setCapacitaciones([])
+      setDocumentos([])
+      setDatosAdministrativos({})
     }
 
     setShowModal(true)
@@ -92,6 +187,134 @@ export default function LegajosPage() {
     setSelectedUser(null)
     setSelectedLegajo(null)
     setActiveTab('personal')
+
+    // Reset all form states
+    setNumeroLegajo('')
+    setDatosPersonales({})
+    setDatosFamiliares({ grupoFamiliarACargo: [] })
+    setContactosEmergencia([])
+    setDatosLaborales({})
+    setDatosRemuneracion({ adicionales: [], beneficios: [] })
+    setFormacion([])
+    setCapacitaciones([])
+    setDocumentos([])
+    setDatosAdministrativos({})
+  }
+
+  const handleSave = async () => {
+    if (!selectedUser) return
+
+    // Basic validations
+    if (!numeroLegajo.trim()) {
+      alert('Número de legajo es requerido')
+      return
+    }
+
+    // Validate DNI format (8 digits)
+    if (datosPersonales.dni && !/^\d{7,8}$/.test(datosPersonales.dni)) {
+      alert('DNI debe tener 7 u 8 dígitos')
+      setActiveTab('personal')
+      return
+    }
+
+    // Validate CUIL format (XX-XXXXXXXX-X)
+    if (datosPersonales.cuil && !/^\d{2}-?\d{8}-?\d{1}$/.test(datosPersonales.cuil.replace(/-/g, ''))) {
+      alert('CUIL debe tener el formato XX-XXXXXXXX-X')
+      setActiveTab('personal')
+      return
+    }
+
+    // Validate email formats
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (datosPersonales.emailPersonal && !emailRegex.test(datosPersonales.emailPersonal)) {
+      alert('Email personal no tiene un formato válido')
+      setActiveTab('personal')
+      return
+    }
+    if (datosPersonales.emailCorporativo && !emailRegex.test(datosPersonales.emailCorporativo)) {
+      alert('Email corporativo no tiene un formato válido')
+      setActiveTab('personal')
+      return
+    }
+
+    // Validate CBU format (22 digits)
+    if (datosRemuneracion.cbu && !/^\d{22}$/.test(datosRemuneracion.cbu)) {
+      alert('CBU debe tener exactamente 22 dígitos')
+      setActiveTab('remuneracion')
+      return
+    }
+
+    // Validate salary is positive
+    if (datosRemuneracion.salarioBasico && datosRemuneracion.salarioBasico <= 0) {
+      alert('El salario básico debe ser mayor a cero')
+      setActiveTab('remuneracion')
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      let legajoId = selectedLegajo?.id
+
+      // If legajo doesn't exist, create it first
+      if (!selectedLegajo) {
+        const createResponse = await fetch('/api/legajos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            userId: selectedUser.id,
+            numeroLegajo: numeroLegajo,
+          }),
+        })
+
+        if (!createResponse.ok) {
+          const error = await createResponse.json()
+          throw new Error(error.error || 'Error al crear legajo')
+        }
+
+        const newLegajo = await createResponse.json()
+        legajoId = newLegajo.id
+      }
+
+      // Update all legajo data
+      const updateResponse = await fetch('/api/legajos', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          legajoId: legajoId,
+          datosPersonales,
+          datosFamiliares,
+          contactosEmergencia,
+          datosLaborales,
+          datosRemuneracion,
+          formacion,
+          capacitaciones,
+          documentos,
+          datosAdministrativos,
+        }),
+      })
+
+      if (!updateResponse.ok) {
+        const error = await updateResponse.json()
+        throw new Error(error.error || 'Error al actualizar legajo')
+      }
+
+      // Success!
+      alert('Legajo guardado exitosamente')
+      await fetchUsers()
+      closeModal()
+    } catch (error) {
+      console.error('Error saving legajo:', error)
+      alert(error instanceof Error ? error.message : 'Error al guardar legajo')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
@@ -113,6 +336,27 @@ export default function LegajosPage() {
             Legajos de Empleados ({users.length})
           </h2>
         </div>
+
+        {/* Tenant Filter - Only for Superusers */}
+        {currentUser?.superuser && (
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center space-x-3">
+              <Building2 className="h-5 w-5 text-secondary" />
+              <select
+                value={filterTenantId}
+                onChange={(e) => setFilterTenantId(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+              >
+                <option value="">Mi tenant ({currentUser?.tenantId ? tenants.find(t => t.id === currentUser.tenantId)?.name || 'Actual' : 'Actual'})</option>
+                {tenants.filter(t => t.id !== currentUser?.tenantId).map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Grilla de Usuarios/Legajos */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -265,41 +509,52 @@ export default function LegajosPage() {
               </div>
 
               {/* Contenido de las Tabs */}
-              <div className="flex-1 overflow-y-auto px-1">
+              <div className="flex-1 overflow-y-auto pl-1 pr-4">
                 {activeTab === 'personal' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Formulario de datos personales (en desarrollo)</p>
-                  </div>
+                  <DatosPersonalesForm
+                    data={datosPersonales}
+                    onChange={setDatosPersonales}
+                  />
                 )}
                 {activeTab === 'familiares' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Formulario de datos familiares (en desarrollo)</p>
-                  </div>
+                  <DatosFamiliaresForm
+                    datosFamiliares={datosFamiliares}
+                    contactosEmergencia={contactosEmergencia}
+                    onChangeFamiliares={setDatosFamiliares}
+                    onChangeContactos={setContactosEmergencia}
+                  />
                 )}
                 {activeTab === 'laborales' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Formulario de datos laborales (en desarrollo)</p>
-                  </div>
+                  <DatosLaboralesForm
+                    data={datosLaborales}
+                    onChange={setDatosLaborales}
+                  />
                 )}
                 {activeTab === 'remuneracion' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Formulario de remuneración (en desarrollo)</p>
-                  </div>
+                  <RemuneracionForm
+                    data={datosRemuneracion}
+                    onChange={setDatosRemuneracion}
+                  />
                 )}
                 {activeTab === 'formacion' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Formulario de formación (en desarrollo)</p>
-                  </div>
+                  <FormacionForm
+                    formacion={formacion}
+                    capacitaciones={capacitaciones}
+                    onChangeFormacion={setFormacion}
+                    onChangeCapacitaciones={setCapacitaciones}
+                  />
                 )}
                 {activeTab === 'documentos' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Gestión de documentos (en desarrollo)</p>
-                  </div>
+                  <DocumentosForm
+                    documentos={documentos}
+                    onChange={setDocumentos}
+                  />
                 )}
                 {activeTab === 'administrativos' && (
-                  <div className="space-y-4">
-                    <p className="text-gray-500">Datos administrativos (en desarrollo)</p>
-                  </div>
+                  <DatosAdministrativosForm
+                    data={datosAdministrativos}
+                    onChange={setDatosAdministrativos}
+                  />
                 )}
               </div>
 
@@ -308,13 +563,16 @@ export default function LegajosPage() {
                 <button
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                  disabled={saving}
                 >
                   Cerrar
                 </button>
                 <button
-                  className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Guardar Cambios
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </div>

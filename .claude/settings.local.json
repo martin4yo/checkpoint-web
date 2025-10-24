@@ -41,7 +41,12 @@
       "Bash(do echo \"=== $f ===\")",
       "Bash(ls:*)",
       "Bash(for dir in prisma/migrations/*/)",
-      "Bash(do echo \"=== $dir ===\")"
+      "Bash(do echo \"=== $dir ===\")",
+      "Bash(/dev/null sleep 2 lsof -ti:3000)",
+      "Bash(npm run dev:*)",
+      "Bash(kill:*)",
+      "Bash(chmod:*)",
+      "Bash(./kill-port-3000.sh:*)"
     ],
     "deny": [],
     "ask": []

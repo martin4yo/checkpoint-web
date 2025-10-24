@@ -14,6 +14,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
+    // Get current user info
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        tenantId: true,
+        superuser: true
+      }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const legajoId = req.nextUrl.searchParams.get('legajoId')
 
     // Si se pide un legajo específico, devolverlo con todas sus relaciones
@@ -58,8 +72,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(legajo)
     }
 
-    // Si no, devolver todos los usuarios con sus legajos (si existen)
+    // Get tenant filter parameter
+    const tenantIdParam = req.nextUrl.searchParams.get('tenantId')
+
+    // Determine which tenantId to filter by
+    let filterTenantId = currentUser.tenantId
+
+    // If user is superuser and specifies a tenantId, use that
+    if (currentUser.superuser && tenantIdParam) {
+      filterTenantId = tenantIdParam
+    }
+
+    // Si no, devolver todos los usuarios con sus legajos (si existen) filtrados por tenant
     const users = await prisma.user.findMany({
+      where: {
+        tenantId: filterTenantId
+      },
       include: {
         legajo: {
           include: {
@@ -82,7 +110,14 @@ export async function GET(req: NextRequest) {
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json({ users })
+    return NextResponse.json({
+      users,
+      currentUser: {
+        id: currentUser.id,
+        tenantId: currentUser.tenantId,
+        superuser: currentUser.superuser
+      }
+    })
   } catch (error) {
     console.error('Get legajos error:', error)
     return NextResponse.json({ error: 'Error al obtener legajos' }, { status: 500 })
