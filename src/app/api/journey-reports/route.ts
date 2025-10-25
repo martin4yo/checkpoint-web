@@ -1,26 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { CheckpointType } from '@prisma/client'
+import { verifyToken } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   try {
+    const token = req.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const payload = await verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
+    // Get current user info
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        tenantId: true,
+        superuser: true
+      }
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const { searchParams } = new URL(req.url)
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
     const userId = searchParams.get('userId')
     const search = searchParams.get('search')
+    const tenantIdParam = searchParams.get('tenantId')
+
+    // Determine which tenantId to filter by
+    let filterTenantId = currentUser.tenantId
+
+    // If user is superuser and specifies a tenantId, use that
+    if (currentUser.superuser && tenantIdParam) {
+      filterTenantId = tenantIdParam
+    }
 
     // Construir filtros
     const where: {
       type: CheckpointType
       timestamp?: { gte?: Date; lte?: Date }
       userId?: string
+      user?: { tenantId: string }
       OR?: Array<{
         placeName?: { contains: string; mode: 'insensitive' }
         user?: { name: { contains: string; mode: 'insensitive' } }
       }>
     } = {
-      type: CheckpointType.JOURNEY_START
+      type: CheckpointType.JOURNEY_START,
+      user: {
+        tenantId: filterTenantId
+      }
     }
 
     if (dateFrom || dateTo) {

@@ -675,14 +675,48 @@ export default function CheckpointsPage() {
     checkpointId: '',
     checkpointName: ''
   })
+  const [currentUser, setCurrentUser] = useState<{ id: string; tenantId: string; superuser: boolean } | null>(null)
+  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([])
+  const [filterTenantId, setFilterTenantId] = useState<string>('')
 
   // Debug logging
   console.log('Current selectedCheckpoint:', selectedCheckpoint)
 
   useEffect(() => {
+    fetchCurrentUser()
     fetchUsers()
     fetchPlaces()
   }, [])
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch('/api/users/me')
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentUser(data)
+        setFilterTenantId(data.tenantId)
+
+        // If superuser, fetch tenants
+        if (data.superuser) {
+          fetchTenants()
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
+    }
+  }
 
   const fetchCheckpoints = useCallback(async () => {
     try {
@@ -692,6 +726,7 @@ export default function CheckpointsPage() {
       if (filter.dateTo) params.append('dateTo', filter.dateTo)
       if (filter.userId) params.append('userId', filter.userId)
       if (filter.placeId) params.append('placeId', filter.placeId)
+      if (filterTenantId) params.append('tenantId', filterTenantId)
 
       const response = await fetch(`/api/checkpoints?${params}`)
       if (response.ok) {
@@ -703,7 +738,7 @@ export default function CheckpointsPage() {
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, filterTenantId])
 
   useEffect(() => {
     fetchCheckpoints()
@@ -797,6 +832,24 @@ export default function CheckpointsPage() {
             <h3 className="text-lg font-medium text-gray-900">Filtros</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {currentUser?.superuser && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tenant
+                </label>
+                <select
+                  value={filterTenantId}
+                  onChange={(e) => setFilterTenantId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                >
+                  {tenants.map((tenant) => (
+                    <option key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Buscar por lugar
