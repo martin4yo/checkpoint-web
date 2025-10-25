@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(git --version)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
