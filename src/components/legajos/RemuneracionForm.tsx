@@ -26,7 +26,6 @@ export default function RemuneracionForm({ data, onChange }: Props) {
 
   const agregarAdicional = () => {
     if (!nuevoAdicional.concepto || !nuevoAdicional.monto) {
-      alert('Concepto y monto son requeridos')
       return
     }
 
@@ -49,7 +48,6 @@ export default function RemuneracionForm({ data, onChange }: Props) {
 
   const agregarBeneficio = () => {
     if (!nuevoBeneficio.tipo || !nuevoBeneficio.descripcion) {
-      alert('Tipo y descripción son requeridos')
       return
     }
 

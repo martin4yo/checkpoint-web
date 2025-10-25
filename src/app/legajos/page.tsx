@@ -17,6 +17,7 @@ import {
   Settings,
   Building2
 } from 'lucide-react'
+import { useConfirm } from '@/hooks/useConfirm'
 import DatosPersonalesForm from '@/components/legajos/DatosPersonalesForm'
 import DatosFamiliaresForm from '@/components/legajos/DatosFamiliaresForm'
 import DatosLaboralesForm from '@/components/legajos/DatosLaboralesForm'
@@ -72,6 +73,7 @@ interface CurrentUser {
 }
 
 export default function LegajosPage() {
+  const { confirm, ConfirmDialog } = useConfirm()
   const [users, setUsers] = useState<User[]>([])
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -134,6 +136,29 @@ export default function LegajosPage() {
     fetchUsers()
   }, [filterTenantId, fetchUsers])
 
+  // Helper function to convert ISO DateTime back to YYYY-MM-DD for date inputs
+  const convertDatesToInputFormat = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => convertDatesToInputFormat(item))
+    }
+
+    const converted: any = {}
+    for (const key in obj) {
+      const value = obj[key]
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+        // Convert ISO DateTime to YYYY-MM-DD for date inputs
+        converted[key] = value.split('T')[0]
+      } else if (typeof value === 'object' && value !== null) {
+        converted[key] = convertDatesToInputFormat(value)
+      } else {
+        converted[key] = value
+      }
+    }
+    return converted
+  }
+
   const handleEdit = async (user: User) => {
     setSelectedUser(user)
 
@@ -145,17 +170,17 @@ export default function LegajosPage() {
           const fullLegajo = await response.json()
           setSelectedLegajo(fullLegajo)
 
-          // Populate all form states
+          // Populate all form states (convert dates back to YYYY-MM-DD format)
           setNumeroLegajo(fullLegajo.numeroLegajo || '')
-          setDatosPersonales(fullLegajo.datosPersonales || {})
-          setDatosFamiliares(fullLegajo.datosFamiliares || { grupoFamiliarACargo: [] })
-          setContactosEmergencia(fullLegajo.contactosEmergencia || [])
-          setDatosLaborales(fullLegajo.datosLaborales || {})
-          setDatosRemuneracion(fullLegajo.datosRemuneracion || { adicionales: [], beneficios: [] })
-          setFormacion(fullLegajo.formacion || [])
-          setCapacitaciones(fullLegajo.capacitaciones || [])
-          setDocumentos(fullLegajo.documentos || [])
-          setDatosAdministrativos(fullLegajo.datosAdministrativos || {})
+          setDatosPersonales(convertDatesToInputFormat(fullLegajo.datosPersonales || {}))
+          setDatosFamiliares(convertDatesToInputFormat(fullLegajo.datosFamiliares || { grupoFamiliarACargo: [] }))
+          setContactosEmergencia(convertDatesToInputFormat(fullLegajo.contactosEmergencia || []))
+          setDatosLaborales(convertDatesToInputFormat(fullLegajo.datosLaborales || {}))
+          setDatosRemuneracion(convertDatesToInputFormat(fullLegajo.datosRemuneracion || { adicionales: [], beneficios: [] }))
+          setFormacion(convertDatesToInputFormat(fullLegajo.formacion || []))
+          setCapacitaciones(convertDatesToInputFormat(fullLegajo.capacitaciones || []))
+          setDocumentos(convertDatesToInputFormat(fullLegajo.documentos || []))
+          setDatosAdministrativos(convertDatesToInputFormat(fullLegajo.datosAdministrativos || {}))
         }
       } catch (error) {
         console.error('Error fetching legajo details:', error)
@@ -206,20 +231,35 @@ export default function LegajosPage() {
 
     // Basic validations
     if (!numeroLegajo.trim()) {
-      alert('Número de legajo es requerido')
+      await confirm({
+        title: 'Campo Requerido',
+        message: 'El número de legajo es requerido',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       return
     }
 
     // Validate DNI format (8 digits)
     if (datosPersonales.dni && !/^\d{7,8}$/.test(datosPersonales.dni)) {
-      alert('DNI debe tener 7 u 8 dígitos')
+      await confirm({
+        title: 'Validación de DNI',
+        message: 'El DNI debe tener 7 u 8 dígitos',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('personal')
       return
     }
 
     // Validate CUIL format (XX-XXXXXXXX-X)
-    if (datosPersonales.cuil && !/^\d{2}-?\d{8}-?\d{1}$/.test(datosPersonales.cuil.replace(/-/g, ''))) {
-      alert('CUIL debe tener el formato XX-XXXXXXXX-X')
+    if (datosPersonales.cuil && !/^\d{2}-\d{8}-\d{1}$/.test(datosPersonales.cuil)) {
+      await confirm({
+        title: 'Validación de CUIL',
+        message: 'El CUIL debe tener el formato XX-XXXXXXXX-X (ejemplo: 20-22301759-3)',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('personal')
       return
     }
@@ -227,26 +267,46 @@ export default function LegajosPage() {
     // Validate email formats
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (datosPersonales.emailPersonal && !emailRegex.test(datosPersonales.emailPersonal)) {
-      alert('Email personal no tiene un formato válido')
+      await confirm({
+        title: 'Validación de Email',
+        message: 'El email personal no tiene un formato válido',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('personal')
       return
     }
     if (datosPersonales.emailCorporativo && !emailRegex.test(datosPersonales.emailCorporativo)) {
-      alert('Email corporativo no tiene un formato válido')
+      await confirm({
+        title: 'Validación de Email',
+        message: 'El email corporativo no tiene un formato válido',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('personal')
       return
     }
 
     // Validate CBU format (22 digits)
     if (datosRemuneracion.cbu && !/^\d{22}$/.test(datosRemuneracion.cbu)) {
-      alert('CBU debe tener exactamente 22 dígitos')
+      await confirm({
+        title: 'Validación de CBU',
+        message: 'El CBU debe tener exactamente 22 dígitos',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('remuneracion')
       return
     }
 
     // Validate salary is positive
     if (datosRemuneracion.salarioBasico && datosRemuneracion.salarioBasico <= 0) {
-      alert('El salario básico debe ser mayor a cero')
+      await confirm({
+        title: 'Validación de Salario',
+        message: 'El salario básico debe ser mayor a cero',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
       setActiveTab('remuneracion')
       return
     }
@@ -256,13 +316,36 @@ export default function LegajosPage() {
     try {
       let legajoId = selectedLegajo?.id
 
+      // Helper function to clean empty strings from objects (convert to null/undefined for DateTime fields)
+      const cleanData = (obj: any): any => {
+        if (!obj || typeof obj !== 'object') return obj
+
+        if (Array.isArray(obj)) {
+          return obj.map(item => cleanData(item))
+        }
+
+        const cleaned: any = {}
+        for (const key in obj) {
+          const value = obj[key]
+          if (value === '' || value === undefined) {
+            // Skip empty strings and undefined values
+            continue
+          }
+          if (typeof value === 'object' && value !== null) {
+            cleaned[key] = cleanData(value)
+          } else {
+            cleaned[key] = value
+          }
+        }
+        return cleaned
+      }
+
       // If legajo doesn't exist, create it first
       if (!selectedLegajo) {
         const createResponse = await fetch('/api/legajos', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             userId: selectedUser.id,
@@ -279,24 +362,23 @@ export default function LegajosPage() {
         legajoId = newLegajo.id
       }
 
-      // Update all legajo data
+      // Update all legajo data (clean empty strings before sending)
       const updateResponse = await fetch('/api/legajos', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           legajoId: legajoId,
-          datosPersonales,
-          datosFamiliares,
-          contactosEmergencia,
-          datosLaborales,
-          datosRemuneracion,
-          formacion,
-          capacitaciones,
-          documentos,
-          datosAdministrativos,
+          datosPersonales: cleanData(datosPersonales),
+          datosFamiliares: cleanData(datosFamiliares),
+          contactosEmergencia: cleanData(contactosEmergencia),
+          datosLaborales: cleanData(datosLaborales),
+          datosRemuneracion: cleanData(datosRemuneracion),
+          formacion: cleanData(formacion),
+          capacitaciones: cleanData(capacitaciones),
+          documentos: cleanData(documentos),
+          datosAdministrativos: cleanData(datosAdministrativos),
         }),
       })
 
@@ -306,12 +388,22 @@ export default function LegajosPage() {
       }
 
       // Success!
-      alert('Legajo guardado exitosamente')
+      await confirm({
+        title: 'Éxito',
+        message: 'El legajo ha sido guardado exitosamente',
+        confirmText: 'Aceptar',
+        type: 'info'
+      })
       await fetchUsers()
       closeModal()
     } catch (error) {
       console.error('Error saving legajo:', error)
-      alert(error instanceof Error ? error.message : 'Error al guardar legajo')
+      await confirm({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Error al guardar legajo',
+        confirmText: 'Entendido',
+        type: 'danger'
+      })
     } finally {
       setSaving(false)
     }
@@ -329,6 +421,7 @@ export default function LegajosPage() {
 
   return (
     <DashboardLayout title="Legajos" titleIcon={<FileText className="h-8 w-8 text-gray-600" />}>
+      <ConfirmDialog />
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">

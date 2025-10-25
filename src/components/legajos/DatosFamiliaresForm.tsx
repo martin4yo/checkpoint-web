@@ -26,7 +26,6 @@ export default function DatosFamiliaresForm({ datosFamiliares, contactosEmergenc
 
   const agregarFamiliar = () => {
     if (!nuevoFamiliar.nombre || !nuevoFamiliar.relacion) {
-      alert('Nombre y relación son requeridos')
       return
     }
 
@@ -49,7 +48,6 @@ export default function DatosFamiliaresForm({ datosFamiliares, contactosEmergenc
 
   const agregarContacto = () => {
     if (!nuevoContacto.nombre || !nuevoContacto.telefono) {
-      alert('Nombre y teléfono son requeridos')
       return
     }
 

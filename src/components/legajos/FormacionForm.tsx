@@ -29,7 +29,6 @@ export default function FormacionForm({ formacion, capacitaciones, onChangeForma
 
   const agregarFormacion = () => {
     if (!nuevaFormacion.nivelEducativo || !nuevaFormacion.titulo) {
-      alert('Nivel educativo y título son requeridos')
       return
     }
 
@@ -49,7 +48,6 @@ export default function FormacionForm({ formacion, capacitaciones, onChangeForma
 
   const agregarCapacitacion = () => {
     if (!nuevaCapacitacion.nombre) {
-      alert('Nombre del curso es requerido')
       return
     }
 

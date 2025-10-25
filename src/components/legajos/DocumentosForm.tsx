@@ -42,7 +42,6 @@ export default function DocumentosForm({ documentos, onChange }: Props) {
 
   const agregarDocumento = () => {
     if (!nuevoDocumento.tipoDocumento) {
-      alert('Tipo de documento es requerido')
       return
     }
 
@@ -143,16 +142,14 @@ export default function DocumentosForm({ documentos, onChange }: Props) {
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
                     {doc.archivoUrl && (
-                      <button
-                        onClick={() => {
-                          // TODO: Implement download
-                          alert('Función de descarga en desarrollo')
-                        }}
+                      <a
+                        href={doc.archivoUrl}
+                        download
                         className="text-secondary hover:text-secondary-hover"
                         title="Descargar"
                       >
                         <Download className="h-4 w-4" />
-                      </button>
+                      </a>
                     )}
                     <button
                       onClick={() => eliminarDocumento(index)}
