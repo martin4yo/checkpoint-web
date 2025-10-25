@@ -7,19 +7,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Tenant {
   id              String                @id @default(cuid())
   name            String
-  email           String                @unique
-  password        String
+  slug            String                @unique
   isActive        Boolean               @default(true)
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
+  users           User[]
+  places          Place[]
   checkpoints     Checkpoint[]
   assignments     UserPlaceAssignment[]
   journeyLocations JourneyLocation[]
   pushTokens      PushToken[]
   journeyMonitors JourneyMonitor[]
+  journeyAdjustments JourneyAdjustment[]
+  noveltyTypes    NoveltyType[]
+  novelties       Novelty[]
+
+  @@map("tenants")
+}
+
+model User {
+  id                  String                @id @default(cuid())
+  name                String
+  email               String                @unique
+  password            String
+  tenantId            String
+  supervisorId        String?
+  superuser           Boolean               @default(false)
+  authorizesNovelties Boolean               @default(false)
+  isActive            Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  supervisor          User?                 @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  subordinates        User[]                @relation("UserSupervisor")
+  checkpoints         Checkpoint[]
+  assignments         UserPlaceAssignment[]
+  journeyLocations    JourneyLocation[]
+  pushTokens          PushToken[]
+  journeyMonitors     JourneyMonitor[]
+  novelties           Novelty[]
+  approvedNovelties   Novelty[]             @relation("ApprovedBy")
+  legajo              Legajo?
 
   @@map("users")
 }
@@ -30,9 +61,11 @@ model Place {
   address     String
   latitude    Float
   longitude   Float
+  tenantId    String
   isActive    Boolean               @default(true)
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  tenant      Tenant                @relation(fields: [tenantId], references: [id])
   checkpoints Checkpoint[]
   assignments UserPlaceAssignment[]
 
@@ -43,7 +76,9 @@ model UserPlaceAssignment {
   id        String   @id @default(cuid())
   userId    String
   placeId   String
+  tenantId  String
   createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -62,6 +97,7 @@ model Checkpoint {
   notes           String?
   imageUrl        String?
   type            CheckpointType    @default(MANUAL)
+  tenantId        String
 
   // Campos para jornadas (cuando type es JOURNEY_START)
   endLatitude     Float?
@@ -70,6 +106,7 @@ model Checkpoint {
   endNotes        String?
 
   createdAt       DateTime          @default(now())
+  tenant          Tenant            @relation(fields: [tenantId], references: [id])
   place           Place?            @relation(fields: [placeId], references: [id])
   user            User              @relation(fields: [userId], references: [id])
   journeyLocations JourneyLocation[]
@@ -85,7 +122,9 @@ model JourneyLocation {
   latitude        Float
   longitude       Float
   recordedAt      DateTime
+  tenantId        String
   createdAt       DateTime   @default(now())
+  tenant          Tenant     @relation(fields: [tenantId], references: [id])
   user            User       @relation(fields: [userId], references: [id])
   startCheckpoint Checkpoint @relation(fields: [startCheckpointId], references: [id], onDelete: Cascade)
 
@@ -101,8 +140,10 @@ model PushToken {
   isActive       Boolean   @default(true)
   isAdminDevice  Boolean   @default(false) // Para dispositivos que reciben alertas de monitoreo
   description    String?   // Descripción opcional del dispositivo
+  tenantId       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
   user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_tokens")
@@ -117,8 +158,10 @@ model JourneyMonitor {
   appState        String   @default("unknown") // 'active', 'background', 'inactive', 'unknown'
   isMoving        Boolean  @default(false)
   alertSent       Boolean  @default(false)
+  tenantId        String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
   user            User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, journeyId])
@@ -133,9 +176,10 @@ model JourneyAdjustment {
   lunchStartTime        DateTime? // Inicio del almuerzo
   lunchEndTime          DateTime? // Fin del almuerzo
   notes                 String?   // Notas sobre los ajustes
+  tenantId              String
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
+  tenant                Tenant    @relation(fields: [tenantId], references: [id])
   checkpoint            Checkpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
 
   @@map("journey_adjustments")
@@ -145,4 +189,286 @@ enum CheckpointType {
   MANUAL
   JOURNEY_START
   JOURNEY_END
+}
+
+model NoveltyType {
+  id                  String    @id @default(cuid())
+  name                String    // Ej: "Vacaciones", "Días de estudio", etc.
+  description         String?
+  color               String    @default("#3B82F6") // Color hex para el tipo
+  icon                String    @default("FileText") // Nombre del icono de Lucide React
+  requiresAmount      Boolean   @default(false) // Si requiere ingresar importe
+  requiresDate        Boolean   @default(false) // Si requiere fecha única
+  requiresDateRange   Boolean   @default(false) // Si requiere rango de fechas
+  allowsAttachments   Boolean   @default(false) // Si permite archivos adjuntos
+  isActive            Boolean   @default(true)
+  tenantId            String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  tenant              Tenant    @relation(fields: [tenantId], references: [id])
+  novelties           Novelty[]
+
+  @@map("novelty_types")
+}
+
+model Novelty {
+  id                  String              @id @default(cuid())
+  userId              String              // Usuario que crea la novedad
+  noveltyTypeId       String
+  status              NoveltyStatus       @default(PENDING)
+
+  // Campos opcionales según configuración del tipo
+  amount              Float?              // Importe (si requiresAmount = true)
+  date                DateTime?           // Fecha única (si requiresDate = true)
+  startDate           DateTime?           // Fecha inicio (si requiresDateRange = true)
+  endDate             DateTime?           // Fecha fin (si requiresDateRange = true)
+  notes               String?             // Descripción/notas
+
+  // Datos de aprobación
+  approvedById        String?             // Usuario que aprobó
+  approvedAt          DateTime?           // Fecha de aprobación
+
+  tenantId            String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  user                User                @relation(fields: [userId], references: [id])
+  noveltyType         NoveltyType         @relation(fields: [noveltyTypeId], references: [id])
+  approvedBy          User?               @relation("ApprovedBy", fields: [approvedById], references: [id])
+  attachments         NoveltyAttachment[]
+
+  @@map("novelties")
+}
+
+model NoveltyAttachment {
+  id                  String    @id @default(cuid())
+  noveltyId           String
+  fileName            String
+  fileUrl             String
+  fileSize            Int       // Tamaño en bytes
+  mimeType            String
+  uploadedAt          DateTime  @default(now())
+
+  novelty             Novelty   @relation(fields: [noveltyId], references: [id], onDelete: Cascade)
+
+  @@map("novelty_attachments")
+}
+
+enum NoveltyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ==================== MODELOS DE LEGAJO ====================
+
+model Legajo {
+  id                      String                          @id @default(cuid())
+  userId                  String                          @unique
+  numeroLegajo            String                          @unique
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+
+  user                    User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  datosPersonales         LegajoDatosPersonales?
+  datosFamiliares         LegajoDatosFamiliares?
+  datosLaborales          LegajoDatosLaborales?
+  datosRemuneracion       LegajoDatosRemuneracion?
+  datosAdministrativos    LegajoDatosAdministrativos?
+  contactosEmergencia     LegajoContactoEmergencia[]
+  formacion               LegajoFormacion[]
+  capacitaciones          LegajoCapacitacion[]
+  documentos              LegajoDocumento[]
+  horarios                LegajoHorarioTrabajo[]
+
+  @@map("legajos")
+}
+
+model LegajoDatosPersonales {
+  id                      String    @id @default(cuid())
+  legajoId                String    @unique
+  dni                     String?
+  cuil                    String?
+  fechaNacimiento         DateTime?
+  genero                  String?   // 'MASCULINO', 'FEMENINO', 'OTRO', 'PREFIERO_NO_DECIR'
+  estadoCivil             String?   // 'SOLTERO', 'CASADO', 'DIVORCIADO', 'VIUDO', 'UNION_CONVIVENCIAL'
+  nacionalidad            String?
+  domicilioCalle          String?
+  domicilioNumero         String?
+  domicilioPiso           String?
+  domicilioDepto          String?
+  domicilioLocalidad      String?
+  domicilioProvincia      String?
+  domicilioCP             String?
+  telefonoFijo            String?
+  telefonoCelular         String?
+  emailPersonal           String?
+  emailCorporativo        String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_datos_personales")
+}
+
+model LegajoDatosFamiliares {
+  id                      String    @id @default(cuid())
+  legajoId                String    @unique
+  grupoFamiliarACargo     Json?     // Array de dependientes con estructura: {nombre, relacion, fechaNacimiento, dni, etc}
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_datos_familiares")
+}
+
+model LegajoContactoEmergencia {
+  id                      String    @id @default(cuid())
+  legajoId                String
+  nombre                  String
+  relacion                String
+  telefono                String
+  orden                   Int       @default(1)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_contactos_emergencia")
+}
+
+model LegajoDatosLaborales {
+  id                      String    @id @default(cuid())
+  legajoId                String    @unique
+  fechaIngreso            DateTime?
+  fechaEgreso             DateTime?
+  tipoContrato            String?   // 'TIEMPO_INDETERMINADO', 'PLAZO_FIJO', 'PASANTIA', 'EVENTUAL', 'TEMPORADA'
+  categoria               String?
+  puesto                  String?
+  area                    String?
+  ubicacion               String?   // Sucursal/Sede
+  modalidadTrabajo        String?   // 'PRESENCIAL', 'REMOTO', 'HIBRIDO'
+  obraSocial              String?
+  sindicato               String?
+  convenioColectivo       String?
+  numeroAfiliado          String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_datos_laborales")
+}
+
+model LegajoDatosRemuneracion {
+  id                      String    @id @default(cuid())
+  legajoId                String    @unique
+  salarioBasico           Decimal?  @db.Decimal(10, 2)
+  tipoLiquidacion         String?   // 'MENSUAL', 'QUINCENAL', 'SEMANAL'
+  banco                   String?
+  cbu                     String?
+  adicionales             Json?     // Array de adicionales: {concepto, monto, tipo}
+  beneficios              Json?     // Array de beneficios: {tipo, descripcion, monto}
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_datos_remuneracion")
+}
+
+model LegajoDatosAdministrativos {
+  id                          String    @id @default(cuid())
+  legajoId                    String    @unique
+  estadoEmpleado              String?   // 'ACTIVO', 'LICENCIA', 'SUSPENDIDO', 'INACTIVO'
+  diasVacacionesAnuales       Int?      // Días que corresponden por año
+  diasVacacionesDisponibles   Decimal?  @db.Decimal(5, 2) // Días disponibles actuales
+  diasVacacionesTomadas       Decimal?  @db.Decimal(5, 2) // Días tomados en el período
+  licenciasAcumuladas         Json?     // Diferentes tipos de licencias acumuladas
+  observaciones               String?   @db.Text
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  legajo                      Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_datos_administrativos")
+}
+
+model LegajoHorarioTrabajo {
+  id                      String    @id @default(cuid())
+  legajoId                String
+  vigenciaDesde           DateTime
+  vigenciaHasta           DateTime?
+  tipoJornada             String?   // 'COMPLETA', 'REDUCIDA', 'PARCIAL', 'ESPECIAL'
+  modalidadHorario        String?   // 'FIJO', 'FLEXIBLE', 'TURNOS_ROTATIVOS', 'GUARDIAS', 'POR_OBJETIVOS', 'DISCONTINUA'
+  horasSemanales          Decimal?  @db.Decimal(5, 2)
+  horasMensuales          Decimal?  @db.Decimal(6, 2)
+  esNocturno              Boolean   @default(false)
+  tieneHorasExtrasPactadas Boolean  @default(false)
+  horasExtrasSemanales    Decimal?  @db.Decimal(5, 2)
+  detalleHorario          Json?     // Estructura con horarios por día
+  tieneTurnosRotativos    Boolean   @default(false)
+  esquemaTurnos           Json?     // Estructura con definición de turnos rotativos
+  diasFrancos             String?   // 'SABADO_DOMINGO', 'ROTATIVOS', 'OTRO'
+  detalleFrancos          String?
+  descansoDomingos        Boolean   @default(true)
+  observaciones           String?   @db.Text
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_horarios_trabajo")
+}
+
+model LegajoFormacion {
+  id                      String    @id @default(cuid())
+  legajoId                String
+  nivelEducativo          String?   // 'PRIMARIO', 'SECUNDARIO', 'TERCIARIO', 'UNIVERSITARIO', 'POSGRADO'
+  titulo                  String?
+  institucion             String?
+  fechaObtencion          DateTime?
+  certificaciones         String?   @db.Text
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_formacion")
+}
+
+model LegajoCapacitacion {
+  id                      String    @id @default(cuid())
+  legajoId                String
+  nombre                  String
+  descripcion             String?   @db.Text
+  institucion             String?
+  fechaRealizacion        DateTime?
+  duracionHoras           Int?
+  certificado             Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_capacitaciones")
+}
+
+model LegajoDocumento {
+  id                      String    @id @default(cuid())
+  legajoId                String
+  tipoDocumento           String    // 'CONTRATO', 'FORM_261', 'APTO_MEDICO', 'ALTA_AFIP', etc.
+  descripcion             String?
+  archivoUrl              String?
+  fechaCarga              DateTime  @default(now())
+  fechaVencimiento        DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+
+  @@map("legajo_documentos")
 }

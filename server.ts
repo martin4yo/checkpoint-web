@@ -1,7 +1,6 @@
 import { createServer } from 'http'
 import { parse } from 'url'
 import next from 'next'
-import { journeyWebSocketServer } from './src/lib/websocket-server'
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
@@ -22,25 +21,14 @@ app.prepare().then(() => {
     }
   })
 
-  // Inicializar WebSocket Server después de que el servidor HTTP esté listo
-  server.on('listening', () => {
-    try {
-      journeyWebSocketServer.initialize(server)
-      console.log(`✅ Servidor Next.js con WebSocket listo en http://${hostname}:${port}`)
-    } catch (error) {
-      console.error('Error inicializando WebSocket:', error)
-    }
-  })
-
   server.listen(port, (err?: Error) => {
     if (err) throw err
-    console.log(`> Ready on http://${hostname}:${port}`)
+    console.log(`✅ Servidor Next.js listo en http://${hostname}:${port}`)
   })
 
   // Manejo de cierre graceful
   process.on('SIGTERM', () => {
     console.log('SIGTERM recibido, cerrando servidor...')
-    journeyWebSocketServer.shutdown()
     server.close(() => {
       console.log('Servidor HTTP cerrado')
       process.exit(0)
@@ -49,7 +37,6 @@ app.prepare().then(() => {
 
   process.on('SIGINT', () => {
     console.log('SIGINT recibido, cerrando servidor...')
-    journeyWebSocketServer.shutdown()
     server.close(() => {
       console.log('Servidor HTTP cerrado')
       process.exit(0)

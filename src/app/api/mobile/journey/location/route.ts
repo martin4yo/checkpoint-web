@@ -16,6 +16,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
     }
 
+    // Get user's tenantId
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const body = await req.json()
     const { latitude, longitude } = body
 
@@ -42,7 +52,8 @@ export async function POST(req: NextRequest) {
         startCheckpointId: activeJourney.id,
         latitude,
         longitude,
-        recordedAt: new Date()
+        recordedAt: new Date(),
+        tenantId: user.tenantId,
       }
     })
 

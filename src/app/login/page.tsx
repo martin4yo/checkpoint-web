@@ -43,11 +43,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full mx-4">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <MapMarkerIcon size={48} color="#EA4335" />
+          <div className="flex items-center justify-center mb-6">
+            <img
+              src="/axioma_logo.png"
+              alt="Axioma"
+              className="h-20 w-auto object-contain"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-black mb-2">Checkpoint</h1>
-          <p className="text-gray-600">Panel de administración</p>
+          <h1 className="text-4xl font-bold text-palette-dark mb-2">Checkpoint</h1>
+          <p className="text-palette-purple">Gestión de Recursos Humanos</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,7 +86,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-palette-dark text-palette-yellow py-3 px-4 rounded-xl font-semibold hover:bg-sidebar-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>

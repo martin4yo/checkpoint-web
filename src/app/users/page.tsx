@@ -2,15 +2,31 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react'
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Users, Search } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
+
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+}
 
 interface User {
   id: string
   name: string
   email: string
+  tenantId: string
+  supervisorId?: string | null
+  superuser: boolean
+  authorizesNovelties: boolean
   isActive: boolean
   createdAt: string
+  tenant: Tenant
+  supervisor?: {
+    id: string
+    name: string
+    email: string
+  } | null
   _count?: {
     assignments: number
     checkpoints: number
@@ -19,6 +35,8 @@ interface User {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -26,11 +44,18 @@ export default function UsersPage() {
     name: '',
     email: '',
     password: '',
+    tenantId: '',
+    supervisorId: '',
+    superuser: false,
+    authorizesNovelties: false,
   })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterTenantId, setFilterTenantId] = useState('')
   const { confirm, ConfirmDialog } = useConfirm()
 
   useEffect(() => {
     fetchUsers()
+    fetchTenants()
   }, [])
 
   const fetchUsers = async () => {
@@ -38,12 +63,28 @@ export default function UsersPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data)
+        setUsers(data.users || [])
+
+        // Identify current user (first superuser found, or first user)
+        const superUser = (data.users || []).find((u: User) => u.superuser)
+        setCurrentUser(superUser || data.users?.[0] || null)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/tenants')
+      if (response.ok) {
+        const data = await response.json()
+        setTenants(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
     }
   }
 
@@ -54,6 +95,10 @@ export default function UsersPage() {
       name: formData.name,
       email: formData.email,
       ...(formData.password && { password: formData.password }),
+      tenantId: formData.tenantId,
+      supervisorId: formData.supervisorId || null,
+      superuser: formData.superuser,
+      authorizesNovelties: formData.authorizesNovelties,
     }
 
     try {
@@ -66,9 +111,13 @@ export default function UsersPage() {
       if (response.ok) {
         fetchUsers()
         resetForm()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error al guardar usuario')
       }
     } catch (error) {
       console.error('Error saving user:', error)
+      alert('Error al guardar usuario')
     }
   }
 
@@ -78,6 +127,10 @@ export default function UsersPage() {
       name: user.name,
       email: user.email,
       password: '',
+      tenantId: user.tenantId,
+      supervisorId: user.supervisorId || '',
+      superuser: user.superuser,
+      authorizesNovelties: user.authorizesNovelties || false,
     })
     setShowForm(true)
   }
@@ -138,10 +191,49 @@ export default function UsersPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', password: '' })
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      tenantId: tenants[0]?.id || '',
+      supervisorId: '',
+      superuser: false,
+      authorizesNovelties: false,
+    })
     setEditingUser(null)
     setShowForm(false)
   }
+
+  // Filter users based on search term and tenant filter
+  const filteredUsers = users.filter(user => {
+    // Filter by tenant
+    if (filterTenantId && user.tenantId !== filterTenantId) {
+      return false
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      const matchesName = user.name.toLowerCase().includes(searchLower)
+      const matchesEmail = user.email.toLowerCase().includes(searchLower)
+      const matchesTenantName = user.tenant.name.toLowerCase().includes(searchLower)
+      const matchesTenantSlug = user.tenant.slug.toLowerCase().includes(searchLower)
+      const matchesRole = user.superuser
+        ? 'superusuario'.includes(searchLower)
+        : 'usuario'.includes(searchLower)
+      const matchesStatus = user.isActive
+        ? 'activo'.includes(searchLower)
+        : 'inactivo'.includes(searchLower)
+
+      return matchesName || matchesEmail || matchesTenantName || matchesTenantSlug || matchesRole || matchesStatus
+    }
+
+    return true
+  })
+
+  // Only superusers can edit tenant and superuser fields
+  const canEditTenant = currentUser?.superuser
+  const canEditSuperuser = currentUser?.superuser
 
   if (loading) {
     return (
@@ -158,15 +250,48 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
-            Lista de Usuarios ({users.length})
+            Lista de Usuarios ({filteredUsers.length}{filteredUsers.length !== users.length && ` de ${users.length}`})
           </h2>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              resetForm()
+              setShowForm(true)
+            }}
             className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Usuario
           </button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, email, tenant, rol o estado..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              />
+            </div>
+            <div>
+              <select
+                value={filterTenantId}
+                onChange={(e) => setFilterTenantId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Todos los tenants</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {showForm && (
@@ -200,7 +325,7 @@ export default function UsersPage() {
                     required
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contraseña {editingUser && '(dejar vacío para mantener actual)'}
                   </label>
@@ -211,6 +336,75 @@ export default function UsersPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                     required={!editingUser}
                   />
+                </div>
+                {canEditTenant && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tenant
+                    </label>
+                    <select
+                      value={formData.tenantId}
+                      onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                      required
+                    >
+                      <option value="">Seleccionar tenant...</option>
+                      {tenants.map((tenant) => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supervisor
+                  </label>
+                  <select
+                    value={formData.supervisorId}
+                    onChange={(e) => setFormData({ ...formData, supervisorId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  >
+                    <option value="">Sin supervisor</option>
+                    {users
+                      .filter(u => u.id !== editingUser?.id && u.tenantId === formData.tenantId)
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3 border-t border-gray-200 pt-4">
+                {canEditSuperuser && editingUser && (
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="superuser"
+                      checked={formData.superuser}
+                      onChange={(e) => setFormData({ ...formData, superuser: e.target.checked })}
+                      className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                    />
+                    <label htmlFor="superuser" className="ml-2 block text-sm font-medium text-gray-900">
+                      Super Usuario
+                    </label>
+                    <span className="ml-2 text-xs text-gray-500">(puede gestionar todos los tenants y usuarios)</span>
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="authorizesNovelties"
+                    checked={formData.authorizesNovelties}
+                    onChange={(e) => setFormData({ ...formData, authorizesNovelties: e.target.checked })}
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                  />
+                  <label htmlFor="authorizesNovelties" className="ml-2 block text-sm font-medium text-gray-900">
+                    Autoriza Novedades
+                  </label>
+                  <span className="ml-2 text-xs text-gray-500">(puede aprobar o rechazar novedades)</span>
                 </div>
               </div>
               <div className="flex justify-end space-x-3">
@@ -243,10 +437,16 @@ export default function UsersPage() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
+                  Tenant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Creado
+                  Supervisor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -254,13 +454,38 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{user.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                     {user.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{user.tenant.name}</div>
+                    <div className="text-xs text-gray-500">{user.tenant.slug}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.supervisor ? (
+                      <div>
+                        <div className="text-sm text-gray-900">{user.supervisor.name}</div>
+                        <div className="text-xs text-gray-500">{user.supervisor.email}</div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">Sin supervisor</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.superuser ? (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                        Superusuario
+                      </span>
+                    ) : (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        Usuario
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -272,9 +497,6 @@ export default function UsersPage() {
                     >
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 space-x-2">
                     <button
@@ -307,9 +529,11 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
-          {users.length === 0 && (
+          {filteredUsers.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay usuarios registrados
+              {users.length === 0
+                ? 'No hay usuarios registrados'
+                : 'No se encontraron usuarios con los filtros aplicados'}
             </div>
           )}
         </div>

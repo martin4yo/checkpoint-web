@@ -23,6 +23,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user's tenantId
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { tenantId: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    }
+
     const { pushToken } = await request.json();
 
     if (!pushToken) {
@@ -63,6 +73,7 @@ export async function POST(request: NextRequest) {
         isActive: true,
         isAdminDevice: false, // Los dispositivos móviles rastreados NO son admin
         description: `Dispositivo móvil de ${payload.email}`,
+        tenantId: user.tenantId,
       },
     });
 

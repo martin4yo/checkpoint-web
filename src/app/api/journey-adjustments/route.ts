@@ -13,9 +13,23 @@ export async function POST(req: NextRequest) {
       notes
     } = body
 
+    // Get checkpoint to get tenantId
+    const checkpoint = await prisma.checkpoint.findUnique({
+      where: { id: checkpointId },
+      select: { tenantId: true }
+    })
+
+    if (!checkpoint) {
+      return NextResponse.json(
+        { error: 'Checkpoint no encontrado' },
+        { status: 404 }
+      )
+    }
+
     // Convertir strings a DateTime donde sea necesario
     const data: {
       checkpointId: string
+      tenantId: string
       notes?: string | null
       manualStartTime?: Date
       manualEndTime?: Date
@@ -23,6 +37,7 @@ export async function POST(req: NextRequest) {
       lunchEndTime?: Date
     } = {
       checkpointId,
+      tenantId: checkpoint.tenantId,
       notes: notes || null
     }
 

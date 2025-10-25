@@ -75,7 +75,7 @@ export default function JourneyReportsPage() {
       const response = await fetch('/api/users')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })))
+        setUsers((data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })))
       }
     } catch (error) {
       console.error('Error fetching users:', error)
