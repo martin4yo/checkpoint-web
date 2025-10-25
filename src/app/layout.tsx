@@ -12,6 +12,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AxiomaCloud - Checkpoint",
   description: "Sistema de gestión de checkpoints y ubicaciones",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -20,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className={`${inter.className} antialiased`}>
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>
