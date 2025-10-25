@@ -63,7 +63,7 @@ export default function Sidebar() {
 
   // Auto-expand section based on current path
   useEffect(() => {
-    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants'];
+    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants', '/configuracion'];
     if (configPaths.some(path => pathname.startsWith(path))) {
       setExpandedSection('Configuración');
     }
@@ -149,6 +149,11 @@ export default function Sidebar() {
           name: 'Tenants',
           href: '/tenants',
           icon: Building2
+        },
+        {
+          name: 'Legajos',
+          href: '/configuracion/legajos',
+          icon: Briefcase
         }
       ]
     }

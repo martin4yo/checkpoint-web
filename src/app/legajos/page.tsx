@@ -86,6 +86,7 @@ export default function LegajosPage() {
   const [saving, setSaving] = useState(false)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [fieldConfig, setFieldConfig] = useState<any>(null)
 
   // Form data states
   const [numeroLegajo, setNumeroLegajo] = useState('')
@@ -134,9 +135,25 @@ export default function LegajosPage() {
     }
   }
 
+  const fetchFieldConfig = useCallback(async () => {
+    try {
+      const url = filterTenantId
+        ? `/api/legajo-config?tenantId=${filterTenantId}`
+        : '/api/legajo-config'
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        setFieldConfig(data.requiredFields)
+      }
+    } catch (error) {
+      console.error('Error fetching field config:', error)
+    }
+  }, [filterTenantId])
+
   useEffect(() => {
     fetchUsers()
-  }, [filterTenantId, fetchUsers])
+    fetchFieldConfig()
+  }, [filterTenantId, fetchUsers, fetchFieldConfig])
 
   // Helper function to convert ISO DateTime back to YYYY-MM-DD for date inputs
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,6 +300,217 @@ export default function LegajosPage() {
       return
     }
 
+    // Dynamic validations based on field configuration
+    if (fieldConfig) {
+      // Validate Datos Personales
+      if (fieldConfig.datosPersonales) {
+        const personalFields = {
+          dni: { value: datosPersonales.dni, label: 'DNI' },
+          cuil: { value: datosPersonales.cuil, label: 'CUIL' },
+          emailPersonal: { value: datosPersonales.emailPersonal, label: 'Email Personal' },
+          emailCorporativo: { value: datosPersonales.emailCorporativo, label: 'Email Corporativo' },
+          telefono: { value: datosPersonales.telefono, label: 'Teléfono' },
+          telefonoAlternativo: { value: datosPersonales.telefonoAlternativo, label: 'Teléfono Alternativo' },
+          fechaNacimiento: { value: datosPersonales.fechaNacimiento, label: 'Fecha de Nacimiento' },
+          lugarNacimiento: { value: datosPersonales.lugarNacimiento, label: 'Lugar de Nacimiento' },
+          nacionalidad: { value: datosPersonales.nacionalidad, label: 'Nacionalidad' },
+          sexo: { value: datosPersonales.sexo, label: 'Sexo' },
+          estadoCivil: { value: datosPersonales.estadoCivil, label: 'Estado Civil' },
+          domicilio: { value: datosPersonales.domicilio, label: 'Domicilio' },
+          localidad: { value: datosPersonales.localidad, label: 'Localidad' },
+          provincia: { value: datosPersonales.provincia, label: 'Provincia' },
+          codigoPostal: { value: datosPersonales.codigoPostal, label: 'Código Postal' }
+        }
+
+        for (const [field, { value, label }] of Object.entries(personalFields)) {
+          if (fieldConfig.datosPersonales[field] && !value) {
+            await confirm({
+              title: 'Campo Requerido',
+              message: `El campo "${label}" es obligatorio`,
+              confirmText: 'Entendido',
+              type: 'warning'
+            })
+            setActiveTab('personal')
+            return
+          }
+        }
+      }
+
+      // Validate Datos Familiares
+      if (fieldConfig.datosFamiliares) {
+        if (fieldConfig.datosFamiliares.hijosACargo && datosFamiliares.hijosACargo === undefined) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'Debe indicar si tiene hijos a cargo',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('familiares')
+          return
+        }
+
+        if (fieldConfig.datosFamiliares.grupoFamiliarACargo && (!datosFamiliares.grupoFamiliarACargo || datosFamiliares.grupoFamiliarACargo.length === 0)) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'Debe agregar al menos un integrante del grupo familiar',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('familiares')
+          return
+        }
+      }
+
+      // Validate Contactos de Emergencia
+      if (fieldConfig.contactosEmergencia?.required && (!contactosEmergencia || contactosEmergencia.length === 0)) {
+        await confirm({
+          title: 'Campo Requerido',
+          message: 'Debe agregar al menos un contacto de emergencia',
+          confirmText: 'Entendido',
+          type: 'warning'
+        })
+        setActiveTab('familiares')
+        return
+      }
+
+      // Validate Datos Laborales
+      if (fieldConfig.datosLaborales) {
+        const laboralFields = {
+          puesto: { value: datosLaborales.puesto, label: 'Puesto' },
+          area: { value: datosLaborales.area, label: 'Área' },
+          sector: { value: datosLaborales.sector, label: 'Sector' },
+          supervisor: { value: datosLaborales.supervisor, label: 'Supervisor' },
+          fechaIngreso: { value: datosLaborales.fechaIngreso, label: 'Fecha de Ingreso' },
+          tipoContrato: { value: datosLaborales.tipoContrato, label: 'Tipo de Contrato' },
+          jornada: { value: datosLaborales.jornada, label: 'Jornada' },
+          modalidad: { value: datosLaborales.modalidad, label: 'Modalidad' },
+          ubicacion: { value: datosLaborales.ubicacion, label: 'Ubicación' }
+        }
+
+        for (const [field, { value, label }] of Object.entries(laboralFields)) {
+          if (fieldConfig.datosLaborales[field] && !value) {
+            await confirm({
+              title: 'Campo Requerido',
+              message: `El campo "${label}" es obligatorio`,
+              confirmText: 'Entendido',
+              type: 'warning'
+            })
+            setActiveTab('laborales')
+            return
+          }
+        }
+      }
+
+      // Validate Remuneración
+      if (fieldConfig.datosRemuneracion) {
+        const remuneracionFields = {
+          salarioBasico: { value: datosRemuneracion.salarioBasico, label: 'Salario Básico' },
+          tipoLiquidacion: { value: datosRemuneracion.tipoLiquidacion, label: 'Tipo de Liquidación' },
+          banco: { value: datosRemuneracion.banco, label: 'Banco' },
+          cbu: { value: datosRemuneracion.cbu, label: 'CBU' },
+          obraSocial: { value: datosRemuneracion.obraSocial, label: 'Obra Social' },
+          arl: { value: datosRemuneracion.arl, label: 'ARL' }
+        }
+
+        for (const [field, { value, label }] of Object.entries(remuneracionFields)) {
+          if (fieldConfig.datosRemuneracion[field] && !value) {
+            await confirm({
+              title: 'Campo Requerido',
+              message: `El campo "${label}" es obligatorio`,
+              confirmText: 'Entendido',
+              type: 'warning'
+            })
+            setActiveTab('remuneracion')
+            return
+          }
+        }
+
+        if (fieldConfig.datosRemuneracion.adicionales && (!datosRemuneracion.adicionales || datosRemuneracion.adicionales.length === 0)) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'Debe agregar al menos un adicional',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('remuneracion')
+          return
+        }
+
+        if (fieldConfig.datosRemuneracion.beneficios && (!datosRemuneracion.beneficios || datosRemuneracion.beneficios.length === 0)) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'Debe agregar al menos un beneficio',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('remuneracion')
+          return
+        }
+      }
+
+      // Validate Formación
+      if (fieldConfig.formacion?.required && (!formacion || formacion.length === 0)) {
+        await confirm({
+          title: 'Campo Requerido',
+          message: 'Debe agregar al menos un registro de formación académica',
+          confirmText: 'Entendido',
+          type: 'warning'
+        })
+        setActiveTab('formacion')
+        return
+      }
+
+      // Validate Capacitaciones
+      if (fieldConfig.capacitaciones?.required && (!capacitaciones || capacitaciones.length === 0)) {
+        await confirm({
+          title: 'Campo Requerido',
+          message: 'Debe agregar al menos una capacitación',
+          confirmText: 'Entendido',
+          type: 'warning'
+        })
+        setActiveTab('formacion')
+        return
+      }
+
+      // Validate Documentos
+      if (fieldConfig.documentos?.required && (!documentos || documentos.length === 0)) {
+        await confirm({
+          title: 'Campo Requerido',
+          message: 'Debe agregar al menos un documento',
+          confirmText: 'Entendido',
+          type: 'warning'
+        })
+        setActiveTab('documentos')
+        return
+      }
+
+      // Validate Datos Administrativos
+      if (fieldConfig.datosAdministrativos) {
+        if (fieldConfig.datosAdministrativos.legajoFisico && !datosAdministrativos.legajoFisico) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'El número de legajo físico es obligatorio',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('administrativos')
+          return
+        }
+
+        if (fieldConfig.datosAdministrativos.observaciones && !datosAdministrativos.observaciones) {
+          await confirm({
+            title: 'Campo Requerido',
+            message: 'Las observaciones son obligatorias',
+            confirmText: 'Entendido',
+            type: 'warning'
+          })
+          setActiveTab('administrativos')
+          return
+        }
+      }
+    }
+
+    // Format validations (always apply, regardless of required status)
     // Validate DNI format (8 digits)
     if (datosPersonales.dni && !/^\d{7,8}$/.test(datosPersonales.dni)) {
       await confirm({

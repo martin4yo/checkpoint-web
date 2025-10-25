@@ -51,7 +51,12 @@
       "Bash(ssh root@vps-5199621-x.vps.ovh.net \"cd /var/www/checkpoint-web && cat .env | grep DATABASE_URL\")",
       "Bash(git pull:*)",
       "Bash(dir \"C:\\Ex drive\\AXIOMA\\Checkpoint\\public\" /B)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(tasklist:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
