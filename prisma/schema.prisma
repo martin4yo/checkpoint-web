@@ -24,6 +24,9 @@ model Tenant {
   journeyAdjustments JourneyAdjustment[]
   noveltyTypes    NoveltyType[]
   novelties       Novelty[]
+  biometricData   BiometricData[]
+  biometricConfig BiometricConfig?
+  biometricClocks BiometricClock[]
 
   @@map("tenants")
 }
@@ -51,6 +54,9 @@ model User {
   novelties           Novelty[]
   approvedNovelties   Novelty[]             @relation("ApprovedBy")
   legajo              Legajo?
+  biometricData       BiometricData?
+  biometricClocks     BiometricClock[]
+  enrolledBiometrics  BiometricData[]       @relation("EnrolledBy")
 
   @@map("users")
 }
@@ -68,6 +74,7 @@ model Place {
   tenant      Tenant                @relation(fields: [tenantId], references: [id])
   checkpoints Checkpoint[]
   assignments UserPlaceAssignment[]
+  biometricClocks BiometricClock[]
 
   @@map("places")
 }
@@ -471,4 +478,121 @@ model LegajoDocumento {
   legajo                  Legajo    @relation(fields: [legajoId], references: [id], onDelete: Cascade)
 
   @@map("legajo_documentos")
+}
+
+// ==================== MODELOS DE SISTEMA BIOMÉTRICO ====================
+
+model BiometricData {
+  id                  String              @id @default(cuid())
+  userId              String              @unique
+  tenantId            String
+
+  // Datos biométricos encriptados (JSON strings)
+  faceEmbeddings      String?             @db.Text // Array de embeddings faciales (3-5 fotos)
+  fingerprintHash     String?             @db.Text // Hash de la huella digital
+
+  // Métodos de backup
+  pinHash             String?             // Hash del PIN de 6 dígitos
+  qrCode              String?             @unique // Código QR único
+
+  // Metadata
+  consentSigned       Boolean             @default(false)
+  consentDate         DateTime?
+  enrolledAt          DateTime            @default(now())
+  enrolledById        String              // Usuario que realizó la inscripción
+  lastUsedAt          DateTime?
+  isActive            Boolean             @default(true)
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  enrolledBy          User                @relation("EnrolledBy", fields: [enrolledById], references: [id])
+
+  @@index([tenantId])
+  @@index([qrCode])
+  @@map("biometric_data")
+}
+
+model BiometricConfig {
+  id                  String              @id @default(cuid())
+  tenantId            String              @unique
+
+  // Métodos habilitados
+  faceEnabled         Boolean             @default(true)
+  fingerprintEnabled  Boolean             @default(true)
+  pinEnabled          Boolean             @default(true)
+  qrEnabled           Boolean             @default(true)
+
+  // Configuración de reconocimiento facial
+  faceThreshold       Float               @default(0.6) // 0-1, menor = más estricto
+  faceMinPhotos       Int                 @default(3)   // Mínimo de fotos para enrollment
+
+  // Configuración de PIN
+  pinLength           Int                 @default(6)   // Longitud del PIN
+
+  // Configuración de QR
+  qrExpirationDays    Int?                // null = nunca expira
+
+  // Opciones de seguridad
+  requirePhotoOnClock Boolean             @default(true)  // Tomar foto al fichar
+  maxRetries          Int                 @default(3)     // Intentos fallidos antes de bloquear
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("biometric_config")
+}
+
+model BiometricClock {
+  id                  String              @id @default(cuid())
+  userId              String
+  tenantId            String
+  placeId             String?
+
+  // Tipo de fichaje
+  clockType           BiometricClockType  // 'IN' o 'OUT'
+
+  // Método usado
+  method              BiometricMethod     // 'FACE', 'FINGERPRINT', 'PIN', 'QR'
+
+  // Confianza del método (solo para FACE y FINGERPRINT)
+  confidence          Float?              // 0-1
+
+  // Ubicación
+  latitude            Float
+  longitude           Float
+
+  // Foto del fichaje (opcional)
+  photoUrl            String?
+
+  // Metadata
+  deviceInfo          Json?               // Info del dispositivo
+  failedAttempts      Int                 @default(0)
+
+  createdAt           DateTime            @default(now())
+
+  user                User                @relation(fields: [userId], references: [id])
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  place               Place?              @relation(fields: [placeId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([tenantId, createdAt])
+  @@index([placeId, createdAt])
+  @@map("biometric_clocks")
+}
+
+enum BiometricClockType {
+  IN
+  OUT
+}
+
+enum BiometricMethod {
+  FACE
+  FINGERPRINT
+  PIN
+  QR
 }
