@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import MapMarkerIcon from '@/components/MapMarkerIcon'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -44,10 +44,13 @@ export default function LoginPage() {
       <div className="max-w-md w-full mx-4">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <img
-              src="/axioma_logo.png"
+            <Image
+              src="/axioma_logo_dark.png"
               alt="Axioma"
+              width={200}
+              height={80}
               className="h-20 w-auto object-contain"
+              priority
             />
           </div>
           <h1 className="text-4xl font-bold text-palette-dark mb-2">Checkpoint</h1>

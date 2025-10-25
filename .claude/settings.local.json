@@ -49,7 +49,9 @@
       "Bash(chmod:*)",
       "Bash(./kill-port-3000.sh:*)",
       "Bash(ssh root@vps-5199621-x.vps.ovh.net \"cd /var/www/checkpoint-web && cat .env | grep DATABASE_URL\")",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(dir \"C:\\Ex drive\\AXIOMA\\Checkpoint\\public\" /B)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
