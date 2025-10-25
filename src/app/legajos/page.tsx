@@ -137,6 +137,7 @@ export default function LegajosPage() {
   }, [filterTenantId, fetchUsers])
 
   // Helper function to convert ISO DateTime back to YYYY-MM-DD for date inputs
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const convertDatesToInputFormat = (obj: any): any => {
     if (!obj || typeof obj !== 'object') return obj
 
@@ -144,6 +145,7 @@ export default function LegajosPage() {
       return obj.map(item => convertDatesToInputFormat(item))
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const converted: any = {}
     for (const key in obj) {
       const value = obj[key]
@@ -317,6 +319,7 @@ export default function LegajosPage() {
       let legajoId = selectedLegajo?.id
 
       // Helper function to clean empty strings from objects (convert to null/undefined for DateTime fields)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cleanData = (obj: any): any => {
         if (!obj || typeof obj !== 'object') return obj
 
@@ -324,6 +327,7 @@ export default function LegajosPage() {
           return obj.map(item => cleanData(item))
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cleaned: any = {}
         for (const key in obj) {
           const value = obj[key]
