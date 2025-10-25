@@ -16,6 +16,7 @@
   "dependencies": {
     "@google-cloud/storage": "^7.17.1",
     "@prisma/client": "^6.16.2",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.2",

@@ -84,13 +84,13 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       )
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en biometric/verify:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al verificar datos biométricos',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
@@ -164,7 +164,7 @@ async function verifyFaceMethod(imageBase64: string, userId?: string) {
 
     console.log('❌ Rostro no reconocido')
     return { isValid: false, method: 'FACE' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en verifyFaceMethod:', error)
     throw error
   }
@@ -198,7 +198,7 @@ async function verifyFingerprintMethod(fingerprintHash: string, userId?: string)
       confidence: isValid ? 1.0 : 0.0,
       method: 'FINGERPRINT'
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en verifyFingerprintMethod:', error)
     throw error
   }
@@ -263,7 +263,7 @@ async function verifyPinMethod(pin: string, userId?: string, tenantId?: string) 
 
     console.log('❌ PIN no reconocido')
     return { isValid: false, method: 'PIN' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en verifyPinMethod:', error)
     throw error
   }
@@ -303,7 +303,7 @@ async function verifyQRMethod(qrCode: string) {
       confidence: 1.0,
       method: 'QR'
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en verifyQRMethod:', error)
     throw error
   }

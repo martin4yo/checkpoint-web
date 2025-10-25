@@ -95,7 +95,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
     // Detectar rostro y extraer descriptor
     const detection = await faceapi
-      .detectSingleFace(imageBuffer as any)
+      .detectSingleFace(imageBuffer as unknown as HTMLCanvasElement)
       .withFaceLandmarks()
       .withFaceDescriptor()
 
@@ -108,9 +108,9 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
       confidence: detection.detection.score,
       timestamp: new Date().toISOString()
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error extracting face embedding:', error)
-    throw new Error(`Error al procesar imagen facial: ${error.message}`)
+    throw new Error(`Error al procesar imagen facial: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -170,7 +170,7 @@ export function encryptFaceEmbeddings(embeddings: FaceEmbedding[]): string {
 
     // Retornar: iv + authTag + encrypted
     return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error encrypting face embeddings:', error)
     throw new Error('Error al encriptar datos biométricos')
   }
@@ -199,7 +199,7 @@ export function decryptFaceEmbeddings(encryptedData: string): FaceEmbedding[] {
     decrypted += decipher.final('utf8')
 
     return JSON.parse(decrypted)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error decrypting face embeddings:', error)
     throw new Error('Error al desencriptar datos biométricos')
   }

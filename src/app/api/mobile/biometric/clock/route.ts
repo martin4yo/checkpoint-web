@@ -258,13 +258,13 @@ export async function POST(req: NextRequest) {
       },
       message: `Fichaje de ${clockType === 'IN' ? 'entrada' : 'salida'} registrado exitosamente`
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en biometric/clock:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al registrar fichaje',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
@@ -316,7 +316,7 @@ async function verifyFace(imageBase64: string, userId?: string) {
           confidence: result.confidence
         }
       }
-    } catch (error) {
+    } catch {
       continue
     }
   }
@@ -433,13 +433,13 @@ export async function GET(req: NextRequest) {
       success: true,
       data: clocks
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en GET biometric/clock:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al obtener fichajes',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

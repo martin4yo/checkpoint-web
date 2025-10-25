@@ -100,13 +100,13 @@ export async function POST(req: NextRequest) {
       },
       message: 'PIN registrado exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en enroll/pin:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al registrar PIN',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

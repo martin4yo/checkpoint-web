@@ -89,13 +89,13 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(response)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en biometric/status:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al obtener estado biométrico',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

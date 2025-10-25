@@ -110,13 +110,13 @@ export async function POST(req: NextRequest) {
       },
       message: 'Huella digital registrada exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en enroll/fingerprint:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al registrar huella digital',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

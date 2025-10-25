@@ -4,7 +4,6 @@ import { verifyToken } from '@/lib/auth'
 import {
   extractFaceEmbedding,
   encryptFaceEmbeddings,
-  decryptFaceEmbeddings,
   FaceEmbedding
 } from '@/lib/biometric'
 
@@ -90,9 +89,10 @@ export async function POST(req: NextRequest) {
         const embedding = await extractFaceEmbedding(images[i])
         embeddings.push(embedding)
         console.log(`✅ Imagen ${i + 1}/${images.length} procesada (confidence: ${embedding.confidence.toFixed(2)})`)
-      } catch (error: any) {
-        console.error(`❌ Error procesando imagen ${i + 1}:`, error.message)
-        errors.push(`Imagen ${i + 1}: ${error.message}`)
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`❌ Error procesando imagen ${i + 1}:`, message)
+        errors.push(`Imagen ${i + 1}: ${message}`)
       }
     }
 
@@ -158,13 +158,13 @@ export async function POST(req: NextRequest) {
       },
       message: `${embeddings.length} imágenes faciales registradas exitosamente`
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en enroll/face:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al registrar datos faciales',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

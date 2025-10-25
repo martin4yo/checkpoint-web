@@ -97,13 +97,13 @@ export async function GET(req: NextRequest) {
       },
       message: 'Código QR generado exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en enroll/qr:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al generar código QR',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
@@ -184,13 +184,13 @@ export async function POST(req: NextRequest) {
       },
       message: 'Código QR regenerado exitosamente'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en regenerate QR:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al regenerar código QR',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

@@ -79,13 +79,13 @@ export async function GET(req: NextRequest) {
         maxRetries: config.maxRetries
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en biometric/config:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'Error al obtener configuración biométrica',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
