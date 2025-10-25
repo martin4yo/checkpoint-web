@@ -84,6 +84,8 @@ export default function LegajosPage() {
   const [selectedLegajo, setSelectedLegajo] = useState<LegajoCompleto | null>(null)
   const [activeTab, setActiveTab] = useState('personal')
   const [saving, setSaving] = useState(false)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
 
   // Form data states
   const [numeroLegajo, setNumeroLegajo] = useState('')
@@ -161,7 +163,36 @@ export default function LegajosPage() {
     return converted
   }
 
+  const handleNewLegajo = () => {
+    // Get users without legajo
+    const usersWithoutLegajo = users.filter(u => !u.legajo)
+    setAvailableUsers(usersWithoutLegajo)
+
+    // Reset all states
+    setSelectedUser(null)
+    setSelectedLegajo(null)
+    setIsCreatingNew(true)
+
+    // Generate new legajo number
+    const newNumero = String(users.length + 1).padStart(3, '0')
+    setNumeroLegajo(newNumero)
+
+    // Reset all form states
+    setDatosPersonales({})
+    setDatosFamiliares({ grupoFamiliarACargo: [] })
+    setContactosEmergencia([])
+    setDatosLaborales({})
+    setDatosRemuneracion({ adicionales: [], beneficios: [] })
+    setFormacion([])
+    setCapacitaciones([])
+    setDocumentos([])
+    setDatosAdministrativos({})
+
+    setShowModal(true)
+  }
+
   const handleEdit = async (user: User) => {
+    setIsCreatingNew(false)
     setSelectedUser(user)
 
     // Si el usuario tiene legajo, traer todos sus datos
@@ -214,6 +245,8 @@ export default function LegajosPage() {
     setSelectedUser(null)
     setSelectedLegajo(null)
     setActiveTab('personal')
+    setIsCreatingNew(false)
+    setAvailableUsers([])
 
     // Reset all form states
     setNumeroLegajo('')
@@ -229,7 +262,15 @@ export default function LegajosPage() {
   }
 
   const handleSave = async () => {
-    if (!selectedUser) return
+    if (!selectedUser) {
+      await confirm({
+        title: 'Usuario Requerido',
+        message: 'Debe seleccionar un empleado para crear el legajo',
+        confirmText: 'Entendido',
+        type: 'warning'
+      })
+      return
+    }
 
     // Basic validations
     if (!numeroLegajo.trim()) {
@@ -430,8 +471,15 @@ export default function LegajosPage() {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
             <Users className="inline h-5 w-5 mr-2" />
-            Legajos de Empleados ({users.length})
+            Legajos de Empleados ({users.filter(u => u.legajo).length})
           </h2>
+          <button
+            onClick={handleNewLegajo}
+            className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover flex items-center space-x-2"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Nuevo Legajo</span>
+          </button>
         </div>
 
         {/* Tenant Filter - Only for Superusers */}
@@ -487,7 +535,7 @@ export default function LegajosPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {users.filter(user => user.legajo).map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -546,22 +594,24 @@ export default function LegajosPage() {
               ))}
             </tbody>
           </table>
-          {users.length === 0 && (
+          {users.filter(u => u.legajo).length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay usuarios registrados
+              No hay legajos creados aún. Use el botón "Nuevo Legajo" para crear uno.
             </div>
           )}
         </div>
 
         {/* Modal de Edición/Creación */}
-        {showModal && selectedUser && (
+        {showModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-7xl h-[80vh] flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold">
-                  {selectedLegajo
-                    ? `Legajo N° ${selectedLegajo.numeroLegajo} - ${selectedUser.name}`
-                    : `Crear Legajo - ${selectedUser.name}`
+                  {isCreatingNew
+                    ? 'Crear Nuevo Legajo'
+                    : selectedLegajo
+                    ? `Legajo N° ${selectedLegajo.numeroLegajo} - ${selectedUser?.name}`
+                    : `Crear Legajo - ${selectedUser?.name}`
                   }
                 </h3>
                 <button
@@ -571,6 +621,35 @@ export default function LegajosPage() {
                   <X className="h-6 w-6" />
                 </button>
               </div>
+
+              {/* User Selector - Only for new legajo creation */}
+              {isCreatingNew && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Seleccionar Empleado
+                  </label>
+                  <select
+                    value={selectedUser?.id || ''}
+                    onChange={(e) => {
+                      const user = availableUsers.find(u => u.id === e.target.value)
+                      setSelectedUser(user || null)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                  >
+                    <option value="">-- Seleccione un empleado --</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                  {availableUsers.length === 0 && (
+                    <p className="mt-2 text-sm text-orange-600">
+                      No hay usuarios disponibles sin legajo. Todos los usuarios ya tienen un legajo asignado.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Tabs */}
               <div className="border-b border-gray-200 mb-4 flex-shrink-0">
