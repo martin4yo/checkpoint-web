@@ -13,7 +13,8 @@ interface Tenant {
 
 interface User {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
   tenantId: string
   supervisorId?: string | null
@@ -24,7 +25,8 @@ interface User {
   tenant: Tenant
   supervisor?: {
     id: string
-    name: string
+    firstName: string
+    lastName: string
     email: string
   } | null
   _count?: {
@@ -41,7 +43,8 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     tenantId: '',
@@ -92,7 +95,8 @@ export default function UsersPage() {
     e.preventDefault()
 
     const userData = {
-      name: formData.name,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
       ...(formData.password && { password: formData.password }),
       tenantId: formData.tenantId,
@@ -124,7 +128,8 @@ export default function UsersPage() {
   const handleEdit = (user: User) => {
     setEditingUser(user)
     setFormData({
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       password: '',
       tenantId: user.tenantId,
@@ -192,7 +197,8 @@ export default function UsersPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       tenantId: tenants[0]?.id || '',
@@ -214,7 +220,8 @@ export default function UsersPage() {
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
-      const matchesName = user.name.toLowerCase().includes(searchLower)
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase()
+      const matchesName = fullName.includes(searchLower)
       const matchesEmail = user.email.toLowerCase().includes(searchLower)
       const matchesTenantName = user.tenant.name.toLowerCase().includes(searchLower)
       const matchesTenantSlug = user.tenant.slug.toLowerCase().includes(searchLower)
@@ -307,10 +314,21 @@ export default function UsersPage() {
                   </label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Apellido
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -371,7 +389,7 @@ export default function UsersPage() {
                       .filter(u => u.id !== editingUser?.id && u.tenantId === formData.tenantId)
                       .map((user) => (
                         <option key={user.id} value={user.id}>
-                          {user.name}
+                          {user.firstName} {user.lastName}
                         </option>
                       ))}
                   </select>
@@ -457,7 +475,7 @@ export default function UsersPage() {
               {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                     {user.email}
@@ -469,7 +487,7 @@ export default function UsersPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.supervisor ? (
                       <div>
-                        <div className="text-sm text-gray-900">{user.supervisor.name}</div>
+                        <div className="text-sm text-gray-900">{user.supervisor.firstName} {user.supervisor.lastName}</div>
                         <div className="text-xs text-gray-500">{user.supervisor.email}</div>
                       </div>
                     ) : (
@@ -518,7 +536,7 @@ export default function UsersPage() {
                       )}
                     </button>
                     <button
-                      onClick={() => handleDelete(user.id, user.name)}
+                      onClick={() => handleDelete(user.id, `${user.firstName} ${user.lastName}`)}
                       className="inline-flex items-center text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >

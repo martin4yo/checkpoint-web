@@ -134,7 +134,8 @@ export async function POST(req: NextRequest) {
       where: { id: verifiedUserId },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         tenantId: true,
         isActive: true
@@ -220,7 +221,7 @@ export async function POST(req: NextRequest) {
       data: { lastUsedAt: new Date() }
     })
 
-    console.log(`✅ Fichaje registrado: ${user.name} - ${clockType} - ${method}`)
+    console.log(`✅ Fichaje registrado: ${user.firstName} ${user.lastName} - ${clockType} - ${method}`)
 
     // PASO 8: Si es modo estático, también crear un checkpoint tradicional
     // Esto mantiene compatibilidad con el sistema existente
@@ -249,7 +250,7 @@ export async function POST(req: NextRequest) {
       data: {
         clockId: biometricClock.id,
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
         clockType: clockType,
         method: method,
         confidence: confidence,
@@ -424,7 +425,7 @@ export async function GET(req: NextRequest) {
           select: { id: true, name: true, address: true }
         },
         user: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, firstName: true, lastName: true, email: true }
         }
       }
     })

@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
       where: { id: payload.userId },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         superuser: true,
         authorizesNovelties: true,

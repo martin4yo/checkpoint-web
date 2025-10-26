@@ -22,7 +22,7 @@ export async function POST(
 
     const currentUser = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, name: true, tenantId: true, superuser: true, authorizesNovelties: true }
+      select: { id: true, firstName: true, lastName: true, tenantId: true, superuser: true, authorizesNovelties: true }
     })
 
     if (!currentUser) {
@@ -72,7 +72,8 @@ export async function POST(
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -80,7 +81,8 @@ export async function POST(
         approvedBy: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -99,7 +101,7 @@ export async function POST(
       await sendNoveltyStatusEmail(updatedNovelty.user.email, {
         noveltyTypeName: updatedNovelty.noveltyType.name,
         status: status as 'APPROVED' | 'REJECTED',
-        approverName: currentUser.name,
+        approverName: `${currentUser.firstName} ${currentUser.lastName}`,
         webAppUrl
       })
     } catch (emailError) {

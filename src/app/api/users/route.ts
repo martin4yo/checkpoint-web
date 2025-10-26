@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
       where: whereClause,
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         tenantId: true,
         supervisorId: true,
@@ -48,7 +49,8 @@ export async function GET(req: NextRequest) {
         supervisor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -90,9 +92,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { name, email, password, tenantId, supervisorId, authorizesNovelties } = await req.json()
+    const { firstName, lastName, email, password, tenantId, supervisorId, authorizesNovelties } = await req.json()
 
-    if (!name || !email || !password) {
+    if (!firstName || !email || !password) {
       return NextResponse.json({ error: 'Nombre, email y contraseña son requeridos' }, { status: 400 })
     }
 
@@ -119,7 +121,8 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        name,
+        firstName,
+        lastName: lastName || '',
         email,
         password: hashedPassword,
         tenantId: finalTenantId,
@@ -129,7 +132,8 @@ export async function POST(req: NextRequest) {
       },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         tenantId: true,
         supervisorId: true,
@@ -147,7 +151,8 @@ export async function POST(req: NextRequest) {
         supervisor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         }
@@ -182,9 +187,9 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const { id, name, email, password, tenantId, supervisorId, superuser, authorizesNovelties } = await req.json()
+    const { id, firstName, lastName, email, password, tenantId, supervisorId, superuser, authorizesNovelties } = await req.json()
 
-    if (!id || !name || !email) {
+    if (!id || !firstName || !email) {
       return NextResponse.json(
         { error: 'ID, nombre y email son requeridos' },
         { status: 400 }
@@ -192,7 +197,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = {
-      name,
+      firstName,
+      lastName: lastName || '',
       email,
     }
 
@@ -230,7 +236,8 @@ export async function PUT(req: NextRequest) {
       data: updateData,
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         tenantId: true,
         supervisorId: true,
@@ -248,7 +255,8 @@ export async function PUT(req: NextRequest) {
         supervisor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         }

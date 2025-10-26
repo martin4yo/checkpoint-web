@@ -28,7 +28,8 @@ import { useSidebar } from '@/contexts/SidebarContext';
 
 interface CurrentUser {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   superuser: boolean;
   authorizesNovelties: boolean;
@@ -307,7 +308,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-text-white truncate">
-              {currentUser?.name}
+              {currentUser?.firstName} {currentUser?.lastName}
             </p>
             <p className="text-xs text-text-light truncate">
               {currentUser?.email}

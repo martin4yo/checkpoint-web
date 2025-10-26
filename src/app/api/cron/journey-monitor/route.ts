@@ -17,7 +17,7 @@ export async function POST() {
       },
       include: {
         user: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, firstName: true, lastName: true, email: true }
         }
       },
       orderBy: { timestamp: 'desc' }
@@ -53,7 +53,7 @@ export async function POST() {
         })
 
         if (!monitor) {
-          console.log(`⚠️ No hay monitor para jornada ${journey.id} del usuario ${journey.user.name}`)
+          console.log(`⚠️ No hay monitor para jornada ${journey.id} del usuario ${journey.user.firstName} ${journey.user.lastName}`)
           continue
         }
 
@@ -85,12 +85,12 @@ export async function POST() {
 
         // CASO 1: Sin heartbeat por mucho tiempo (app crashed/cerrada)
         if (minutesSinceHeartbeat > HEARTBEAT_TIMEOUT_MINUTES && !monitor.alertSent) {
-          console.log(`🚨 Jornada sin heartbeat: ${journey.user.name} - ${minutesSinceHeartbeat} minutos`)
+          console.log(`🚨 Jornada sin heartbeat: ${journey.user.firstName} ${journey.user.lastName} - ${minutesSinceHeartbeat} minutos`)
 
           await JourneyNotifications.sendJourneyInactiveAlert(
             adminTokenList,
             {
-              name: journey.user.name,
+              name: `${journey.user.firstName} ${journey.user.lastName}`,
               email: journey.user.email
             },
             {
@@ -112,12 +112,12 @@ export async function POST() {
 
         // CASO 2: Jornada recuperada (heartbeat reciente después de alerta)
         if (minutesSinceHeartbeat <= 5 && monitor.alertSent) {
-          console.log(`✅ Jornada recuperada: ${journey.user.name}`)
+          console.log(`✅ Jornada recuperada: ${journey.user.firstName} ${journey.user.lastName}`)
 
           await JourneyNotifications.sendJourneyRecoveredAlert(
             adminTokenList,
             {
-              name: journey.user.name,
+              name: `${journey.user.firstName} ${journey.user.lastName}`,
               email: journey.user.email
             }
           )

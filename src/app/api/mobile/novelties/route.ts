@@ -64,7 +64,8 @@ export async function GET(req: NextRequest) {
         approvedBy: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },

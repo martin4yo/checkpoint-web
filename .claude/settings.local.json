@@ -56,7 +56,9 @@
       "Bash(taskkill:*)",
       "Bash(netstat:*)",
       "Bash(tasklist:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(awk:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

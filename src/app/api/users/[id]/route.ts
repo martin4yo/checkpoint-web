@@ -37,9 +37,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { name, email, password, isActive } = await req.json()
+    const { firstName, lastName, email, password, isActive } = await req.json()
 
-    const data: Record<string, unknown> = { name, email, isActive }
+    const data: Record<string, unknown> = { firstName, lastName, email, isActive }
 
     if (password) {
       data.password = await hashPassword(password)
@@ -50,7 +50,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data,
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         isActive: true,
         updatedAt: true,

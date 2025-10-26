@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       token,
       user: {
         id: user.id,
-        name: user.name,
+        name: `${user.firstName} ${user.lastName}`,
         email: user.email,
       },
       places: user.assignments.map(a => ({

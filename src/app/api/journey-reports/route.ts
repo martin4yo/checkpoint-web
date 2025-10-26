@@ -52,7 +52,10 @@ export async function GET(req: NextRequest) {
       user?: { tenantId: string }
       OR?: Array<{
         placeName?: { contains: string; mode: 'insensitive' }
-        user?: { name: { contains: string; mode: 'insensitive' } }
+        user?: {
+          firstName?: { contains: string; mode: 'insensitive' }
+          lastName?: { contains: string; mode: 'insensitive' }
+        }
       }>
     } = {
       type: CheckpointType.JOURNEY_START,
@@ -74,7 +77,8 @@ export async function GET(req: NextRequest) {
     if (search) {
       where.OR = [
         { placeName: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } }
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } }
       ]
     }
 
@@ -85,7 +89,8 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -156,7 +161,7 @@ export async function GET(req: NextRequest) {
       return {
         id: journey.id,
         placeName: journey.placeName,
-        userName: journey.user.name,
+        userName: `${journey.user.firstName} ${journey.user.lastName}`,
         userEmail: journey.user.email,
         startDate,
         startTime,

@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             tenant: {
               select: {
@@ -65,7 +66,8 @@ export async function GET(req: NextRequest) {
         approvedBy: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -153,7 +155,8 @@ export async function POST(req: NextRequest) {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -181,7 +184,7 @@ export async function POST(req: NextRequest) {
         await sendNoveltyCreatedEmail(emails, {
           noveltyId: novelty.id,
           noveltyTypeName: novelty.noveltyType.name,
-          userName: novelty.user.name,
+          userName: `${novelty.user.firstName} ${novelty.user.lastName}`,
           userEmail: novelty.user.email,
           amount: novelty.amount || undefined,
           date: novelty.date?.toISOString(),
@@ -274,7 +277,8 @@ export async function PUT(req: NextRequest) {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -282,7 +286,8 @@ export async function PUT(req: NextRequest) {
         approvedBy: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         }

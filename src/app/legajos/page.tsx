@@ -60,7 +60,8 @@ interface Legajo {
 
 interface User {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
   isActive: boolean
   legajo?: Legajo | null
@@ -775,7 +776,7 @@ export default function LegajosPage() {
                       <User className="h-8 w-8 rounded-full bg-gray-200 p-2 text-gray-600 mr-3" />
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {user.name}
+                          {user.firstName} {user.lastName}
                         </div>
                         <div className="text-xs text-gray-500">{user.email}</div>
                       </div>
@@ -838,8 +839,8 @@ export default function LegajosPage() {
                   {isCreatingNew
                     ? 'Crear Nuevo Legajo'
                     : selectedLegajo
-                    ? `Legajo N° ${selectedLegajo.numeroLegajo} - ${selectedUser?.name}`
-                    : `Crear Legajo - ${selectedUser?.name}`
+                    ? `Legajo N° ${selectedLegajo.numeroLegajo} - ${selectedUser?.firstName} ${selectedUser?.lastName}`
+                    : `Crear Legajo - ${selectedUser?.firstName} ${selectedUser?.lastName}`
                   }
                 </h3>
                 <button
@@ -867,7 +868,7 @@ export default function LegajosPage() {
                     <option value="">-- Seleccione un empleado --</option>
                     {availableUsers.map((user) => (
                       <option key={user.id} value={user.id}>
-                        {user.name} ({user.email})
+                        {user.firstName} {user.lastName} ({user.email})
                       </option>
                     ))}
                   </select>

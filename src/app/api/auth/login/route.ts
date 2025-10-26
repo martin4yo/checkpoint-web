@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
       success: true,
       user: {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
       },
       token,

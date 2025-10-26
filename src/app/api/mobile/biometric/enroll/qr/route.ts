@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     // Obtener usuario
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, tenantId: true, email: true, name: true }
+      select: { id: true, tenantId: true, email: true, firstName: true, lastName: true }
     })
 
     if (!user) {
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
         qrCode: qrCode,
         qrImage: qrImageBase64 // Base64 image for display
       },
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     // Obtener usuario
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, tenantId: true, email: true, name: true }
+      select: { id: true, tenantId: true, email: true, firstName: true, lastName: true }
     })
 
     if (!user) {
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: {
         userId: user.id,
-        userName: user.name,
+        userName: `${user.firstName} ${user.lastName}`,
         qrCode: code,
         qrImage: imageBase64
       },
