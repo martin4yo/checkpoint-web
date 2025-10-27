@@ -46,10 +46,16 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    // Obtener configuración del tenant
+    // Obtener datos del usuario y configuración del tenant
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { tenantId: true }
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        tenantId: true
+      }
     })
 
     const config = user ? await prisma.biometricConfig.findUnique({
@@ -59,6 +65,13 @@ export async function GET(req: NextRequest) {
     const response = {
       success: true,
       data: {
+        user: {
+          id: user?.id,
+          email: user?.email,
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          fullName: user ? `${user.firstName} ${user.lastName}` : ''
+        },
         enrolled: !!biometricData,
         isActive: biometricData?.isActive ?? false,
         methods: {
