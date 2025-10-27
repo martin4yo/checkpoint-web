@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', '@vladmandic/face-api'],
+  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', '@vladmandic/face-api', '@tensorflow/tfjs-node'],
   images: {
     remotePatterns: [
       {
