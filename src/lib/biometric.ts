@@ -101,7 +101,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
     // Detectar rostro y extraer descriptor
     const detection = await faceapi
-      .detectSingleFace(tensor)
+      .detectSingleFace(tensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0])
       .withFaceLandmarks()
       .withFaceDescriptor()
 
