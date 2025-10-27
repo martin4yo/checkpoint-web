@@ -1,8 +1,17 @@
 import { createServer } from 'http'
 import { parse } from 'url'
 import next from 'next'
+import { config } from 'dotenv'
+import { resolve } from 'path'
 
+// Cargar variables de entorno desde .env.production si estamos en producción
 const dev = process.env.NODE_ENV !== 'production'
+if (!dev) {
+  config({ path: resolve(process.cwd(), '.env.production') })
+  console.log('📋 Cargando configuración desde .env.production')
+  console.log(`   PORT configurado: ${process.env.PORT}`)
+}
+
 const hostname = 'localhost'
 const port = parseInt(process.env.PORT || '3000', 10)
 
