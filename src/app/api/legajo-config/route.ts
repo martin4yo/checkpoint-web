@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     const targetTenantId = (user.superuser && queryTenantId) ? queryTenantId : user.tenantId
 
     // Buscar configuración existente
-    let config = await prisma.legajoFieldConfig.findUnique({
+    const config = await prisma.legajoFieldConfig.findUnique({
       where: { tenantId: targetTenantId }
     })
 

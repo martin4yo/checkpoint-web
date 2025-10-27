@@ -28,6 +28,7 @@ export interface FamiliarACargo {
 }
 
 export interface LegajoDatosFamiliares {
+  hijosACargo?: boolean
   grupoFamiliarACargo?: FamiliarACargo[]
 }
 
@@ -46,7 +47,11 @@ export interface LegajoDatosLaborales {
   categoria?: string
   puesto?: string
   area?: string
+  sector?: string
+  supervisor?: string
   ubicacion?: string
+  jornada?: string
+  modalidad?: string
   modalidadTrabajo?: string
   obraSocial?: string
   sindicato?: string
@@ -71,6 +76,8 @@ export interface LegajoDatosRemuneracion {
   tipoLiquidacion?: string
   banco?: string
   cbu?: string
+  obraSocial?: string
+  arl?: string
   adicionales?: Adicional[]
   beneficios?: Beneficio[]
 }
@@ -110,6 +117,7 @@ export interface LegajoDatosAdministrativos {
   diasVacacionesTomadas?: number
   licenciasAcumuladas?: Record<string, number>
   observaciones?: string
+  legajoFisico?: string
 }
 
 export interface LegajoCompleto {

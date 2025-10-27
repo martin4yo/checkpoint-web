@@ -22,7 +22,8 @@ async function main() {
     where: { email: 'admin@checkpoint.com' },
     update: {},
     create: {
-      name: 'Administrador',
+      firstName: 'Administrador',
+      lastName: '',
       email: 'admin@checkpoint.com',
       password: hashedPassword,
       tenantId: tenant.id,

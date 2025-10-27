@@ -87,6 +87,7 @@ export default function LegajosPage() {
   const [saving, setSaving] = useState(false)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fieldConfig, setFieldConfig] = useState<any>(null)
 
   // Form data states
@@ -310,17 +311,17 @@ export default function LegajosPage() {
           cuil: { value: datosPersonales.cuil, label: 'CUIL' },
           emailPersonal: { value: datosPersonales.emailPersonal, label: 'Email Personal' },
           emailCorporativo: { value: datosPersonales.emailCorporativo, label: 'Email Corporativo' },
-          telefono: { value: datosPersonales.telefono, label: 'Teléfono' },
-          telefonoAlternativo: { value: datosPersonales.telefonoAlternativo, label: 'Teléfono Alternativo' },
+          telefonoFijo: { value: datosPersonales.telefonoFijo, label: 'Teléfono Fijo' },
+          telefonoCelular: { value: datosPersonales.telefonoCelular, label: 'Teléfono Celular' },
           fechaNacimiento: { value: datosPersonales.fechaNacimiento, label: 'Fecha de Nacimiento' },
-          lugarNacimiento: { value: datosPersonales.lugarNacimiento, label: 'Lugar de Nacimiento' },
           nacionalidad: { value: datosPersonales.nacionalidad, label: 'Nacionalidad' },
-          sexo: { value: datosPersonales.sexo, label: 'Sexo' },
+          genero: { value: datosPersonales.genero, label: 'Género' },
           estadoCivil: { value: datosPersonales.estadoCivil, label: 'Estado Civil' },
-          domicilio: { value: datosPersonales.domicilio, label: 'Domicilio' },
-          localidad: { value: datosPersonales.localidad, label: 'Localidad' },
-          provincia: { value: datosPersonales.provincia, label: 'Provincia' },
-          codigoPostal: { value: datosPersonales.codigoPostal, label: 'Código Postal' }
+          domicilioCalle: { value: datosPersonales.domicilioCalle, label: 'Calle' },
+          domicilioNumero: { value: datosPersonales.domicilioNumero, label: 'Número' },
+          domicilioLocalidad: { value: datosPersonales.domicilioLocalidad, label: 'Localidad' },
+          domicilioProvincia: { value: datosPersonales.domicilioProvincia, label: 'Provincia' },
+          domicilioCP: { value: datosPersonales.domicilioCP, label: 'Código Postal' }
         }
 
         for (const [field, { value, label }] of Object.entries(personalFields)) {
@@ -825,7 +826,7 @@ export default function LegajosPage() {
           </table>
           {users.filter(u => u.legajo).length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No hay legajos creados aún. Use el botón "Nuevo Legajo" para crear uno.
+              No hay legajos creados aún. Use el botón &quot;Nuevo Legajo&quot; para crear uno.
             </div>
           )}
         </div>
