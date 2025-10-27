@@ -8,6 +8,7 @@
  */
 
 import * as faceapi from '@vladmandic/face-api'
+import * as tf from '@tensorflow/tfjs-node'
 import * as bcrypt from 'bcryptjs'
 import QRCode from 'qrcode'
 import { v4 as uuidv4 } from 'uuid'
@@ -89,13 +90,18 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     await initializeFaceApi()
   }
 
+  let tensor: tf.Tensor3D | undefined
+
   try {
     // Convertir base64 a buffer
     const imageBuffer = Buffer.from(imageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64')
 
+    // Convertir buffer a tensor usando TensorFlow.js Node
+    tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D
+
     // Detectar rostro y extraer descriptor
     const detection = await faceapi
-      .detectSingleFace(imageBuffer as unknown as HTMLCanvasElement)
+      .detectSingleFace(tensor)
       .withFaceLandmarks()
       .withFaceDescriptor()
 
@@ -111,6 +117,11 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
   } catch (error: unknown) {
     console.error('Error extracting face embedding:', error)
     throw new Error(`Error al procesar imagen facial: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  } finally {
+    // Liberar memoria del tensor
+    if (tensor) {
+      tensor.dispose()
+    }
   }
 }
 
