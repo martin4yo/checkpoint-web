@@ -20,7 +20,8 @@ import {
   User,
   Settings,
   ChevronRight,
-  Briefcase
+  Briefcase,
+  Shield
 } from 'lucide-react';
 import Image from 'next/image';
 import { clsx } from 'clsx';
@@ -64,7 +65,7 @@ export default function Sidebar() {
 
   // Auto-expand section based on current path
   useEffect(() => {
-    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants', '/configuracion'];
+    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants', '/configuracion', '/biometric'];
     if (configPaths.some(path => pathname.startsWith(path))) {
       setExpandedSection('Configuración');
     }
@@ -155,6 +156,11 @@ export default function Sidebar() {
           name: 'Legajos',
           href: '/configuracion/legajos',
           icon: Briefcase
+        },
+        {
+          name: 'Datos Biométricos',
+          href: '/biometric',
+          icon: Shield
         }
       ]
     }
