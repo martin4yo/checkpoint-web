@@ -155,34 +155,51 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
     // Intentar detectar rostro en múltiples orientaciones (0°, 90°, 180°, 270°)
     const rotations = [0, 1, 2, 3] // k rotaciones de 90° en sentido antihorario
+    let bestDetection: { descriptor: number[], confidence: number } | null = null
 
     for (const k of rotations) {
       let tensorToTest = processedTensor
+      let shouldDisposeTensor = false
 
       if (k > 0) {
         console.log(`🔄 Intentando con rotación ${k * 90}°`)
         tensorToTest = rotateTensor(processedTensor, k)
         rotatedTensors.push(tensorToTest)
+        shouldDisposeTensor = true
       }
 
-      // Detectar rostro y extraer descriptor usando TinyFaceDetector
-      // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
-      const detection = await faceapi
-        .detectSingleFace(
-          tensorToTest as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
-          new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
-        )
-        .withFaceLandmarks(true) // true = usar tiny landmarks
-        .withFaceDescriptor()
+      try {
+        // Detectar rostro y extraer descriptor usando TinyFaceDetector
+        // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
+        const detection = await faceapi
+          .detectSingleFace(
+            tensorToTest as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
+          )
+          .withFaceLandmarks(true) // true = usar tiny landmarks
+          .withFaceDescriptor()
 
-      if (detection) {
-        console.log(`✅ Rostro detectado con rotación ${k * 90}° - confianza: ${detection.detection.score.toFixed(3)}`)
+        if (detection) {
+          console.log(`✅ Rostro detectado con rotación ${k * 90}° - confianza: ${detection.detection.score.toFixed(3)}`)
 
-        return {
-          descriptor: Array.from(detection.descriptor),
-          confidence: detection.detection.score,
-          timestamp: new Date().toISOString()
+          bestDetection = {
+            descriptor: Array.from(detection.descriptor),
+            confidence: detection.detection.score
+          }
+
+          // No hacer break para limpiar todos los tensores en finally
+          break
         }
+      } catch (rotationError) {
+        console.error(`Error en rotación ${k * 90}°:`, rotationError)
+      }
+    }
+
+    if (bestDetection) {
+      return {
+        descriptor: bestDetection.descriptor,
+        confidence: bestDetection.confidence,
+        timestamp: new Date().toISOString()
       }
     }
 
@@ -212,7 +229,20 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     if (resizedTensor) {
       resizedTensor.dispose()
     }
-    rotatedTensors.forEach(t => t.dispose())
+    rotatedTensors.forEach(t => {
+      if (t && !t.isDisposed) {
+        t.dispose()
+      }
+    })
+
+    // Forzar garbage collection si está disponible (solo en desarrollo)
+    if (global.gc) {
+      global.gc()
+    }
+
+    // Log de memoria para debug
+    const memUsage = tf.memory()
+    console.log(`🧠 Memoria TF: ${memUsage.numTensors} tensores, ${(memUsage.numBytes / 1024 / 1024).toFixed(2)} MB`)
   }
 }
 
