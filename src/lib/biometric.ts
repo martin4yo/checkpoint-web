@@ -84,6 +84,36 @@ export async function initializeFaceApi() {
 // ==================== RECONOCIMIENTO FACIAL ====================
 
 /**
+ * Rota un tensor 3D en múltiplos de 90 grados
+ * @param tensor - Tensor a rotar
+ * @param k - Número de rotaciones de 90° en sentido antihorario (0-3)
+ */
+function rotateTensor(tensor: tf.Tensor3D, k: number): tf.Tensor3D {
+  const rotation = k % 4
+
+  switch (rotation) {
+    case 0:
+      return tensor
+    case 1: // 90° antihorario
+      return tf.tidy(() => {
+        const transposed = tf.transpose(tensor, [1, 0, 2]) as tf.Tensor3D
+        return tf.reverse(transposed, 1) as tf.Tensor3D
+      })
+    case 2: // 180°
+      return tf.tidy(() => {
+        return tf.reverse(tensor, [0, 1]) as tf.Tensor3D
+      })
+    case 3: // 270° antihorario (o 90° horario)
+      return tf.tidy(() => {
+        const transposed = tf.transpose(tensor, [1, 0, 2]) as tf.Tensor3D
+        return tf.reverse(transposed, 0) as tf.Tensor3D
+      })
+    default:
+      return tensor
+  }
+}
+
+/**
  * Procesa una imagen facial y extrae el embedding (descriptor)
  *
  * @param imageBase64 - Imagen en base64
@@ -131,7 +161,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
       if (k > 0) {
         console.log(`🔄 Intentando con rotación ${k * 90}°`)
-        tensorToTest = tf.image.rot90(processedTensor, k) as tf.Tensor3D
+        tensorToTest = rotateTensor(processedTensor, k)
         rotatedTensors.push(tensorToTest)
       }
 
