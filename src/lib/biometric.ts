@@ -59,15 +59,19 @@ export async function initializeFaceApi() {
   if (faceApiInitialized) return
 
   try {
+    // Configurar TensorFlow para limitar uso de memoria
+    tf.env().set('WEBGL_CPU_FORWARD', false)
+    tf.env().set('WEBGL_PACK', false)
+
     const MODEL_URL = process.cwd() + '/public/models'
 
-    // Cargar modelos necesarios
-    await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL)
-    await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL)
+    // Cargar modelos TINY (más livianos, menos memoria)
+    await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL)
+    await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODEL_URL)
     await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL)
 
     faceApiInitialized = true
-    console.log('✅ Face-API models loaded successfully')
+    console.log('✅ Face-API models loaded successfully (Tiny version)')
   } catch (error) {
     console.error('❌ Error loading Face-API models:', error)
     // En desarrollo, no fallar si no hay modelos
@@ -99,10 +103,13 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     // Convertir buffer a tensor usando TensorFlow.js Node
     tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D
 
-    // Detectar rostro y extraer descriptor
+    // Detectar rostro y extraer descriptor usando TinyFaceDetector
     const detection = await faceapi
-      .detectSingleFace(tensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0])
-      .withFaceLandmarks()
+      .detectSingleFace(
+        tensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
+        new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+      )
+      .withFaceLandmarks(true) // true = usar tiny landmarks
       .withFaceDescriptor()
 
     if (!detection) {
