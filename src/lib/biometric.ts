@@ -96,6 +96,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
   let tensor: tf.Tensor3D | undefined
   let resizedTensor: tf.Tensor3D | undefined
+  const rotatedTensors: tf.Tensor3D[] = []
 
   try {
     // Convertir base64 a buffer
@@ -122,28 +123,54 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
       processedTensor = resizedTensor
     }
 
-    // Detectar rostro y extraer descriptor usando TinyFaceDetector
-    // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
-    const detection = await faceapi
-      .detectSingleFace(
-        processedTensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
-        new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
-      )
-      .withFaceLandmarks(true) // true = usar tiny landmarks
-      .withFaceDescriptor()
+    // Intentar detectar rostro en múltiples orientaciones (0°, 90°, 180°, 270°)
+    const rotations = [0, 1, 2, 3] // k rotaciones de 90° en sentido antihorario
 
-    if (!detection) {
-      console.error('❌ No se detectó ningún rostro. Intenta con mejor iluminación o acerca más el rostro.')
-      throw new Error('No se detectó ningún rostro en la imagen')
+    for (const k of rotations) {
+      let tensorToTest = processedTensor
+
+      if (k > 0) {
+        console.log(`🔄 Intentando con rotación ${k * 90}°`)
+        tensorToTest = tf.image.rot90(processedTensor, k) as tf.Tensor3D
+        rotatedTensors.push(tensorToTest)
+      }
+
+      // Detectar rostro y extraer descriptor usando TinyFaceDetector
+      // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
+      const detection = await faceapi
+        .detectSingleFace(
+          tensorToTest as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
+          new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
+        )
+        .withFaceLandmarks(true) // true = usar tiny landmarks
+        .withFaceDescriptor()
+
+      if (detection) {
+        console.log(`✅ Rostro detectado con rotación ${k * 90}° - confianza: ${detection.detection.score.toFixed(3)}`)
+
+        return {
+          descriptor: Array.from(detection.descriptor),
+          confidence: detection.detection.score,
+          timestamp: new Date().toISOString()
+        }
+      }
     }
 
-    console.log(`✅ Rostro detectado con confianza: ${detection.detection.score.toFixed(3)}`)
+    // Si no se detectó en ninguna orientación, guardar imagen para debug
+    console.error('❌ No se detectó rostro en ninguna orientación')
 
-    return {
-      descriptor: Array.from(detection.descriptor),
-      confidence: detection.detection.score,
-      timestamp: new Date().toISOString()
+    // Guardar imagen temporalmente para debug
+    try {
+      const fs = await import('fs')
+      const path = await import('path')
+      const debugPath = path.join('/tmp', `face-debug-${Date.now()}.jpg`)
+      fs.writeFileSync(debugPath, imageBuffer)
+      console.log(`💾 Imagen guardada para debug en: ${debugPath}`)
+    } catch (debugError) {
+      console.error('Error guardando imagen de debug:', debugError)
     }
+
+    throw new Error('No se detectó ningún rostro en la imagen')
   } catch (error: unknown) {
     console.error('Error extracting face embedding:', error)
     throw new Error(`Error al procesar imagen facial: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -155,6 +182,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     if (resizedTensor) {
       resizedTensor.dispose()
     }
+    rotatedTensors.forEach(t => t.dispose())
   }
 }
 
