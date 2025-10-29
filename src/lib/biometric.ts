@@ -103,18 +103,24 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     // Convertir buffer a tensor usando TensorFlow.js Node
     tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D
 
+    console.log(`📸 Procesando imagen: ${tensor.shape[0]}x${tensor.shape[1]}`)
+
     // Detectar rostro y extraer descriptor usando TinyFaceDetector
+    // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
     const detection = await faceapi
       .detectSingleFace(
         tensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
-        new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+        new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
       )
       .withFaceLandmarks(true) // true = usar tiny landmarks
       .withFaceDescriptor()
 
     if (!detection) {
+      console.error('❌ No se detectó ningún rostro. Intenta con mejor iluminación o acerca más el rostro.')
       throw new Error('No se detectó ningún rostro en la imagen')
     }
+
+    console.log(`✅ Rostro detectado con confianza: ${detection.detection.score.toFixed(3)}`)
 
     return {
       descriptor: Array.from(detection.descriptor),
