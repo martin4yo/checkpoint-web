@@ -65,7 +65,8 @@
       "Bash(ESLINT_NO_DEV_ERRORS=true npx next build)",
       "Bash(killall:*)",
       "Bash(timeout 90 npm run build:*)",
-      "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''hex''))\")"
+      "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''hex''))\")",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
