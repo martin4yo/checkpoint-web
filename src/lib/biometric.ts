@@ -95,6 +95,7 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
   }
 
   let tensor: tf.Tensor3D | undefined
+  let resizedTensor: tf.Tensor3D | undefined
 
   try {
     // Convertir base64 a buffer
@@ -103,13 +104,29 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     // Convertir buffer a tensor usando TensorFlow.js Node
     tensor = tf.node.decodeImage(imageBuffer, 3) as tf.Tensor3D
 
-    console.log(`📸 Procesando imagen: ${tensor.shape[0]}x${tensor.shape[1]}`)
+    const [height, width] = tensor.shape
+    console.log(`📸 Imagen original: ${height}x${width}`)
+
+    // Redimensionar si la imagen es muy grande (mejora detección y reduce memoria)
+    const maxSize = 640
+    let processedTensor = tensor
+
+    if (height > maxSize || width > maxSize) {
+      const scale = maxSize / Math.max(height, width)
+      const newHeight = Math.round(height * scale)
+      const newWidth = Math.round(width * scale)
+
+      console.log(`🔄 Redimensionando a: ${newHeight}x${newWidth}`)
+
+      resizedTensor = tf.image.resizeBilinear(tensor, [newHeight, newWidth]) as tf.Tensor3D
+      processedTensor = resizedTensor
+    }
 
     // Detectar rostro y extraer descriptor usando TinyFaceDetector
     // inputSize más alto (416) y scoreThreshold más bajo (0.3) para mejor detección
     const detection = await faceapi
       .detectSingleFace(
-        tensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
+        processedTensor as unknown as Parameters<typeof faceapi.detectSingleFace>[0],
         new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
       )
       .withFaceLandmarks(true) // true = usar tiny landmarks
@@ -131,9 +148,12 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
     console.error('Error extracting face embedding:', error)
     throw new Error(`Error al procesar imagen facial: ${error instanceof Error ? error.message : 'Unknown error'}`)
   } finally {
-    // Liberar memoria del tensor
+    // Liberar memoria de los tensores
     if (tensor) {
       tensor.dispose()
+    }
+    if (resizedTensor) {
+      resizedTensor.dispose()
     }
   }
 }
