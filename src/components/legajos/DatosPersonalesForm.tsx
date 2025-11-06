@@ -3,9 +3,13 @@ import { LegajoDatosPersonales } from '@/types/legajo'
 interface Props {
   data: LegajoDatosPersonales
   onChange: (data: LegajoDatosPersonales) => void
+  fieldConfig?: any
 }
 
-export default function DatosPersonalesForm({ data, onChange }: Props) {
+export default function DatosPersonalesForm({ data, onChange, fieldConfig }: Props) {
+  const isRequired = (fieldName: string) => {
+    return fieldConfig?.datosPersonales?.[fieldName] === true
+  }
   const handleChange = (field: keyof LegajoDatosPersonales, value: string) => {
     onChange({ ...data, [field]: value })
   }
@@ -18,7 +22,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              DNI
+              DNI{isRequired('dni') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -30,7 +34,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              CUIL/CUIT
+              CUIL/CUIT{isRequired('cuil') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -42,7 +46,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha de Nacimiento
+              Fecha de Nacimiento{isRequired('fechaNacimiento') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="date"
@@ -60,7 +64,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Género
+              Género{isRequired('genero') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <select
               value={data.genero || ''}
@@ -76,7 +80,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado Civil
+              Estado Civil{isRequired('estadoCivil') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <select
               value={data.estadoCivil || ''}
@@ -93,7 +97,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nacionalidad
+              Nacionalidad{isRequired('nacionalidad') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -112,7 +116,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div className="md:col-span-6">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Calle
+              Calle{isRequired('domicilioCalle') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -123,7 +127,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Número
+              Número{isRequired('domicilioNumero') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -158,7 +162,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Localidad
+              Localidad{isRequired('domicilioLocalidad') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -169,7 +173,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Provincia
+              Provincia{isRequired('domicilioProvincia') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -180,7 +184,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Código Postal
+              Código Postal{isRequired('domicilioCP') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -198,7 +202,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono Fijo
+              Teléfono Fijo{isRequired('telefonoFijo') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="tel"
@@ -210,7 +214,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono Celular
+              Teléfono Celular{isRequired('telefonoCelular') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="tel"
@@ -222,7 +226,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Personal
+              Email Personal{isRequired('emailPersonal') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="email"
@@ -234,7 +238,7 @@ export default function DatosPersonalesForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Corporativo
+              Email Corporativo{isRequired('emailCorporativo') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="email"

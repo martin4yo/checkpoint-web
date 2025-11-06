@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Save, Clock, Coffee, FileText } from 'lucide-react'
+import { X, Clock, Coffee, FileText } from 'lucide-react'
 
 interface JourneyReport {
   id: string
@@ -228,20 +228,17 @@ export default function JourneyAdjustmentModal({
           <div className="mt-6 sm:flex sm:flex-row-reverse">
             <button
               type="button"
-              className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex w-full justify-center rounded-md bg-secondary px-3 py-2 text-sm font-semibold text-palette-yellow shadow-sm hover:bg-secondary-hover focus:ring-2 focus:ring-secondary focus:ring-offset-2 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
               disabled={saving}
             >
               {saving ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-palette-yellow mr-2"></div>
                   Guardando...
                 </>
               ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Guardar
-                </>
+                'Guardar'
               )}
             </button>
             <button

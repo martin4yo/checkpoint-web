@@ -5,9 +5,13 @@ import { Trash2, Download, FileText, Upload, AlertCircle, CheckCircle } from 'lu
 interface Props {
   documentos: Documento[]
   onChange: (documentos: Documento[]) => void
+  fieldConfig?: any
 }
 
-export default function DocumentosForm({ documentos, onChange }: Props) {
+export default function DocumentosForm({ documentos, onChange, fieldConfig }: Props) {
+  const isDocumentosRequired = () => {
+    return fieldConfig?.documentos?.required === true
+  }
   const [nuevoDocumento, setNuevoDocumento] = useState<Documento>({
     tipoDocumento: '',
     descripcion: '',
@@ -232,7 +236,7 @@ export default function DocumentosForm({ documentos, onChange }: Props) {
           </div>
           <button
             onClick={agregarDocumento}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+            className="mt-4 inline-flex items-center px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover"
           >
             <Upload className="h-4 w-4 mr-2" />
             Agregar Documento

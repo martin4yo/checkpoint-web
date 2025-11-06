@@ -21,7 +21,8 @@ import {
   Settings,
   ChevronRight,
   Briefcase,
-  Shield
+  Shield,
+  Database
 } from 'lucide-react';
 import Image from 'next/image';
 import { clsx } from 'clsx';
@@ -65,9 +66,13 @@ export default function Sidebar() {
 
   // Auto-expand section based on current path
   useEffect(() => {
-    const configPaths = ['/users', '/places', '/assignments', '/novelty-types', '/push-devices', '/tenants', '/configuracion', '/biometric'];
+    const configPaths = ['/users', '/push-devices', '/tenants', '/configuracion', '/biometric', '/legajos/export-profiles'];
+    const tablePaths = ['/places', '/assignments', '/novelty-types', '/configuracion/tablas-maestras'];
+
     if (configPaths.some(path => pathname.startsWith(path))) {
       setExpandedSection('Configuración');
+    } else if (tablePaths.some(path => pathname.startsWith(path))) {
+      setExpandedSection('Tablas');
     }
   }, [pathname]);
 
@@ -123,9 +128,50 @@ export default function Sidebar() {
       icon: Settings,
       children: [
         {
+          name: 'Tenants',
+          href: '/tenants',
+          icon: Building2
+        },
+        {
           name: 'Usuarios',
           href: '/users',
           icon: Users
+        },
+        {
+          name: 'Datos Biométricos',
+          href: '/biometric',
+          icon: Shield
+        },
+        {
+          name: 'Notificaciones',
+          href: '/push-devices',
+          icon: Bell
+        },
+        {
+          name: 'Legajos',
+          href: '/configuracion/legajos',
+          icon: Briefcase
+        },
+        {
+          name: 'Exportar Datos',
+          href: '/legajos/export-profiles',
+          icon: FileBarChart
+        },
+        {
+          name: 'Campos de Usuario',
+          href: '/configuracion/campos-personalizados',
+          icon: Settings
+        }
+      ]
+    },
+    {
+      name: 'Tablas',
+      icon: Database,
+      children: [
+        {
+          name: 'Maestros',
+          href: '/configuracion/tablas-maestras',
+          icon: Database
         },
         {
           name: 'Lugares',
@@ -141,26 +187,6 @@ export default function Sidebar() {
           name: 'Tipos de Novedades',
           href: '/novelty-types',
           icon: Tag
-        },
-        {
-          name: 'Notificaciones',
-          href: '/push-devices',
-          icon: Bell
-        },
-        {
-          name: 'Tenants',
-          href: '/tenants',
-          icon: Building2
-        },
-        {
-          name: 'Legajos',
-          href: '/configuracion/legajos',
-          icon: Briefcase
-        },
-        {
-          name: 'Datos Biométricos',
-          href: '/biometric',
-          icon: Shield
         }
       ]
     }
@@ -368,7 +394,7 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <div className={clsx(
         'hidden lg:flex flex-col transition-all duration-300 ease-in-out flex-shrink-0 fixed top-0 left-0 h-full bg-sidebar shadow-lg border-r border-sidebar-hover z-50',
-        isCollapsed ? 'w-20' : 'w-64'
+        isCollapsed ? 'w-20' : 'w-72'
       )}>
         {/* Logo Section */}
         <div className="bg-sidebar py-0">
@@ -411,7 +437,7 @@ export default function Sidebar() {
       {/* Sidebar spacer for desktop */}
       <div className={clsx(
         'hidden lg:block transition-all duration-300',
-        isCollapsed ? 'w-20' : 'w-64'
+        isCollapsed ? 'w-20' : 'w-72'
       )} />
     </>
   );

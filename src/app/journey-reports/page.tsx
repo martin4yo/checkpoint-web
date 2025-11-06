@@ -52,6 +52,8 @@ export default function JourneyReportsPage() {
   const [currentUser, setCurrentUser] = useState<{ id: string; tenantId: string; superuser: boolean } | null>(null)
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([])
   const [filterTenantId, setFilterTenantId] = useState<string>('')
+  const [exportProfiles, setExportProfiles] = useState<{ id: string; name: string; description: string | null }[]>([])
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('')
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -116,10 +118,38 @@ export default function JourneyReportsPage() {
     }
   }, [])
 
+  const fetchExportProfiles = useCallback(async () => {
+    try {
+      const params = new URLSearchParams()
+      if (filterTenantId) {
+        params.append('tenantId', filterTenantId)
+      }
+      const response = await fetch(`/api/legajos/export-profiles?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        setExportProfiles(data.profiles || [])
+
+        // Seleccionar el perfil por defecto si existe
+        const defaultProfile = data.profiles?.find((p: any) => p.isDefault)
+        if (defaultProfile) {
+          setSelectedProfileId(defaultProfile.id)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching export profiles:', error)
+    }
+  }, [filterTenantId])
+
   useEffect(() => {
     fetchCurrentUser()
     fetchUsers()
   }, [fetchCurrentUser, fetchUsers])
+
+  useEffect(() => {
+    if (filterTenantId) {
+      fetchExportProfiles()
+    }
+  }, [filterTenantId, fetchExportProfiles])
 
   useEffect(() => {
     fetchJourneys()
@@ -175,60 +205,129 @@ export default function JourneyReportsPage() {
     })
   }
 
-  const exportToExcel = () => {
-    const exportData = journeys.map((journey) => ({
-      'Usuario': journey.userName,
-      'Email': journey.userEmail,
-      'Lugar': journey.placeName,
-      'Fecha Inicio': journey.startDate,
-      'Hora Inicio Original': journey.startTime,
-      'Fecha Fin': journey.endDate || 'En curso',
-      'Hora Fin Original': journey.endTime || 'En curso',
-      'Hora Inicio Final': journey.adjustments?.manualStartTime ?
-        new Date(journey.adjustments.manualStartTime).toLocaleString() :
-        `${journey.startDate === journey.endDate ? '' : `${journey.startDate} `}${journey.startTime}`,
-      'Hora Fin Final': journey.adjustments?.manualEndTime ?
-        new Date(journey.adjustments.manualEndTime).toLocaleString() :
-        (journey.endDate && journey.endTime ?
-          `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}` :
-          'En curso'),
-      'Almuerzo Inicio': journey.adjustments?.lunchStartTime || '-',
-      'Almuerzo Fin': journey.adjustments?.lunchEndTime || '-',
-      'Duración': journey.duration,
-      'Notas': journey.adjustments?.notes || '-',
-      'Tiene Ajustes': (journey.adjustments?.manualStartTime || journey.adjustments?.manualEndTime ||
-                        journey.adjustments?.lunchStartTime || journey.adjustments?.notes) ? 'Sí' : 'No'
-    }))
+  const exportToExcel = async () => {
+    try {
+      let legajoDataMap: Map<string, any> = new Map()
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData)
+      // Si hay un perfil seleccionado, obtener datos de legajo
+      if (selectedProfileId) {
+        // Obtener IDs únicos de usuarios de las jornadas
+        const uniqueUserIds = [...new Set(journeys.map(j => j.userEmail))].join(',')
 
-    // Ajustar el ancho de las columnas
-    const columnWidths = [
-      { wch: 20 }, // Usuario
-      { wch: 25 }, // Email
-      { wch: 20 }, // Lugar
-      { wch: 12 }, // Fecha Inicio
-      { wch: 15 }, // Hora Inicio Original
-      { wch: 12 }, // Fecha Fin
-      { wch: 15 }, // Hora Fin Original
-      { wch: 20 }, // Hora Inicio Final
-      { wch: 20 }, // Hora Fin Final
-      { wch: 12 }, // Almuerzo Inicio
-      { wch: 12 }, // Almuerzo Fin
-      { wch: 10 }, // Duración
-      { wch: 30 }, // Notas
-      { wch: 12 }  // Tiene Ajustes
-    ]
-    worksheet['!cols'] = columnWidths
+        const response = await fetch(
+          `/api/legajos/export-data?profileId=${selectedProfileId}&userIds=${uniqueUserIds}`
+        )
 
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte de Jornadas')
+        if (response.ok) {
+          const { data } = await response.json()
+          // Crear un mapa email -> datos de legajo
+          data.forEach((legajo: any) => {
+            legajoDataMap.set(legajo.email, legajo)
+          })
+        }
+      }
 
-    // Generar nombre del archivo con fecha
-    const today = new Date().toISOString().split('T')[0]
-    const filename = `reporte_jornadas_${today}.xlsx`
+      // Construir datos de exportación
+      const exportData = journeys.map((journey) => {
+        const rowData: any = {
+          'Usuario': journey.userName,
+          'Email': journey.userEmail,
+        }
 
-    XLSX.writeFile(workbook, filename)
+        // Si hay datos de legajo, agregarlos primero
+        if (legajoDataMap.has(journey.userEmail)) {
+          const legajoData = legajoDataMap.get(journey.userEmail)
+
+          // Agregar número de legajo
+          if (legajoData.numeroLegajo) {
+            rowData['Nº Legajo'] = legajoData.numeroLegajo
+          }
+
+          // Agregar datos personales
+          if (legajoData.datosPersonales) {
+            const dp = legajoData.datosPersonales
+            if (dp.dni) rowData['DNI'] = dp.dni
+            if (dp.cuil) rowData['CUIL'] = dp.cuil
+            if (dp.fechaNacimiento) rowData['Fecha Nacimiento'] = new Date(dp.fechaNacimiento).toLocaleDateString()
+            if (dp.genero) rowData['Género'] = dp.genero
+            if (dp.estadoCivil) rowData['Estado Civil'] = dp.estadoCivil
+            if (dp.domicilioCalle) rowData['Domicilio'] = `${dp.domicilioCalle} ${dp.domicilioNumero || ''}`
+            if (dp.domicilioLocalidad) rowData['Localidad'] = dp.domicilioLocalidad
+            if (dp.telefonoCelular) rowData['Teléfono'] = dp.telefonoCelular
+          }
+
+          // Agregar datos laborales
+          if (legajoData.datosLaborales) {
+            const dl = legajoData.datosLaborales
+            if (dl.fechaIngreso) rowData['Fecha Ingreso'] = new Date(dl.fechaIngreso).toLocaleDateString()
+            if (dl.puesto) rowData['Puesto'] = dl.puesto
+            if (dl.area) rowData['Área'] = dl.area
+            if (dl.categoria) rowData['Categoría'] = dl.categoria
+            if (dl.modalidadTrabajo) rowData['Modalidad'] = dl.modalidadTrabajo
+          }
+
+          // Agregar datos de remuneración
+          if (legajoData.datosRemuneracion) {
+            const dr = legajoData.datosRemuneracion
+            if (dr.salarioBasico) rowData['Salario Básico'] = Number(dr.salarioBasico)
+            if (dr.banco) rowData['Banco'] = dr.banco
+            if (dr.cbu) rowData['CBU'] = dr.cbu
+          }
+
+          // Agregar datos administrativos
+          if (legajoData.datosAdministrativos) {
+            const da = legajoData.datosAdministrativos
+            if (da.estadoEmpleado) rowData['Estado'] = da.estadoEmpleado
+            if (da.diasVacacionesDisponibles) rowData['Días Vacaciones'] = Number(da.diasVacacionesDisponibles)
+          }
+        }
+
+        // Agregar datos de jornada
+        return {
+          ...rowData,
+          'Lugar': journey.placeName,
+          'Fecha Inicio': journey.startDate,
+          'Hora Inicio Original': journey.startTime,
+          'Fecha Fin': journey.endDate || 'En curso',
+          'Hora Fin Original': journey.endTime || 'En curso',
+          'Hora Inicio Final': journey.adjustments?.manualStartTime ?
+            new Date(journey.adjustments.manualStartTime).toLocaleString() :
+            `${journey.startDate === journey.endDate ? '' : `${journey.startDate} `}${journey.startTime}`,
+          'Hora Fin Final': journey.adjustments?.manualEndTime ?
+            new Date(journey.adjustments.manualEndTime).toLocaleString() :
+            (journey.endDate && journey.endTime ?
+              `${journey.startDate === journey.endDate ? '' : `${journey.endDate} `}${journey.endTime}` :
+              'En curso'),
+          'Almuerzo Inicio': journey.adjustments?.lunchStartTime || '-',
+          'Almuerzo Fin': journey.adjustments?.lunchEndTime || '-',
+          'Duración': journey.duration,
+          'Notas': journey.adjustments?.notes || '-',
+          'Tiene Ajustes': (journey.adjustments?.manualStartTime || journey.adjustments?.manualEndTime ||
+                            journey.adjustments?.lunchStartTime || journey.adjustments?.notes) ? 'Sí' : 'No'
+        }
+      })
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData)
+
+      // Ajustar el ancho de las columnas automáticamente
+      const columnWidths = Object.keys(exportData[0] || {}).map(() => ({ wch: 15 }))
+      worksheet['!cols'] = columnWidths
+
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte de Jornadas')
+
+      // Generar nombre del archivo con fecha
+      const today = new Date().toISOString().split('T')[0]
+      const profileName = exportProfiles.find(p => p.id === selectedProfileId)?.name || ''
+      const filename = profileName
+        ? `reporte_jornadas_${profileName.toLowerCase().replace(/\s+/g, '_')}_${today}.xlsx`
+        : `reporte_jornadas_${today}.xlsx`
+
+      XLSX.writeFile(workbook, filename)
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+      alert('Error al generar archivo Excel')
+    }
   }
 
 
@@ -252,7 +351,7 @@ export default function JourneyReportsPage() {
           <button
             onClick={exportToExcel}
             disabled={journeys.length === 0}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-palette-yellow bg-secondary hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Download className="h-4 w-4 mr-2" />
             Exportar a Excel
@@ -319,6 +418,23 @@ export default function JourneyReportsPage() {
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Perfil de Exportación
+              </label>
+              <select
+                value={selectedProfileId}
+                onChange={(e) => setSelectedProfileId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              >
+                <option value="">Sin datos de legajo</option>
+                {exportProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.name}
                   </option>
                 ))}
               </select>

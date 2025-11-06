@@ -465,7 +465,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
               <a
                 href={`${window.location.origin}${checkpoint.imageUrl}`}
                 download
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                className="px-4 py-2 bg-secondary text-palette-yellow rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors inline-flex items-center"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Descargar
@@ -594,7 +594,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+              className="px-4 py-2 bg-secondary text-palette-yellow rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors inline-flex items-center"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Abrir en Google Maps

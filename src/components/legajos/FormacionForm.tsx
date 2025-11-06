@@ -7,9 +7,16 @@ interface Props {
   capacitaciones: Capacitacion[]
   onChangeFormacion: (formacion: Formacion[]) => void
   onChangeCapacitaciones: (capacitaciones: Capacitacion[]) => void
+  fieldConfig?: any
 }
 
-export default function FormacionForm({ formacion, capacitaciones, onChangeFormacion, onChangeCapacitaciones }: Props) {
+export default function FormacionForm({ formacion, capacitaciones, onChangeFormacion, onChangeCapacitaciones, fieldConfig }: Props) {
+  const isFormacionRequired = () => {
+    return fieldConfig?.formacion?.required === true
+  }
+  const isCapacitacionRequired = () => {
+    return fieldConfig?.capacitaciones?.required === true
+  }
   const [nuevaFormacion, setNuevaFormacion] = useState<Formacion>({
     nivelEducativo: '',
     titulo: '',
@@ -156,7 +163,7 @@ export default function FormacionForm({ formacion, capacitaciones, onChangeForma
           </div>
           <button
             onClick={agregarFormacion}
-            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover"
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Formación
@@ -274,7 +281,7 @@ export default function FormacionForm({ formacion, capacitaciones, onChangeForma
           </div>
           <button
             onClick={agregarCapacitacion}
-            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover"
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Capacitación

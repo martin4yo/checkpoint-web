@@ -15,7 +15,8 @@ import {
   GraduationCap,
   FileArchive,
   Settings,
-  Building2
+  Building2,
+  Sliders
 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import DatosPersonalesForm from '@/components/legajos/DatosPersonalesForm'
@@ -25,6 +26,7 @@ import RemuneracionForm from '@/components/legajos/RemuneracionForm'
 import FormacionForm from '@/components/legajos/FormacionForm'
 import DocumentosForm from '@/components/legajos/DocumentosForm'
 import DatosAdministrativosForm from '@/components/legajos/DatosAdministrativosForm'
+import CamposPersonalizadosForm from '@/components/legajos/CamposPersonalizadosForm'
 import {
   LegajoCompleto,
   LegajoDatosPersonales,
@@ -100,6 +102,7 @@ export default function LegajosPage() {
   const [formacion, setFormacion] = useState<Formacion[]>([])
   const [capacitaciones, setCapacitaciones] = useState<Capacitacion[]>([])
   const [documentos, setDocumentos] = useState<Documento[]>([])
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({})
   const [datosAdministrativos, setDatosAdministrativos] = useState<LegajoDatosAdministrativos>({})
 
   const fetchUsers = useCallback(async () => {
@@ -192,9 +195,8 @@ export default function LegajosPage() {
     setSelectedLegajo(null)
     setIsCreatingNew(true)
 
-    // Generate new legajo number
-    const newNumero = String(users.length + 1).padStart(3, '0')
-    setNumeroLegajo(newNumero)
+    // Reset numero legajo for manual input
+    setNumeroLegajo('')
 
     // Reset all form states
     setDatosPersonales({})
@@ -206,6 +208,7 @@ export default function LegajosPage() {
     setCapacitaciones([])
     setDocumentos([])
     setDatosAdministrativos({})
+    setCustomFieldValues({})
 
     setShowModal(true)
   }
@@ -233,6 +236,15 @@ export default function LegajosPage() {
           setCapacitaciones(convertDatesToInputFormat(fullLegajo.capacitaciones || []))
           setDocumentos(convertDatesToInputFormat(fullLegajo.documentos || []))
           setDatosAdministrativos(convertDatesToInputFormat(fullLegajo.datosAdministrativos || {}))
+
+          // Cargar valores de campos personalizados
+          const customValues: Record<string, string> = {}
+          if (fullLegajo.customFieldValues && Array.isArray(fullLegajo.customFieldValues)) {
+            fullLegajo.customFieldValues.forEach((cfv: any) => {
+              customValues[cfv.customFieldId] = cfv.value
+            })
+          }
+          setCustomFieldValues(customValues)
         }
       } catch (error) {
         console.error('Error fetching legajo details:', error)
@@ -240,9 +252,8 @@ export default function LegajosPage() {
     } else {
       // Si no tiene legajo, inicializar vacío
       setSelectedLegajo(null)
-      // Generate new legajo number (simple auto-increment based on user count)
-      const newNumero = String(users.length + 1).padStart(3, '0')
-      setNumeroLegajo(newNumero)
+      // Reset numero legajo for manual input
+      setNumeroLegajo('')
 
       // Reset all form states
       setDatosPersonales({})
@@ -254,6 +265,7 @@ export default function LegajosPage() {
       setCapacitaciones([])
       setDocumentos([])
       setDatosAdministrativos({})
+      setCustomFieldValues({})
     }
 
     setShowModal(true)
@@ -654,6 +666,7 @@ export default function LegajosPage() {
           capacitaciones: cleanData(capacitaciones),
           documentos: cleanData(documentos),
           datosAdministrativos: cleanData(datosAdministrativos),
+          customFieldValues: customFieldValues,
         }),
       })
 
@@ -705,7 +718,7 @@ export default function LegajosPage() {
           </h2>
           <button
             onClick={handleNewLegajo}
-            className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover flex items-center space-x-2"
+            className="px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover flex items-center space-x-2"
           >
             <FileText className="h-4 w-4" />
             <span>Nuevo Legajo</span>
@@ -834,7 +847,7 @@ export default function LegajosPage() {
         {/* Modal de Edición/Creación */}
         {showModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-7xl h-[80vh] flex flex-col">
+            <div className="bg-white rounded-lg border-2 border-gray-300 p-6 w-full max-w-[1400px] h-[80vh] flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold">
                   {isCreatingNew
@@ -881,6 +894,25 @@ export default function LegajosPage() {
                 </div>
               )}
 
+              {/* Número de Legajo */}
+              {selectedUser && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Número de Legajo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={numeroLegajo}
+                    onChange={(e) => setNumeroLegajo(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
+                    placeholder="Ej: LEG-001, 00123, etc."
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Ingrese el número de legajo personalizado
+                  </p>
+                </div>
+              )}
+
               {/* Tabs */}
               <div className="border-b border-gray-200 mb-4 flex-shrink-0">
                 <nav className="-mb-px flex space-x-2">
@@ -892,6 +924,7 @@ export default function LegajosPage() {
                     { id: 'formacion', label: 'Formación', icon: GraduationCap },
                     { id: 'documentos', label: 'Documentos', icon: FileArchive },
                     { id: 'administrativos', label: 'Administrativos', icon: Settings },
+                    { id: 'personalizados', label: 'Campos Personalizados', icon: Sliders },
                   ].map((tab) => {
                     const IconComponent = tab.icon
                     return (
@@ -920,6 +953,7 @@ export default function LegajosPage() {
                   <DatosPersonalesForm
                     data={datosPersonales}
                     onChange={setDatosPersonales}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'familiares' && (
@@ -928,18 +962,21 @@ export default function LegajosPage() {
                     contactosEmergencia={contactosEmergencia}
                     onChangeFamiliares={setDatosFamiliares}
                     onChangeContactos={setContactosEmergencia}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'laborales' && (
                   <DatosLaboralesForm
                     data={datosLaborales}
                     onChange={setDatosLaborales}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'remuneracion' && (
                   <RemuneracionForm
                     data={datosRemuneracion}
                     onChange={setDatosRemuneracion}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'formacion' && (
@@ -948,18 +985,28 @@ export default function LegajosPage() {
                     capacitaciones={capacitaciones}
                     onChangeFormacion={setFormacion}
                     onChangeCapacitaciones={setCapacitaciones}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'documentos' && (
                   <DocumentosForm
                     documentos={documentos}
                     onChange={setDocumentos}
+                    fieldConfig={fieldConfig}
                   />
                 )}
                 {activeTab === 'administrativos' && (
                   <DatosAdministrativosForm
                     data={datosAdministrativos}
                     onChange={setDatosAdministrativos}
+                    fieldConfig={fieldConfig}
+                  />
+                )}
+                {activeTab === 'personalizados' && (
+                  <CamposPersonalizadosForm
+                    legajoId={selectedUser?.legajo?.id}
+                    values={customFieldValues}
+                    onChange={setCustomFieldValues}
                   />
                 )}
               </div>
@@ -976,7 +1023,7 @@ export default function LegajosPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
