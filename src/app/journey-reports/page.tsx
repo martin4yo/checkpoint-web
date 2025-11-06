@@ -246,10 +246,10 @@ export default function JourneyReportsPage() {
 
           // Agregar datos personales
           if (legajoData.datosPersonales) {
-            const dp = legajoData.datosPersonales
+            const dp = legajoData.datosPersonales as Record<string, unknown>
             if (dp.dni) rowData['DNI'] = dp.dni
             if (dp.cuil) rowData['CUIL'] = dp.cuil
-            if (dp.fechaNacimiento) rowData['Fecha Nacimiento'] = new Date(dp.fechaNacimiento).toLocaleDateString()
+            if (dp.fechaNacimiento) rowData['Fecha Nacimiento'] = new Date(dp.fechaNacimiento as string).toLocaleDateString()
             if (dp.genero) rowData['Género'] = dp.genero
             if (dp.estadoCivil) rowData['Estado Civil'] = dp.estadoCivil
             if (dp.domicilioCalle) rowData['Domicilio'] = `${dp.domicilioCalle} ${dp.domicilioNumero || ''}`
@@ -259,8 +259,8 @@ export default function JourneyReportsPage() {
 
           // Agregar datos laborales
           if (legajoData.datosLaborales) {
-            const dl = legajoData.datosLaborales
-            if (dl.fechaIngreso) rowData['Fecha Ingreso'] = new Date(dl.fechaIngreso).toLocaleDateString()
+            const dl = legajoData.datosLaborales as Record<string, unknown>
+            if (dl.fechaIngreso) rowData['Fecha Ingreso'] = new Date(dl.fechaIngreso as string).toLocaleDateString()
             if (dl.puesto) rowData['Puesto'] = dl.puesto
             if (dl.area) rowData['Área'] = dl.area
             if (dl.categoria) rowData['Categoría'] = dl.categoria
@@ -269,7 +269,7 @@ export default function JourneyReportsPage() {
 
           // Agregar datos de remuneración
           if (legajoData.datosRemuneracion) {
-            const dr = legajoData.datosRemuneracion
+            const dr = legajoData.datosRemuneracion as Record<string, unknown>
             if (dr.salarioBasico) rowData['Salario Básico'] = Number(dr.salarioBasico)
             if (dr.banco) rowData['Banco'] = dr.banco
             if (dr.cbu) rowData['CBU'] = dr.cbu
@@ -277,7 +277,7 @@ export default function JourneyReportsPage() {
 
           // Agregar datos administrativos
           if (legajoData.datosAdministrativos) {
-            const da = legajoData.datosAdministrativos
+            const da = legajoData.datosAdministrativos as Record<string, unknown>
             if (da.estadoEmpleado) rowData['Estado'] = da.estadoEmpleado
             if (da.diasVacacionesDisponibles) rowData['Días Vacaciones'] = Number(da.diasVacacionesDisponibles)
           }

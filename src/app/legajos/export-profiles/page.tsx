@@ -180,16 +180,16 @@ export default function ExportProfilesPage() {
   const toggleField = (section: keyof SelectedFields, field: string) => {
     setFormData(prev => {
       const selectedFields = { ...prev.selectedFields }
-      if (!selectedFields[section]) {
-        selectedFields[section] = []
+      if (!selectedFields[section] || !Array.isArray(selectedFields[section])) {
+        selectedFields[section] = [] as unknown as string[] & boolean
       }
-      const fields = selectedFields[section]!
+      const fields = selectedFields[section] as string[]
       const index = fields.indexOf(field)
 
       if (index > -1) {
-        selectedFields[section] = fields.filter(f => f !== field)
+        selectedFields[section] = fields.filter(f => f !== field) as unknown as string[] & boolean
       } else {
-        selectedFields[section] = [...fields, field]
+        selectedFields[section] = [...fields, field] as unknown as string[] & boolean
       }
 
       return { ...prev, selectedFields }
