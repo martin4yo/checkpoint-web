@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     const selectedFields = profile.selectedFields as SelectedFields
 
     // Construir el include dinámicamente según los campos seleccionados
-    const include: any = {
+    const include: Record<string, unknown> = {
       user: {
         select: {
           id: true,
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Construir where clause
-    const where: any = {
+    const where: Record<string, unknown> = {
       user: {
         tenantId: profile.tenantId
       }
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
 
     // Filtrar campos específicos según el perfil
     const filteredData = legajos.map(legajo => {
-      const result: any = {
+      const result: Record<string, unknown> = {
         numeroLegajo: legajo.numeroLegajo,
         usuario: `${legajo.user.firstName} ${legajo.user.lastName}`,
         email: legajo.user.email
@@ -117,10 +117,10 @@ export async function GET(req: NextRequest) {
 
       // Filtrar datos personales
       if (legajo.datosPersonales && selectedFields.datosPersonales) {
-        const datosPersonales: any = {}
+        const datosPersonales: Record<string, unknown> = {}
         selectedFields.datosPersonales.forEach(field => {
           if (field in legajo.datosPersonales!) {
-            datosPersonales[field] = (legajo.datosPersonales as any)[field]
+            datosPersonales[field] = (legajo.datosPersonales as Record<string, unknown>)[field]
           }
         })
         result.datosPersonales = datosPersonales
@@ -128,10 +128,10 @@ export async function GET(req: NextRequest) {
 
       // Filtrar datos familiares
       if (legajo.datosFamiliares && selectedFields.datosFamiliares) {
-        const datosFamiliares: any = {}
+        const datosFamiliares: Record<string, unknown> = {}
         selectedFields.datosFamiliares.forEach(field => {
           if (field in legajo.datosFamiliares!) {
-            datosFamiliares[field] = (legajo.datosFamiliares as any)[field]
+            datosFamiliares[field] = (legajo.datosFamiliares as Record<string, unknown>)[field]
           }
         })
         result.datosFamiliares = datosFamiliares
@@ -139,10 +139,10 @@ export async function GET(req: NextRequest) {
 
       // Filtrar datos laborales
       if (legajo.datosLaborales && selectedFields.datosLaborales) {
-        const datosLaborales: any = {}
+        const datosLaborales: Record<string, unknown> = {}
         selectedFields.datosLaborales.forEach(field => {
           if (field in legajo.datosLaborales!) {
-            datosLaborales[field] = (legajo.datosLaborales as any)[field]
+            datosLaborales[field] = (legajo.datosLaborales as Record<string, unknown>)[field]
           }
         })
         result.datosLaborales = datosLaborales
@@ -150,10 +150,10 @@ export async function GET(req: NextRequest) {
 
       // Filtrar datos remuneración
       if (legajo.datosRemuneracion && selectedFields.datosRemuneracion) {
-        const datosRemuneracion: any = {}
+        const datosRemuneracion: Record<string, unknown> = {}
         selectedFields.datosRemuneracion.forEach(field => {
           if (field in legajo.datosRemuneracion!) {
-            datosRemuneracion[field] = (legajo.datosRemuneracion as any)[field]
+            datosRemuneracion[field] = (legajo.datosRemuneracion as Record<string, unknown>)[field]
           }
         })
         result.datosRemuneracion = datosRemuneracion
@@ -161,10 +161,10 @@ export async function GET(req: NextRequest) {
 
       // Filtrar datos administrativos
       if (legajo.datosAdministrativos && selectedFields.datosAdministrativos) {
-        const datosAdministrativos: any = {}
+        const datosAdministrativos: Record<string, unknown> = {}
         selectedFields.datosAdministrativos.forEach(field => {
           if (field in legajo.datosAdministrativos!) {
-            datosAdministrativos[field] = (legajo.datosAdministrativos as any)[field]
+            datosAdministrativos[field] = (legajo.datosAdministrativos as Record<string, unknown>)[field]
           }
         })
         result.datosAdministrativos = datosAdministrativos

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { FileText, Save, Building2, CheckSquare, Info, User, Users, Briefcase, DollarSign, GraduationCap, FileArchive, Settings } from 'lucide-react'
+import { FileText, Save, Building2, CheckSquare, User, Users, Briefcase, DollarSign, GraduationCap, FileArchive, Settings } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 
 interface Tenant {

@@ -3,7 +3,7 @@ import { LegajoDatosPersonales } from '@/types/legajo'
 interface Props {
   data: LegajoDatosPersonales
   onChange: (data: LegajoDatosPersonales) => void
-  fieldConfig?: any
+  fieldConfig?: Record<string, unknown>
 }
 
 export default function DatosPersonalesForm({ data, onChange, fieldConfig }: Props) {

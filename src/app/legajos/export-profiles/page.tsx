@@ -9,7 +9,7 @@ interface ExportProfile {
   name: string
   description: string | null
   isDefault: boolean
-  selectedFields: any
+  selectedFields: Record<string, unknown>
   includeJourneyData: boolean
   journeyDateRange: string | null
   createdAt: string
@@ -257,7 +257,7 @@ export default function ExportProfilesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {profiles.map((profile) => {
                     const totalFields = Object.values(profile.selectedFields || {})
-                      .reduce((sum: number, fields: any) => sum + (Array.isArray(fields) ? fields.length : 0), 0)
+                      .reduce((sum: number, fields: Record<string, unknown>) => sum + (Array.isArray(fields) ? fields.length : 0), 0)
 
                     return (
                       <tr key={profile.id} className="hover:bg-gray-50">

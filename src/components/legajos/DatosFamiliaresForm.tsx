@@ -7,7 +7,7 @@ interface Props {
   contactosEmergencia: ContactoEmergencia[]
   onChangeFamiliares: (data: LegajoDatosFamiliares) => void
   onChangeContactos: (contactos: ContactoEmergencia[]) => void
-  fieldConfig?: any
+  fieldConfig?: Record<string, unknown>
 }
 
 export default function DatosFamiliaresForm({ datosFamiliares, contactosEmergencia, onChangeFamiliares, onChangeContactos, fieldConfig }: Props) {

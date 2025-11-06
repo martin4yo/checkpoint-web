@@ -130,9 +130,9 @@ export default function JourneyReportsPage() {
         setExportProfiles(data.profiles || [])
 
         // Seleccionar el perfil por defecto si existe
-        const defaultProfile = data.profiles?.find((p: any) => p.isDefault)
+        const defaultProfile = data.profiles?.find((p: Record<string, unknown>) => p.isDefault)
         if (defaultProfile) {
-          setSelectedProfileId(defaultProfile.id)
+          setSelectedProfileId(defaultProfile.id as string)
         }
       }
     } catch (error) {
@@ -207,7 +207,7 @@ export default function JourneyReportsPage() {
 
   const exportToExcel = async () => {
     try {
-      let legajoDataMap: Map<string, any> = new Map()
+      const legajoDataMap: Map<string, Record<string, unknown>> = new Map()
 
       // Si hay un perfil seleccionado, obtener datos de legajo
       if (selectedProfileId) {
@@ -221,15 +221,15 @@ export default function JourneyReportsPage() {
         if (response.ok) {
           const { data } = await response.json()
           // Crear un mapa email -> datos de legajo
-          data.forEach((legajo: any) => {
-            legajoDataMap.set(legajo.email, legajo)
+          data.forEach((legajo: Record<string, unknown>) => {
+            legajoDataMap.set(legajo.email as string, legajo)
           })
         }
       }
 
       // Construir datos de exportación
       const exportData = journeys.map((journey) => {
-        const rowData: any = {
+        const rowData: Record<string, unknown> = {
           'Usuario': journey.userName,
           'Email': journey.userEmail,
         }

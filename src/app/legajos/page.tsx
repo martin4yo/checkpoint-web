@@ -89,8 +89,7 @@ export default function LegajosPage() {
   const [saving, setSaving] = useState(false)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [fieldConfig, setFieldConfig] = useState<any>(null)
+  const [fieldConfig, setFieldConfig] = useState<Record<string, unknown> | null>(null)
 
   // Form data states
   const [numeroLegajo, setNumeroLegajo] = useState('')
@@ -240,7 +239,7 @@ export default function LegajosPage() {
           // Cargar valores de campos personalizados
           const customValues: Record<string, string> = {}
           if (fullLegajo.customFieldValues && Array.isArray(fullLegajo.customFieldValues)) {
-            fullLegajo.customFieldValues.forEach((cfv: any) => {
+            fullLegajo.customFieldValues.forEach((cfv: { customFieldId: string; value: string }) => {
               customValues[cfv.customFieldId] = cfv.value
             })
           }

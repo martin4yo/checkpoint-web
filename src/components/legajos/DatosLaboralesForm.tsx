@@ -23,7 +23,7 @@ interface Employee {
 interface Props {
   data: LegajoDatosLaborales
   onChange: (data: LegajoDatosLaborales) => void
-  fieldConfig?: any
+  fieldConfig?: Record<string, unknown>
 }
 
 export default function DatosLaboralesForm({ data, onChange, fieldConfig }: Props) {

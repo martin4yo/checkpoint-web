@@ -5,7 +5,7 @@ import { Trash2, Download, FileText, Upload, AlertCircle, CheckCircle } from 'lu
 interface Props {
   documentos: Documento[]
   onChange: (documentos: Documento[]) => void
-  fieldConfig?: any
+  fieldConfig?: Record<string, unknown>
 }
 
 export default function DocumentosForm({ documentos, onChange, fieldConfig }: Props) {

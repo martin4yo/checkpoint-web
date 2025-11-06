@@ -7,7 +7,7 @@ interface Props {
   capacitaciones: Capacitacion[]
   onChangeFormacion: (formacion: Formacion[]) => void
   onChangeCapacitaciones: (capacitaciones: Capacitacion[]) => void
-  fieldConfig?: any
+  fieldConfig?: Record<string, unknown>
 }
 
 export default function FormacionForm({ formacion, capacitaciones, onChangeFormacion, onChangeCapacitaciones, fieldConfig }: Props) {

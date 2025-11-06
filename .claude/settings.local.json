@@ -68,7 +68,8 @@
       "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''hex''))\")",
       "Bash(rm:*)",
       "Bash(timeout 120 npm run build)",
-      "Read(//home/martin/**)"
+      "Read(//home/martin/**)",
+      "Bash(npx next build:*)"
     ],
     "deny": [],
     "ask": []
