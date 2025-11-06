@@ -69,7 +69,9 @@
       "Bash(rm:*)",
       "Bash(timeout 120 npm run build)",
       "Read(//home/martin/**)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "Bash(ssh:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

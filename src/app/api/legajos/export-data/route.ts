@@ -109,10 +109,11 @@ export async function GET(req: NextRequest) {
 
     // Filtrar campos específicos según el perfil
     const filteredData = legajos.map(legajo => {
+      const user = legajo.user as unknown as { firstName: string; lastName: string; email: string }
       const result: Record<string, unknown> = {
         numeroLegajo: legajo.numeroLegajo,
-        usuario: `${legajo.user.firstName} ${legajo.user.lastName}`,
-        email: legajo.user.email
+        usuario: `${user.firstName} ${user.lastName}`,
+        email: user.email
       }
 
       // Filtrar datos personales
@@ -120,7 +121,7 @@ export async function GET(req: NextRequest) {
         const datosPersonales: Record<string, unknown> = {}
         selectedFields.datosPersonales.forEach(field => {
           if (field in legajo.datosPersonales!) {
-            datosPersonales[field] = (legajo.datosPersonales as Record<string, unknown>)[field]
+            datosPersonales[field] = (legajo.datosPersonales as unknown as Record<string, unknown>)[field]
           }
         })
         result.datosPersonales = datosPersonales
@@ -131,7 +132,7 @@ export async function GET(req: NextRequest) {
         const datosFamiliares: Record<string, unknown> = {}
         selectedFields.datosFamiliares.forEach(field => {
           if (field in legajo.datosFamiliares!) {
-            datosFamiliares[field] = (legajo.datosFamiliares as Record<string, unknown>)[field]
+            datosFamiliares[field] = (legajo.datosFamiliares as unknown as Record<string, unknown>)[field]
           }
         })
         result.datosFamiliares = datosFamiliares
@@ -142,7 +143,7 @@ export async function GET(req: NextRequest) {
         const datosLaborales: Record<string, unknown> = {}
         selectedFields.datosLaborales.forEach(field => {
           if (field in legajo.datosLaborales!) {
-            datosLaborales[field] = (legajo.datosLaborales as Record<string, unknown>)[field]
+            datosLaborales[field] = (legajo.datosLaborales as unknown as Record<string, unknown>)[field]
           }
         })
         result.datosLaborales = datosLaborales
@@ -153,7 +154,7 @@ export async function GET(req: NextRequest) {
         const datosRemuneracion: Record<string, unknown> = {}
         selectedFields.datosRemuneracion.forEach(field => {
           if (field in legajo.datosRemuneracion!) {
-            datosRemuneracion[field] = (legajo.datosRemuneracion as Record<string, unknown>)[field]
+            datosRemuneracion[field] = (legajo.datosRemuneracion as unknown as Record<string, unknown>)[field]
           }
         })
         result.datosRemuneracion = datosRemuneracion
@@ -164,7 +165,7 @@ export async function GET(req: NextRequest) {
         const datosAdministrativos: Record<string, unknown> = {}
         selectedFields.datosAdministrativos.forEach(field => {
           if (field in legajo.datosAdministrativos!) {
-            datosAdministrativos[field] = (legajo.datosAdministrativos as Record<string, unknown>)[field]
+            datosAdministrativos[field] = (legajo.datosAdministrativos as unknown as Record<string, unknown>)[field]
           }
         })
         result.datosAdministrativos = datosAdministrativos
