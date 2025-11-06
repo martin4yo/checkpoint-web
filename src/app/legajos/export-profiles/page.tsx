@@ -197,7 +197,8 @@ export default function ExportProfilesPage() {
   }
 
   const isFieldSelected = (section: keyof SelectedFields, field: string) => {
-    return formData.selectedFields[section]?.includes(field) || false
+    const sectionFields = formData.selectedFields[section]
+    return Array.isArray(sectionFields) && sectionFields.includes(field)
   }
 
   if (loading) {
@@ -257,7 +258,7 @@ export default function ExportProfilesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {profiles.map((profile) => {
                     const totalFields = Object.values(profile.selectedFields || {})
-                      .reduce((sum: number, fields: Record<string, unknown>) => sum + (Array.isArray(fields) ? fields.length : 0), 0)
+                      .reduce((sum, fields) => (sum as number) + (Array.isArray(fields) ? fields.length : 0), 0)
 
                     return (
                       <tr key={profile.id} className="hover:bg-gray-50">
