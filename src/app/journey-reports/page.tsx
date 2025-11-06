@@ -238,8 +238,9 @@ export default function JourneyReportsPage() {
         if (legajoDataMap.has(journey.userEmail)) {
           const legajoData = legajoDataMap.get(journey.userEmail)
 
-          // Agregar número de legajo
-          if (legajoData.numeroLegajo) {
+          if (legajoData) {
+            // Agregar número de legajo
+            if (legajoData.numeroLegajo) {
             rowData['Nº Legajo'] = legajoData.numeroLegajo
           }
 
@@ -279,6 +280,7 @@ export default function JourneyReportsPage() {
             const da = legajoData.datosAdministrativos
             if (da.estadoEmpleado) rowData['Estado'] = da.estadoEmpleado
             if (da.diasVacacionesDisponibles) rowData['Días Vacaciones'] = Number(da.diasVacacionesDisponibles)
+          }
           }
         }
 
