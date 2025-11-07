@@ -40,8 +40,6 @@ export default function TenantsPage() {
       if (response.ok) {
         const data = await response.json()
         setTenants(data)
-      } else if (response.status === 403) {
-        alert('No tienes permisos para ver los tenants')
       }
     } catch (error) {
       console.error('Error fetching tenants:', error)
