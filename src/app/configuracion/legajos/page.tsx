@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { FileText, Save, Building2, CheckSquare, User, Users, Briefcase, DollarSign, GraduationCap, FileArchive, Settings } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -48,17 +48,7 @@ export default function LegajoConfigPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [selectedTenantId, setSelectedTenantId] = useState<string>('')
 
-  useEffect(() => {
-    fetchCurrentUser()
-  }, [])
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchConfig()
-    }
-  }, [currentUser, selectedTenantId])
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me')
 
@@ -74,7 +64,7 @@ export default function LegajoConfigPage() {
     } catch (error) {
       console.error('Error fetching current user:', error)
     }
-  }
+  }, [])
 
   const fetchTenants = async () => {
     try {
@@ -89,7 +79,7 @@ export default function LegajoConfigPage() {
     }
   }
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       const url = selectedTenantId
         ? `/api/legajo-config?tenantId=${selectedTenantId}`
@@ -106,7 +96,17 @@ export default function LegajoConfigPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedTenantId])
+
+  useEffect(() => {
+    fetchCurrentUser()
+  }, [fetchCurrentUser])
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchConfig()
+    }
+  }, [currentUser, fetchConfig])
 
   const handleToggleField = (section: string, field: string) => {
     if (!config) return

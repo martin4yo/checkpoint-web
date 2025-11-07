@@ -8,10 +8,7 @@ interface Props {
   fieldConfig?: Record<string, unknown>
 }
 
-export default function DocumentosForm({ documentos, onChange, fieldConfig }: Props) {
-  const isDocumentosRequired = () => {
-    return fieldConfig?.documentos?.required === true
-  }
+export default function DocumentosForm({ documentos, onChange }: Props) {
   const [nuevoDocumento, setNuevoDocumento] = useState<Documento>({
     tipoDocumento: '',
     descripcion: '',

@@ -258,7 +258,7 @@ export default function ExportProfilesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {profiles.map((profile) => {
                     const totalFields = Object.values(profile.selectedFields || {})
-                      .reduce((sum, fields) => (sum as number) + (Array.isArray(fields) ? fields.length : 0), 0)
+                      .reduce((sum, fields) => (sum as number) + (Array.isArray(fields) ? fields.length : 0), 0) as number
 
                     return (
                       <tr key={profile.id} className="hover:bg-gray-50">

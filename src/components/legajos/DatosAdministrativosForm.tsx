@@ -1,10 +1,15 @@
 import { LegajoDatosAdministrativos } from '@/types/legajo'
 import { AlertCircle, Calendar, FileText } from 'lucide-react'
 
+interface FieldConfig {
+  datosAdministrativos?: Record<string, boolean>
+  [key: string]: unknown
+}
+
 interface Props {
   data: LegajoDatosAdministrativos
   onChange: (data: LegajoDatosAdministrativos) => void
-  fieldConfig?: Record<string, unknown>
+  fieldConfig?: FieldConfig
 }
 
 export default function DatosAdministrativosForm({ data, onChange, fieldConfig }: Props) {

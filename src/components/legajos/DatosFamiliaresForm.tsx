@@ -10,13 +10,7 @@ interface Props {
   fieldConfig?: Record<string, unknown>
 }
 
-export default function DatosFamiliaresForm({ datosFamiliares, contactosEmergencia, onChangeFamiliares, onChangeContactos, fieldConfig }: Props) {
-  const isRequired = (fieldName: string) => {
-    return fieldConfig?.datosFamiliares?.[fieldName] === true
-  }
-  const isContactoRequired = () => {
-    return fieldConfig?.contactosEmergencia?.required === true
-  }
+export default function DatosFamiliaresForm({ datosFamiliares, contactosEmergencia, onChangeFamiliares, onChangeContactos }: Props) {
   const [nuevoFamiliar, setNuevoFamiliar] = useState<FamiliarACargo>({
     nombre: '',
     relacion: '',

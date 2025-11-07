@@ -8,10 +8,15 @@ interface MasterDataRecord {
   description: string
 }
 
+interface FieldConfig {
+  datosRemuneracion?: Record<string, boolean>
+  [key: string]: unknown
+}
+
 interface Props {
   data: LegajoDatosRemuneracion
   onChange: (data: LegajoDatosRemuneracion) => void
-  fieldConfig?: Record<string, unknown>
+  fieldConfig?: FieldConfig
 }
 
 export default function RemuneracionForm({ data, onChange, fieldConfig }: Props) {

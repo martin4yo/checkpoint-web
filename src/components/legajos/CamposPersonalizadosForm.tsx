@@ -10,18 +10,12 @@ interface CustomField {
   isActive: boolean
 }
 
-interface CustomFieldValue {
-  customFieldId: string
-  value: string
-}
-
 interface Props {
-  legajoId?: string
   values: Record<string, string>
   onChange: (values: Record<string, string>) => void
 }
 
-export default function CamposPersonalizadosForm({ legajoId, values, onChange }: Props) {
+export default function CamposPersonalizadosForm({ values, onChange }: Props) {
   const [customFields, setCustomFields] = useState<CustomField[]>([])
   const [loading, setLoading] = useState(true)
 

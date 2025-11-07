@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
@@ -24,7 +25,6 @@ import {
   Shield,
   Database
 } from 'lucide-react';
-import Image from 'next/image';
 import { clsx } from 'clsx';
 import { useSidebar } from '@/contexts/SidebarContext';
 
@@ -399,10 +399,13 @@ export default function Sidebar() {
         {/* Logo Section */}
         <div className="bg-sidebar py-0">
           <div className="relative h-16 w-full flex items-center justify-center">
-            <img
+            <Image
               src="/axioma_logo_invertido.png"
               alt="Axioma Logo"
+              width={200}
+              height={64}
               className="h-full w-auto object-contain p-3"
+              priority
             />
           </div>
         </div>
@@ -421,10 +424,13 @@ export default function Sidebar() {
             {/* Logo Section for mobile */}
             <div className="bg-sidebar py-2">
               <div className="relative h-12 w-full flex items-center justify-center">
-                <img
+                <Image
                   src="/axioma_logo_invertido.png"
                   alt="Axioma Logo"
+                  width={160}
+                  height={48}
                   className="h-full w-auto object-contain p-2"
+                  priority
                 />
               </div>
             </div>

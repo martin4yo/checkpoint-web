@@ -20,10 +20,15 @@ interface Employee {
   email: string
 }
 
+interface FieldConfig {
+  datosLaborales?: Record<string, boolean>
+  [key: string]: unknown
+}
+
 interface Props {
   data: LegajoDatosLaborales
   onChange: (data: LegajoDatosLaborales) => void
-  fieldConfig?: Record<string, unknown>
+  fieldConfig?: FieldConfig
 }
 
 export default function DatosLaboralesForm({ data, onChange, fieldConfig }: Props) {

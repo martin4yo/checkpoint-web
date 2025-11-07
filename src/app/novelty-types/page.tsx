@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip, Building2 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -57,11 +57,7 @@ export default function NoveltyTypesPage() {
   })
   const { confirm, ConfirmDialog } = useConfirm()
 
-  useEffect(() => {
-    fetchNoveltyTypes()
-  }, [filterTenantId])
-
-  const fetchNoveltyTypes = async () => {
+  const fetchNoveltyTypes = useCallback(async () => {
     try {
       const url = filterTenantId
         ? `/api/novelty-types?tenantId=${filterTenantId}`
@@ -82,7 +78,11 @@ export default function NoveltyTypesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterTenantId, tenants.length])
+
+  useEffect(() => {
+    fetchNoveltyTypes()
+  }, [fetchNoveltyTypes])
 
   const fetchTenants = async () => {
     try {

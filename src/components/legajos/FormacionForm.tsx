@@ -10,13 +10,7 @@ interface Props {
   fieldConfig?: Record<string, unknown>
 }
 
-export default function FormacionForm({ formacion, capacitaciones, onChangeFormacion, onChangeCapacitaciones, fieldConfig }: Props) {
-  const isFormacionRequired = () => {
-    return fieldConfig?.formacion?.required === true
-  }
-  const isCapacitacionRequired = () => {
-    return fieldConfig?.capacitaciones?.required === true
-  }
+export default function FormacionForm({ formacion, capacitaciones, onChangeFormacion, onChangeCapacitaciones }: Props) {
   const [nuevaFormacion, setNuevaFormacion] = useState<Formacion>({
     nivelEducativo: '',
     titulo: '',

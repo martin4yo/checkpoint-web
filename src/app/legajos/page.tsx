@@ -336,7 +336,7 @@ export default function LegajosPage() {
         }
 
         for (const [field, { value, label }] of Object.entries(personalFields)) {
-          if (fieldConfig.datosPersonales[field] && !value) {
+          if ((fieldConfig.datosPersonales as Record<string, unknown>)?.[field] && !value) {
             await confirm({
               title: 'Campo Requerido',
               message: `El campo "${label}" es obligatorio`,
@@ -351,7 +351,7 @@ export default function LegajosPage() {
 
       // Validate Datos Familiares
       if (fieldConfig.datosFamiliares) {
-        if (fieldConfig.datosFamiliares.hijosACargo && datosFamiliares.hijosACargo === undefined) {
+        if ((fieldConfig.datosFamiliares as Record<string, unknown>).hijosACargo && datosFamiliares.hijosACargo === undefined) {
           await confirm({
             title: 'Campo Requerido',
             message: 'Debe indicar si tiene hijos a cargo',
@@ -362,7 +362,7 @@ export default function LegajosPage() {
           return
         }
 
-        if (fieldConfig.datosFamiliares.grupoFamiliarACargo && (!datosFamiliares.grupoFamiliarACargo || datosFamiliares.grupoFamiliarACargo.length === 0)) {
+        if ((fieldConfig.datosFamiliares as Record<string, unknown>).grupoFamiliarACargo && (!datosFamiliares.grupoFamiliarACargo || datosFamiliares.grupoFamiliarACargo.length === 0)) {
           await confirm({
             title: 'Campo Requerido',
             message: 'Debe agregar al menos un integrante del grupo familiar',
@@ -375,7 +375,7 @@ export default function LegajosPage() {
       }
 
       // Validate Contactos de Emergencia
-      if (fieldConfig.contactosEmergencia?.required && (!contactosEmergencia || contactosEmergencia.length === 0)) {
+      if ((fieldConfig.contactosEmergencia as Record<string, unknown>)?.required && (!contactosEmergencia || contactosEmergencia.length === 0)) {
         await confirm({
           title: 'Campo Requerido',
           message: 'Debe agregar al menos un contacto de emergencia',
@@ -401,7 +401,7 @@ export default function LegajosPage() {
         }
 
         for (const [field, { value, label }] of Object.entries(laboralFields)) {
-          if (fieldConfig.datosLaborales[field] && !value) {
+          if ((fieldConfig.datosLaborales as Record<string, unknown>)[field] && !value) {
             await confirm({
               title: 'Campo Requerido',
               message: `El campo "${label}" es obligatorio`,
@@ -426,7 +426,7 @@ export default function LegajosPage() {
         }
 
         for (const [field, { value, label }] of Object.entries(remuneracionFields)) {
-          if (fieldConfig.datosRemuneracion[field] && !value) {
+          if ((fieldConfig.datosRemuneracion as Record<string, unknown>)[field] && !value) {
             await confirm({
               title: 'Campo Requerido',
               message: `El campo "${label}" es obligatorio`,
@@ -438,7 +438,7 @@ export default function LegajosPage() {
           }
         }
 
-        if (fieldConfig.datosRemuneracion.adicionales && (!datosRemuneracion.adicionales || datosRemuneracion.adicionales.length === 0)) {
+        if ((fieldConfig.datosRemuneracion as Record<string, unknown>).adicionales && (!datosRemuneracion.adicionales || datosRemuneracion.adicionales.length === 0)) {
           await confirm({
             title: 'Campo Requerido',
             message: 'Debe agregar al menos un adicional',
@@ -449,7 +449,7 @@ export default function LegajosPage() {
           return
         }
 
-        if (fieldConfig.datosRemuneracion.beneficios && (!datosRemuneracion.beneficios || datosRemuneracion.beneficios.length === 0)) {
+        if ((fieldConfig.datosRemuneracion as Record<string, unknown>).beneficios && (!datosRemuneracion.beneficios || datosRemuneracion.beneficios.length === 0)) {
           await confirm({
             title: 'Campo Requerido',
             message: 'Debe agregar al menos un beneficio',
@@ -462,7 +462,7 @@ export default function LegajosPage() {
       }
 
       // Validate Formación
-      if (fieldConfig.formacion?.required && (!formacion || formacion.length === 0)) {
+      if ((fieldConfig.formacion as Record<string, unknown>)?.required && (!formacion || formacion.length === 0)) {
         await confirm({
           title: 'Campo Requerido',
           message: 'Debe agregar al menos un registro de formación académica',
@@ -474,7 +474,7 @@ export default function LegajosPage() {
       }
 
       // Validate Capacitaciones
-      if (fieldConfig.capacitaciones?.required && (!capacitaciones || capacitaciones.length === 0)) {
+      if ((fieldConfig.capacitaciones as Record<string, unknown>)?.required && (!capacitaciones || capacitaciones.length === 0)) {
         await confirm({
           title: 'Campo Requerido',
           message: 'Debe agregar al menos una capacitación',
@@ -486,7 +486,7 @@ export default function LegajosPage() {
       }
 
       // Validate Documentos
-      if (fieldConfig.documentos?.required && (!documentos || documentos.length === 0)) {
+      if ((fieldConfig.documentos as Record<string, unknown>)?.required && (!documentos || documentos.length === 0)) {
         await confirm({
           title: 'Campo Requerido',
           message: 'Debe agregar al menos un documento',
@@ -499,7 +499,7 @@ export default function LegajosPage() {
 
       // Validate Datos Administrativos
       if (fieldConfig.datosAdministrativos) {
-        if (fieldConfig.datosAdministrativos.legajoFisico && !datosAdministrativos.legajoFisico) {
+        if ((fieldConfig.datosAdministrativos as Record<string, unknown>).legajoFisico && !datosAdministrativos.legajoFisico) {
           await confirm({
             title: 'Campo Requerido',
             message: 'El número de legajo físico es obligatorio',
@@ -510,7 +510,7 @@ export default function LegajosPage() {
           return
         }
 
-        if (fieldConfig.datosAdministrativos.observaciones && !datosAdministrativos.observaciones) {
+        if ((fieldConfig.datosAdministrativos as Record<string, unknown>).observaciones && !datosAdministrativos.observaciones) {
           await confirm({
             title: 'Campo Requerido',
             message: 'Las observaciones son obligatorias',
@@ -952,7 +952,7 @@ export default function LegajosPage() {
                   <DatosPersonalesForm
                     data={datosPersonales}
                     onChange={setDatosPersonales}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'familiares' && (
@@ -961,21 +961,21 @@ export default function LegajosPage() {
                     contactosEmergencia={contactosEmergencia}
                     onChangeFamiliares={setDatosFamiliares}
                     onChangeContactos={setContactosEmergencia}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'laborales' && (
                   <DatosLaboralesForm
                     data={datosLaborales}
                     onChange={setDatosLaborales}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'remuneracion' && (
                   <RemuneracionForm
                     data={datosRemuneracion}
                     onChange={setDatosRemuneracion}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'formacion' && (
@@ -984,26 +984,25 @@ export default function LegajosPage() {
                     capacitaciones={capacitaciones}
                     onChangeFormacion={setFormacion}
                     onChangeCapacitaciones={setCapacitaciones}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'documentos' && (
                   <DocumentosForm
                     documentos={documentos}
                     onChange={setDocumentos}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'administrativos' && (
                   <DatosAdministrativosForm
                     data={datosAdministrativos}
                     onChange={setDatosAdministrativos}
-                    fieldConfig={fieldConfig}
+                    fieldConfig={fieldConfig ?? undefined}
                   />
                 )}
                 {activeTab === 'personalizados' && (
                   <CamposPersonalizadosForm
-                    legajoId={selectedUser?.legajo?.id}
                     values={customFieldValues}
                     onChange={setCustomFieldValues}
                   />

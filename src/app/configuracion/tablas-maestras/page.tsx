@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Database, Plus, Edit3, Trash2, X, Save } from 'lucide-react'
 
@@ -75,15 +75,7 @@ export default function TablasMaestrasPage() {
     breakMinutes: ''
   })
 
-  useEffect(() => {
-    if (activeTab === 'simple') {
-      fetchRecords()
-    } else {
-      fetchPositions()
-    }
-  }, [selectedTable, activeTab])
-
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/master-data?table=${selectedTable}`)
@@ -96,7 +88,7 @@ export default function TablasMaestrasPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedTable])
 
   const fetchPositions = async () => {
     setLoading(true)
@@ -112,6 +104,14 @@ export default function TablasMaestrasPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (activeTab === 'simple') {
+      fetchRecords()
+    } else {
+      fetchPositions()
+    }
+  }, [selectedTable, activeTab, fetchRecords])
 
   const handleCreate = () => {
     if (activeTab === 'simple') {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, Building2 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -97,13 +97,7 @@ export default function NoveltiesPage() {
   const [viewAttachments, setViewAttachments] = useState<Attachment[]>([])
   const { confirm, ConfirmDialog } = useConfirm()
 
-  useEffect(() => {
-    fetchNovelties()
-    fetchNoveltyTypes()
-    fetchUsers()
-  }, [filterTenantId])
-
-  const fetchNovelties = async () => {
+  const fetchNovelties = useCallback(async () => {
     try {
       const url = filterTenantId
         ? `/api/novelties?tenantId=${filterTenantId}`
@@ -124,7 +118,7 @@ export default function NoveltiesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterTenantId, tenants.length])
 
   const fetchNoveltyTypes = async () => {
     try {
@@ -162,6 +156,12 @@ export default function NoveltiesPage() {
       console.error('Error fetching users:', error)
     }
   }
+
+  useEffect(() => {
+    fetchNovelties()
+    fetchNoveltyTypes()
+    fetchUsers()
+  }, [fetchNovelties])
 
   const fetchAttachments = async (noveltyId: string) => {
     try {

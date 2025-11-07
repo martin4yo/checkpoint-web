@@ -71,7 +71,8 @@
       "Read(//home/martin/**)",
       "Bash(npx next build:*)",
       "Bash(ssh:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []
