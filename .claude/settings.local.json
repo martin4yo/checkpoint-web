@@ -67,7 +67,11 @@
       "Bash(timeout 90 npm run build:*)",
       "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''hex''))\")",
       "Bash(rm:*)",
-      "Bash(timeout 120 npm run build)"
+      "Bash(timeout 120 npm run build)",
+      "Bash(find:*)",
+      "WebFetch(domain:blog.centrodeelearning.com)",
+      "WebFetch(domain:www.cfecursos.com.ar)",
+      "WebFetch(domain:hr.vismalatam.com)"
     ],
     "deny": [],
     "ask": []
