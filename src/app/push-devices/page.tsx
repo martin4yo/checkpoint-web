@@ -183,21 +183,21 @@ export default function PushDevicesPage() {
           <div className="flex space-x-3">
             <button
               onClick={testNotification}
-              className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center bg-secondary text-palette-yellow px-4 py-2 rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
             >
               <Bell className="mr-2 h-4 w-4" />
               Probar Notificación
             </button>
             <button
               onClick={testMonitoring}
-              className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center bg-secondary text-palette-yellow px-4 py-2 rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
             >
               <Bell className="mr-2 h-4 w-4" />
               Probar Monitoreo
             </button>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center bg-secondary text-palette-yellow px-4 py-2 rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
             >
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Dispositivo
@@ -305,7 +305,7 @@ export default function PushDevicesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                  className="px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
                 >
                   Registrar
                 </button>

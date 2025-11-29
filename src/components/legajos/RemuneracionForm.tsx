@@ -1,13 +1,66 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LegajoDatosRemuneracion, Adicional, Beneficio } from '@/types/legajo'
 import { Plus, Trash2, DollarSign, Gift } from 'lucide-react'
+
+interface MasterDataRecord {
+  id: string
+  code: string
+  description: string
+}
+
+interface FieldConfig {
+  datosRemuneracion?: Record<string, boolean>
+  [key: string]: unknown
+}
 
 interface Props {
   data: LegajoDatosRemuneracion
   onChange: (data: LegajoDatosRemuneracion) => void
+  fieldConfig?: FieldConfig
 }
 
-export default function RemuneracionForm({ data, onChange }: Props) {
+export default function RemuneracionForm({ data, onChange, fieldConfig }: Props) {
+  const [obrasSociales, setObrasSociales] = useState<MasterDataRecord[]>([])
+  const [sindicatos, setSindicatos] = useState<MasterDataRecord[]>([])
+  const [bancos, setBancos] = useState<MasterDataRecord[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchMasterData()
+  }, [])
+
+  const fetchMasterData = async () => {
+    try {
+      const [osRes, sindRes, bancoRes] = await Promise.all([
+        fetch('/api/master-data?table=obra_social'),
+        fetch('/api/master-data?table=sindicato'),
+        fetch('/api/master-data?table=banco')
+      ])
+
+      if (osRes.ok) {
+        const data = await osRes.json()
+        setObrasSociales(data.records || [])
+      }
+
+      if (sindRes.ok) {
+        const data = await sindRes.json()
+        setSindicatos(data.records || [])
+      }
+
+      if (bancoRes.ok) {
+        const data = await bancoRes.json()
+        setBancos(data.records || [])
+      }
+    } catch (error) {
+      console.error('Error fetching master data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const isRequired = (fieldName: string) => {
+    return fieldConfig?.datosRemuneracion?.[fieldName] === true
+  }
   const [nuevoAdicional, setNuevoAdicional] = useState<Adicional>({
     concepto: '',
     monto: 0,
@@ -79,7 +132,7 @@ export default function RemuneracionForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Salario Básico
+              Salario Básico{isRequired('salarioBasico') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="number"
@@ -92,7 +145,7 @@ export default function RemuneracionForm({ data, onChange }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Liquidación
+              Tipo de Liquidación{isRequired('tipoLiquidacion') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <select
               value={data.tipoLiquidacion || ''}
@@ -114,19 +167,25 @@ export default function RemuneracionForm({ data, onChange }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Banco
+              Banco{isRequired('banco') && <span className="text-red-500 ml-1">*</span>}
             </label>
-            <input
-              type="text"
+            <select
               value={data.banco || ''}
               onChange={(e) => handleChange('banco', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-              placeholder="Ej: Banco Nación, Santander"
-            />
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              {bancos.map(banco => (
+                <option key={banco.id} value={banco.description}>
+                  {banco.code} - {banco.description}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              CBU (22 dígitos)
+              CBU (22 dígitos){isRequired('cbu') && <span className="text-red-500 ml-1">*</span>}
             </label>
             <input
               type="text"
@@ -136,6 +195,49 @@ export default function RemuneracionForm({ data, onChange }: Props) {
               placeholder="0000000000000000000000"
               maxLength={22}
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Cobertura Social */}
+      <div>
+        <h4 className="text-md font-semibold text-gray-700 mb-3">Cobertura Social</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Obra Social{isRequired('obraSocial') && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <select
+              value={data.obraSocial || ''}
+              onChange={(e) => handleChange('obraSocial', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              {obrasSociales.map(os => (
+                <option key={os.id} value={os.description}>
+                  {os.code} - {os.description}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sindicato
+            </label>
+            <select
+              value={data.arl || ''}
+              onChange={(e) => handleChange('arl', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              {sindicatos.map(sind => (
+                <option key={sind.id} value={sind.description}>
+                  {sind.code} - {sind.description}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -208,7 +310,7 @@ export default function RemuneracionForm({ data, onChange }: Props) {
           </div>
           <button
             onClick={agregarAdicional}
-            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover"
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Adicional
@@ -282,7 +384,7 @@ export default function RemuneracionForm({ data, onChange }: Props) {
           </div>
           <button
             onClick={agregarBeneficio}
-            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover"
+            className="mt-3 inline-flex items-center px-4 py-2 bg-secondary text-palette-yellow rounded-md hover:bg-secondary-hover"
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Beneficio

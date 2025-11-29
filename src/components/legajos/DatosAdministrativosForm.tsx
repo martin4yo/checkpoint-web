@@ -1,12 +1,21 @@
 import { LegajoDatosAdministrativos } from '@/types/legajo'
 import { AlertCircle, Calendar, FileText } from 'lucide-react'
 
+interface FieldConfig {
+  datosAdministrativos?: Record<string, boolean>
+  [key: string]: unknown
+}
+
 interface Props {
   data: LegajoDatosAdministrativos
   onChange: (data: LegajoDatosAdministrativos) => void
+  fieldConfig?: FieldConfig
 }
 
-export default function DatosAdministrativosForm({ data, onChange }: Props) {
+export default function DatosAdministrativosForm({ data, onChange, fieldConfig }: Props) {
+  const isRequired = (fieldName: string) => {
+    return fieldConfig?.datosAdministrativos?.[fieldName] === true
+  }
   const handleChange = (field: keyof LegajoDatosAdministrativos, value: string | number) => {
     onChange({ ...data, [field]: value })
   }
@@ -146,7 +155,7 @@ export default function DatosAdministrativosForm({ data, onChange }: Props) {
 
       {/* Observaciones */}
       <div>
-        <h4 className="text-md font-semibold text-gray-700 mb-3">Observaciones</h4>
+        <h4 className="text-md font-semibold text-gray-700 mb-3">Observaciones{isRequired('observaciones') && <span className="text-red-500 ml-1">*</span>}</h4>
         <textarea
           value={data.observaciones || ''}
           onChange={(e) => handleChange('observaciones', e.target.value)}

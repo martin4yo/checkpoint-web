@@ -19,7 +19,6 @@ import crypto from 'crypto'
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm'
 const ENCRYPTION_KEY = process.env.BIOMETRIC_ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex')
 const MIN_FACE_CONFIDENCE = 0.6 // Threshold mínimo para reconocimiento facial
-const FACE_DESCRIPTOR_LENGTH = 128 // Longitud del descriptor facial de FaceNet
 
 // ==================== TIPOS ====================
 
@@ -159,13 +158,11 @@ export async function extractFaceEmbedding(imageBase64: string): Promise<FaceEmb
 
     for (const k of rotations) {
       let tensorToTest = processedTensor
-      let shouldDisposeTensor = false
 
       if (k > 0) {
         console.log(`🔄 Intentando con rotación ${k * 90}°`)
         tensorToTest = rotateTensor(processedTensor, k)
         rotatedTensors.push(tensorToTest)
-        shouldDisposeTensor = true
       }
 
       try {
@@ -449,7 +446,7 @@ export function validateQRCode(scannedCode: string): {
       tenantId: parts[1],
       userId: parts[2]
     }
-  } catch (error) {
+  } catch {
     return { isValid: false }
   }
 }

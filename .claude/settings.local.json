@@ -68,10 +68,11 @@
       "Bash(node -e \"console.log(require(''crypto'').randomBytes(32).toString(''hex''))\")",
       "Bash(rm:*)",
       "Bash(timeout 120 npm run build)",
-      "Bash(find:*)",
-      "WebFetch(domain:blog.centrodeelearning.com)",
-      "WebFetch(domain:www.cfecursos.com.ar)",
-      "WebFetch(domain:hr.vismalatam.com)"
+      "Read(//home/martin/**)",
+      "Bash(npx next build:*)",
+      "Bash(ssh:*)",
+      "Bash(tee:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []

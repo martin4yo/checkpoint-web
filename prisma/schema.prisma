@@ -28,6 +28,10 @@ model Tenant {
   biometricConfig BiometricConfig?
   biometricClocks BiometricClock[]
   legajoFieldConfig LegajoFieldConfig?
+  legajoExportProfiles LegajoExportProfile[]
+  legajoCustomFields LegajoCustomField[]
+  masterDataTables MasterDataTable[]
+  jobPositions JobPosition[]
 
   @@map("tenants")
 }
@@ -290,6 +294,7 @@ model Legajo {
   capacitaciones          LegajoCapacitacion[]
   documentos              LegajoDocumento[]
   horarios                LegajoHorarioTrabajo[]
+  customFieldValues       LegajoCustomFieldValue[]
 
   @@map("legajos")
 }
@@ -614,4 +619,135 @@ model LegajoFieldConfig {
   tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("legajo_field_configs")
+}
+
+model LegajoExportProfile {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  name                String    // "Liquidación Mensual", "Auditoría AFIP", etc.
+  description         String?
+  isDefault           Boolean   @default(false)
+
+  // Campos de legajo a incluir (estructura por sección)
+  selectedFields      Json      // Ej: { "datosPersonales": ["dni", "cuil"], "datosLaborales": ["puesto", "area"] }
+
+  // Configuración de integración con jornadas
+  includeJourneyData  Boolean   @default(true)  // Si incluye datos de horas/jornadas
+  journeyDateRange    String?   @default("month") // "week", "month", "custom"
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, isDefault])
+  @@map("legajo_export_profiles")
+}
+
+// ==================== CAMPOS PERSONALIZADOS DE LEGAJOS ====================
+
+model LegajoCustomField {
+  id                  String                      @id @default(cuid())
+  tenantId            String
+  fieldName           String                      // Nombre del campo personalizado
+  fieldType           LegajoCustomFieldType       // Tipo de dato
+  defaultValue        String?                     // Valor por defecto
+  isRequired          Boolean                     @default(false)
+  order               Int                         @default(0) // Orden de visualización
+  isActive            Boolean                     @default(true)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  tenant              Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values              LegajoCustomFieldValue[]
+
+  @@unique([tenantId, fieldName])
+  @@index([tenantId])
+  @@map("legajo_custom_fields")
+}
+
+model LegajoCustomFieldValue {
+  id                  String                @id @default(cuid())
+  legajoId            String
+  customFieldId       String
+  value               String                // Valor almacenado como string
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  legajo              Legajo                @relation(fields: [legajoId], references: [id], onDelete: Cascade)
+  customField         LegajoCustomField     @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([legajoId, customFieldId])
+  @@index([legajoId])
+  @@index([customFieldId])
+  @@map("legajo_custom_field_values")
+}
+
+enum LegajoCustomFieldType {
+  TEXT        // Texto corto
+  TEXTAREA    // Texto largo
+  NUMBER      // Número
+  DATE        // Fecha
+  SELECT      // Lista desplegable (opciones en defaultValue como JSON)
+  CHECKBOX    // Booleano
+  EMAIL       // Email
+  PHONE       // Teléfono
+}
+
+// ==================== TABLAS MAESTRAS DE LEGAJOS ====================
+
+// Tabla genérica para datos maestros simples (categoría, área, sucursal, obra social, sindicato, banco)
+model MasterDataTable {
+  id          String   @id @default(cuid())
+  tenantId    String
+  table       String   // "categoria", "area", "sucursal", "obra_social", "sindicato", "banco"
+  code        String   // Código único dentro de la tabla
+  description String   // Descripción del ítem
+  isActive    Boolean  @default(true)
+  order       Int      @default(0) // Orden de visualización
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, table, code])
+  @@index([tenantId, table])
+  @@map("master_data_tables")
+}
+
+// Tabla específica para puestos de trabajo con detalles complejos
+model JobPosition {
+  id                String   @id @default(cuid())
+  tenantId          String
+  code              String   // Código único del puesto
+  name              String   // Nombre del puesto
+  description       String?  // Descripción detallada
+
+  // Días de trabajo
+  workDays          Json     // Array de días: ["lunes", "martes", "miércoles", "jueves", "viernes"]
+
+  // Configuración de horarios
+  scheduleType      String   // "fijo", "rotativo", "flexible"
+  startTime         String?  // "09:00" - Hora de inicio (para horario fijo)
+  endTime           String?  // "18:00" - Hora de fin (para horario fijo)
+  hoursPerDay       Float?   // Horas por día
+  hoursPerWeek      Float?   // Horas por semana
+
+  // Configuración de horas extras
+  overtimeAllowed   Boolean  @default(false)
+  overtimeRate      Float?   // Multiplicador de horas extras: 1.5, 2.0, etc.
+
+  // Descansos
+  breakMinutes      Int?     // Minutos de descanso durante la jornada
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("job_positions")
 }

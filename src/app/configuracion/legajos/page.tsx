@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { FileText, Save, Building2 } from 'lucide-react'
+import { FileText, Save, Building2, CheckSquare, User, Users, Briefcase, DollarSign, GraduationCap, FileArchive, Settings } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 
 interface Tenant {
@@ -48,17 +48,7 @@ export default function LegajoConfigPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [selectedTenantId, setSelectedTenantId] = useState<string>('')
 
-  useEffect(() => {
-    fetchCurrentUser()
-  }, [])
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchConfig()
-    }
-  }, [currentUser, selectedTenantId])
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me')
 
@@ -74,7 +64,7 @@ export default function LegajoConfigPage() {
     } catch (error) {
       console.error('Error fetching current user:', error)
     }
-  }
+  }, [])
 
   const fetchTenants = async () => {
     try {
@@ -89,7 +79,7 @@ export default function LegajoConfigPage() {
     }
   }
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       const url = selectedTenantId
         ? `/api/legajo-config?tenantId=${selectedTenantId}`
@@ -106,7 +96,17 @@ export default function LegajoConfigPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedTenantId])
+
+  useEffect(() => {
+    fetchCurrentUser()
+  }, [fetchCurrentUser])
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchConfig()
+    }
+  }, [currentUser, fetchConfig])
 
   const handleToggleField = (section: string, field: string) => {
     if (!config) return
@@ -164,6 +164,17 @@ export default function LegajoConfigPage() {
     }
   }
 
+  const getTotalRequiredFields = () => {
+    if (!config) return 0
+    let count = 0
+    Object.values(config.requiredFields).forEach(section => {
+      Object.values(section).forEach(value => {
+        if (value === true) count++
+      })
+    })
+    return count
+  }
+
   if (loading) {
     return (
       <DashboardLayout title="Configuración de Legajos" titleIcon={<FileText className="h-8 w-8 text-gray-600" />}>
@@ -188,30 +199,41 @@ export default function LegajoConfigPage() {
     <DashboardLayout title="Configuración de Legajos" titleIcon={<FileText className="h-8 w-8 text-gray-600" />}>
       <ConfirmDialog />
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Campos Obligatorios de Legajos
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Configure qué campos son obligatorios al crear o editar un legajo
-            </p>
+        {/* Header con descripción mejorada */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex flex-1">
+              <div className="flex-shrink-0">
+                <CheckSquare className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Configuración de Campos Obligatorios de Legajos
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>• Configure qué campos son obligatorios al crear o editar un legajo de empleado</p>
+                  <p>• Los campos marcados como obligatorios deberán ser completados antes de guardar un legajo</p>
+                  <p>• Total de campos obligatorios configurados: {getTotalRequiredFields()}</p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="ml-4 px-6 py-3 bg-secondary text-palette-yellow rounded-lg hover:bg-secondary-hover font-semibold flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+            >
+              <Save className="h-5 w-5" />
+              <span>{saving ? 'Guardando...' : 'Guardar Configuración'}</span>
+            </button>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary-hover flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-4 w-4" />
-            <span>{saving ? 'Guardando...' : 'Guardar Configuración'}</span>
-          </button>
         </div>
 
         {/* Tenant Filter - Only for Superusers */}
         {currentUser?.superuser && (
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-secondary">
             <div className="flex items-center space-x-3">
               <Building2 className="h-5 w-5 text-secondary" />
+              <label className="text-sm font-medium text-gray-700">Configurar para:</label>
               <select
                 value={selectedTenantId}
                 onChange={(e) => setSelectedTenantId(e.target.value)}
@@ -228,11 +250,14 @@ export default function LegajoConfigPage() {
           </div>
         )}
 
-        {/* Secciones de Configuración */}
-        <div className="space-y-6">
+        {/* Grid de Secciones de Configuración */}
+        <div className="columns-2 gap-6 space-y-6">
           {/* Datos Personales */}
           <Section
             title="Datos Personales"
+            icon={<User className="h-5 w-5" />}
+            color="bg-blue-50 border-blue-200"
+            iconColor="text-blue-600"
             fields={config.requiredFields.datosPersonales}
             fieldLabels={{
               dni: 'DNI',
@@ -257,6 +282,9 @@ export default function LegajoConfigPage() {
           {/* Datos Familiares */}
           <Section
             title="Datos Familiares"
+            icon={<Users className="h-5 w-5" />}
+            color="bg-green-50 border-green-200"
+            iconColor="text-green-600"
             fields={config.requiredFields.datosFamiliares}
             fieldLabels={{
               hijosACargo: 'Hijos a Cargo',
@@ -268,6 +296,9 @@ export default function LegajoConfigPage() {
           {/* Contactos de Emergencia */}
           <Section
             title="Contactos de Emergencia"
+            icon={<User className="h-5 w-5" />}
+            color="bg-red-50 border-red-200"
+            iconColor="text-red-600"
             fields={config.requiredFields.contactosEmergencia}
             fieldLabels={{
               required: 'Al menos un contacto de emergencia'
@@ -278,6 +309,9 @@ export default function LegajoConfigPage() {
           {/* Datos Laborales */}
           <Section
             title="Datos Laborales"
+            icon={<Briefcase className="h-5 w-5" />}
+            color="bg-purple-50 border-purple-200"
+            iconColor="text-purple-600"
             fields={config.requiredFields.datosLaborales}
             fieldLabels={{
               puesto: 'Puesto',
@@ -298,6 +332,9 @@ export default function LegajoConfigPage() {
           {/* Remuneración */}
           <Section
             title="Remuneración"
+            icon={<DollarSign className="h-5 w-5" />}
+            color="bg-yellow-50 border-yellow-200"
+            iconColor="text-yellow-600"
             fields={config.requiredFields.datosRemuneracion}
             fieldLabels={{
               salarioBasico: 'Salario Básico',
@@ -315,6 +352,9 @@ export default function LegajoConfigPage() {
           {/* Formación */}
           <Section
             title="Formación"
+            icon={<GraduationCap className="h-5 w-5" />}
+            color="bg-indigo-50 border-indigo-200"
+            iconColor="text-indigo-600"
             fields={config.requiredFields.formacion}
             fieldLabels={{
               required: 'Al menos un registro de formación académica'
@@ -325,6 +365,9 @@ export default function LegajoConfigPage() {
           {/* Capacitaciones */}
           <Section
             title="Capacitaciones"
+            icon={<GraduationCap className="h-5 w-5" />}
+            color="bg-teal-50 border-teal-200"
+            iconColor="text-teal-600"
             fields={config.requiredFields.capacitaciones}
             fieldLabels={{
               required: 'Al menos una capacitación'
@@ -335,6 +378,9 @@ export default function LegajoConfigPage() {
           {/* Documentos */}
           <Section
             title="Documentos"
+            icon={<FileArchive className="h-5 w-5" />}
+            color="bg-orange-50 border-orange-200"
+            iconColor="text-orange-600"
             fields={config.requiredFields.documentos}
             fieldLabels={{
               required: 'Al menos un documento adjunto'
@@ -345,6 +391,9 @@ export default function LegajoConfigPage() {
           {/* Datos Administrativos */}
           <Section
             title="Datos Administrativos"
+            icon={<Settings className="h-5 w-5" />}
+            color="bg-gray-50 border-gray-200"
+            iconColor="text-gray-600"
             fields={config.requiredFields.datosAdministrativos}
             fieldLabels={{
               legajoFisico: 'Número de Legajo Físico',
@@ -360,27 +409,55 @@ export default function LegajoConfigPage() {
 
 interface SectionProps {
   title: string
+  icon: React.ReactNode
+  color: string
+  iconColor: string
   fields: FieldConfig
   fieldLabels: { [key: string]: string }
   onToggle: (field: string) => void
 }
 
-function Section({ title, fields, fieldLabels, onToggle }: SectionProps) {
+function Section({ title, icon, color, iconColor, fields, fieldLabels, onToggle }: SectionProps) {
+  const requiredCount = Object.values(fields).filter(v => v === true).length
+  const totalCount = Object.keys(fields).length
+
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className="space-y-3">
-        {Object.entries(fields).map(([field, required]) => (
-          <label key={field} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-            <input
-              type="checkbox"
-              checked={Boolean(required)}
-              onChange={() => onToggle(field)}
-              className="h-5 w-5 text-secondary focus:ring-secondary border-gray-300 rounded cursor-pointer"
-            />
-            <span className="text-sm text-gray-700">{fieldLabels[field] || field}</span>
-          </label>
-        ))}
+    <div className={`bg-white rounded-lg overflow-hidden transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_60px_rgb(0,0,0,0.3)] hover:-translate-y-1 transform mb-6 break-inside-avoid`}>
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-lg ${color} ${iconColor}`}>
+              {icon}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          </div>
+          <div className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            {requiredCount}/{totalCount}
+          </div>
+        </div>
+        <div className="space-y-2">
+          {Object.entries(fields).map(([field, required]) => (
+            <label key={field} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors group">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={Boolean(required)}
+                  onChange={() => onToggle(field)}
+                  className="h-5 w-5 focus:ring-secondary border-gray-300 rounded cursor-pointer transition-all"
+                  style={{ accentColor: '#352151' }}
+                />
+              </div>
+              <span className={`text-sm flex-1 transition-colors ${required ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                {fieldLabels[field] || field}
+              </span>
+              {required && (
+                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                  Obligatorio
+                </span>
+              )}
+            </label>
+          ))}
+        </div>
       </div>
     </div>
   )

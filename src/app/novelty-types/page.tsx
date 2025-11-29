@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip, Building2 } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -57,11 +57,7 @@ export default function NoveltyTypesPage() {
   })
   const { confirm, ConfirmDialog } = useConfirm()
 
-  useEffect(() => {
-    fetchNoveltyTypes()
-  }, [filterTenantId])
-
-  const fetchNoveltyTypes = async () => {
+  const fetchNoveltyTypes = useCallback(async () => {
     try {
       const url = filterTenantId
         ? `/api/novelty-types?tenantId=${filterTenantId}`
@@ -82,7 +78,11 @@ export default function NoveltyTypesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterTenantId, tenants.length])
+
+  useEffect(() => {
+    fetchNoveltyTypes()
+  }, [fetchNoveltyTypes])
 
   const fetchTenants = async () => {
     try {
@@ -207,7 +207,7 @@ export default function NoveltyTypesPage() {
               resetForm()
               setShowForm(true)
             }}
-            className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center bg-secondary text-palette-yellow px-4 py-2 rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
             Nuevo Tipo
@@ -395,7 +395,7 @@ export default function NoveltyTypesPage() {
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors"
+                    className="flex-1 bg-secondary text-palette-yellow px-4 py-2 rounded-md hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors"
                   >
                     {editingType ? 'Actualizar' : 'Crear'}
                   </button>

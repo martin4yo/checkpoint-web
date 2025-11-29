@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Filter, X, ExternalLink, Trash2, Eye, Image, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, CheckCircle } from 'lucide-react'
+import { Filter, X, ExternalLink, Trash2, Eye, Image as ImageIcon, MapPin, Calendar, User, FileText, Camera, Play, Square, Navigation, CheckCircle } from 'lucide-react'
 import ConfirmModal from '@/components/ConfirmModal'
 import JourneyLocationsViewer from '@/components/JourneyLocationsViewer'
+import Image from 'next/image'
 
 interface Checkpoint {
   id: string
@@ -154,9 +155,11 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
                     <h4 className="font-semibold text-gray-900">Fotografía</h4>
                   </div>
                   <div className="relative">
-                    <img
+                    <Image
                       src={`${window.location.origin}${checkpoint.imageUrl}`}
                       alt={`Fotografía del checkpoint en ${checkpoint.placeName}`}
+                      width={800}
+                      height={256}
                       className="w-full h-64 object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={(e) => {
                         e.preventDefault()
@@ -185,7 +188,7 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
                   </div>
                   <div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                     <div className="text-center">
-                      <Image className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-gray-500">Sin imagen disponible</p>
                     </div>
                   </div>
@@ -272,9 +275,11 @@ function CheckpointDetailsModal({ checkpoint, onClose }: CheckpointDetailsModalP
             >
               <X className="h-8 w-8" />
             </button>
-            <img
+            <Image
               src={`${window.location.origin}${checkpoint.imageUrl}`}
               alt={`Fotografía completa del checkpoint en ${checkpoint.placeName}`}
+              width={1920}
+              height={1080}
               className="max-h-[90vh] max-w-full object-contain rounded-lg"
             />
             <div className="mt-4 text-center">
@@ -394,9 +399,11 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
             {/* Imagen Preview */}
             <div>
               {checkpoint.imageUrl ? (
-                <img
+                <Image
                   src={`${window.location.origin}${checkpoint.imageUrl}`}
                   alt={`Información de fotografía del checkpoint en ${checkpoint.placeName}`}
+                  width={400}
+                  height={256}
                   className="w-full h-64 object-cover rounded-lg shadow-md"
                 />
               ) : (
@@ -465,7 +472,7 @@ function PhotoInfoModal({ checkpoint, onClose }: PhotoModalProps) {
               <a
                 href={`${window.location.origin}${checkpoint.imageUrl}`}
                 download
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                className="px-4 py-2 bg-secondary text-palette-yellow rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors inline-flex items-center"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Descargar
@@ -594,7 +601,7 @@ function LocationInfoModal({ checkpoint, onClose }: LocationModalProps) {
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+              className="px-4 py-2 bg-secondary text-palette-yellow rounded-lg hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors inline-flex items-center"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Abrir en Google Maps
@@ -682,13 +689,7 @@ export default function CheckpointsPage() {
   // Debug logging
   console.log('Current selectedCheckpoint:', selectedCheckpoint)
 
-  useEffect(() => {
-    fetchCurrentUser()
-    fetchUsers()
-    fetchPlaces()
-  }, [])
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/users/me')
       if (response.ok) {
@@ -704,7 +705,7 @@ export default function CheckpointsPage() {
     } catch (error) {
       console.error('Error fetching current user:', error)
     }
-  }
+  }, [])
 
   const fetchTenants = async () => {
     try {
@@ -739,6 +740,12 @@ export default function CheckpointsPage() {
       setLoading(false)
     }
   }, [filter, filterTenantId])
+
+  useEffect(() => {
+    fetchCurrentUser()
+    fetchUsers()
+    fetchPlaces()
+  }, [fetchCurrentUser])
 
   useEffect(() => {
     fetchCheckpoints()
@@ -994,9 +1001,11 @@ export default function CheckpointsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {checkpoint.imageUrl ? (
-                      <img
+                      <Image
                         src={`${window.location.origin}${checkpoint.imageUrl}`}
                         alt={`Miniatura de ${checkpoint.placeName}`}
+                        width={48}
+                        height={48}
                         className="h-12 w-12 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => {
                           e.preventDefault()
@@ -1006,7 +1015,7 @@ export default function CheckpointsPage() {
                       />
                     ) : (
                       <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                        <Image className="h-6 w-6 text-gray-400" />
+                        <ImageIcon className="h-6 w-6 text-gray-400" />
                       </div>
                     )}
                   </td>
