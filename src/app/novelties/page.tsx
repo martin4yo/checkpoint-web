@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, Building2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, Building2, DollarSign, Calendar, CalendarRange } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon } from '@/lib/lucide-icons'
 
@@ -714,11 +714,27 @@ export default function NoveltiesPage() {
                             <div className="text-sm font-medium text-gray-900 truncate">
                               {type.name}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {type.requiresAmount && '💰 '}
-                              {type.requiresDate && '📅 '}
-                              {type.requiresDateRange && '📆 '}
-                              {type.allowsAttachments && '📎 '}
+                            <div className="flex items-center gap-1 mt-1">
+                              {type.requiresAmount && (
+                                <div className="flex items-center text-xs text-gray-500" title="Requiere monto">
+                                  <DollarSign className="h-3 w-3" />
+                                </div>
+                              )}
+                              {type.requiresDate && (
+                                <div className="flex items-center text-xs text-gray-500" title="Requiere fecha">
+                                  <Calendar className="h-3 w-3" />
+                                </div>
+                              )}
+                              {type.requiresDateRange && (
+                                <div className="flex items-center text-xs text-gray-500" title="Requiere rango de fechas">
+                                  <CalendarRange className="h-3 w-3" />
+                                </div>
+                              )}
+                              {type.allowsAttachments && (
+                                <div className="flex items-center text-xs text-gray-500" title="Permite adjuntos">
+                                  <Paperclip className="h-3 w-3" />
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
