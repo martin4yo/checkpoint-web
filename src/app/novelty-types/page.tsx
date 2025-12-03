@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip, Building2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Tag, DollarSign, Calendar, CalendarRange, Paperclip } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon, availableIcons, availableColors } from '@/lib/lucide-icons'
+import { useTenant } from '@/contexts/TenantContext'
 
 interface Tenant {
   id: string
@@ -37,10 +38,9 @@ interface CurrentUser {
 }
 
 export default function NoveltyTypesPage() {
+  const { selectedTenantId } = useTenant()
   const [noveltyTypes, setNoveltyTypes] = useState<NoveltyType[]>([])
-  const [tenants, setTenants] = useState<Tenant[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-  const [filterTenantId, setFilterTenantId] = useState('')
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingType, setEditingType] = useState<NoveltyType | null>(null)
@@ -59,42 +59,25 @@ export default function NoveltyTypesPage() {
 
   const fetchNoveltyTypes = useCallback(async () => {
     try {
-      const url = filterTenantId
-        ? `/api/novelty-types?tenantId=${filterTenantId}`
+      const url = selectedTenantId
+        ? `/api/novelty-types?tenantId=${selectedTenantId}`
         : '/api/novelty-types'
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setNoveltyTypes(data.noveltyTypes)
         setCurrentUser(data.currentUser)
-
-        // Fetch tenants if user is superuser (only on first load)
-        if (data.currentUser.superuser && tenants.length === 0) {
-          fetchTenants()
-        }
       }
     } catch (error) {
       console.error('Error fetching novelty types:', error)
     } finally {
       setLoading(false)
     }
-  }, [filterTenantId, tenants.length])
+  }, [selectedTenantId])
 
   useEffect(() => {
     fetchNoveltyTypes()
   }, [fetchNoveltyTypes])
-
-  const fetchTenants = async () => {
-    try {
-      const response = await fetch('/api/tenants')
-      if (response.ok) {
-        const data = await response.json()
-        setTenants(data)
-      }
-    } catch (error) {
-      console.error('Error fetching tenants:', error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -214,26 +197,6 @@ export default function NoveltyTypesPage() {
           </button>
         </div>
 
-        {/* Tenant Filter - Only for Superusers */}
-        {currentUser?.superuser && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center space-x-3">
-              <Building2 className="h-5 w-5 text-gray-400" />
-              <select
-                value={filterTenantId}
-                onChange={(e) => setFilterTenantId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-              >
-                <option value="">Todos los tenants</option>
-                {tenants.map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
 
         {/* Form Modal */}
         {showForm && (

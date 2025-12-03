@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, Building2, DollarSign, Calendar, CalendarRange } from 'lucide-react'
+import { Plus, Edit2, Trash2, FileText, Check, X, Paperclip, Download, Upload, DollarSign, Calendar, CalendarRange } from 'lucide-react'
 import { useConfirm } from '@/hooks/useConfirm'
 import { DynamicIcon } from '@/lib/lucide-icons'
+import { useTenant } from '@/contexts/TenantContext'
 
 interface NoveltyType {
   id: string
@@ -67,12 +68,11 @@ interface Attachment {
 }
 
 export default function NoveltiesPage() {
+  const { selectedTenantId } = useTenant()
   const [novelties, setNovelties] = useState<Novelty[]>([])
   const [noveltyTypes, setNoveltyTypes] = useState<NoveltyType[]>([])
-  const [tenants, setTenants] = useState<Tenant[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-  const [filterTenantId, setFilterTenantId] = useState('')
   const [filterNoveltyTypeId, setFilterNoveltyTypeId] = useState('')
   const [filterUserId, setFilterUserId] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -99,32 +99,27 @@ export default function NoveltiesPage() {
 
   const fetchNovelties = useCallback(async () => {
     try {
-      const url = filterTenantId
-        ? `/api/novelties?tenantId=${filterTenantId}`
+      const url = selectedTenantId
+        ? `/api/novelties?tenantId=${selectedTenantId}`
         : '/api/novelties'
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setNovelties(data.novelties)
         setCurrentUser(data.currentUser)
-
-        // Fetch tenants if user is superuser (only on first load)
-        if (data.currentUser.superuser && tenants.length === 0) {
-          fetchTenants()
-        }
       }
     } catch (error) {
       console.error('Error fetching novelties:', error)
     } finally {
       setLoading(false)
     }
-  }, [filterTenantId, tenants.length])
+  }, [selectedTenantId])
 
   const fetchNoveltyTypes = useCallback(async () => {
     try {
       // Only add tenantId parameter when filtering by a specific tenant (superuser selecting different tenant)
-      const url = filterTenantId
-        ? `/api/novelty-types?tenantId=${filterTenantId}`
+      const url = selectedTenantId
+        ? `/api/novelty-types?tenantId=${selectedTenantId}`
         : '/api/novelty-types'
       const response = await fetch(url)
       if (response.ok) {
@@ -135,19 +130,7 @@ export default function NoveltiesPage() {
     } catch (error) {
       console.error('Error fetching novelty types:', error)
     }
-  }, [filterTenantId])
-
-  const fetchTenants = async () => {
-    try {
-      const response = await fetch('/api/tenants')
-      if (response.ok) {
-        const data = await response.json()
-        setTenants(data)
-      }
-    } catch (error) {
-      console.error('Error fetching tenants:', error)
-    }
-  }
+  }, [selectedTenantId])
 
   const fetchUsers = async () => {
     try {
@@ -550,27 +533,6 @@ export default function NoveltiesPage() {
             Nueva Novedad
           </button>
         </div>
-
-        {/* Tenant Filter - Only for Superusers */}
-        {currentUser?.superuser && (
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center space-x-3">
-              <Building2 className="h-5 w-5 text-secondary" />
-              <select
-                value={filterTenantId}
-                onChange={(e) => setFilterTenantId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
-              >
-                <option value="">Mi tenant ({currentUser?.tenantId ? tenants.find(t => t.id === currentUser.tenantId)?.name || 'Actual' : 'Actual'})</option>
-                {tenants.filter(t => t.id !== currentUser?.tenantId).map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4">
