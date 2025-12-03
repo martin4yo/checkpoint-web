@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-interface Tenant {
+export interface Tenant {
   id: string
   name: string
   slug: string
@@ -19,8 +19,10 @@ interface CurrentUser {
 
 interface TenantContextType {
   currentUser: CurrentUser | null
+  selectedTenant: Tenant | null
   selectedTenantId: string | null
   tenants: Tenant[]
+  switchTenant: (tenantId: string) => Promise<void>
   setSelectedTenantId: (tenantId: string | null) => void
   isLoading: boolean
 }
@@ -29,6 +31,7 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined)
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -51,6 +54,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         setCurrentUser(user)
         // Set initial selected tenant to user's tenant
         setSelectedTenantId(user.tenantId)
+
+        // Fetch tenant details
+        if (user.tenantId) {
+          fetchTenantDetails(user.tenantId)
+        }
       }
     } catch (error) {
       console.error('Error fetching current user:', error)
@@ -71,12 +79,38 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const fetchTenantDetails = async (tenantId: string) => {
+    try {
+      const response = await fetch(`/api/tenants/${tenantId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedTenant(data.tenant)
+      }
+    } catch (error) {
+      console.error('Error fetching tenant details:', error)
+    }
+  }
+
+  const switchTenant = async (tenantId: string) => {
+    try {
+      console.log('🔄 [TenantContext] switchTenant called with:', tenantId)
+      await fetchTenantDetails(tenantId)
+      setSelectedTenantId(tenantId)
+      console.log('✅ [TenantContext] Tenant switched successfully')
+    } catch (error) {
+      console.error('❌ [TenantContext] Error switching tenant:', error)
+      throw error
+    }
+  }
+
   return (
     <TenantContext.Provider
       value={{
         currentUser,
+        selectedTenant,
         selectedTenantId,
         tenants,
+        switchTenant,
         setSelectedTenantId,
         isLoading
       }}

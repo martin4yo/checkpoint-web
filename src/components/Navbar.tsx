@@ -2,13 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, MapPin, Users, CheckCircle, Link as LinkIcon, LogOut, Bell, FileBarChart, Building2 } from 'lucide-react'
-import { useTenant } from '@/contexts/TenantContext'
+import { Home, MapPin, Users, CheckCircle, Link as LinkIcon, LogOut, Bell, FileBarChart } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { currentUser, selectedTenantId, tenants, setSelectedTenantId } = useTenant()
 
   const handleLogout = async () => {
     try {
@@ -59,27 +57,7 @@ export default function Navbar() {
               })}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            {/* Tenant Selector - Only for Superusers */}
-            {currentUser?.superuser && tenants.length > 0 && (
-              <div className="relative">
-                <div className="flex items-center">
-                  <Building2 className="h-4 w-4 text-gray-500 mr-2" />
-                  <select
-                    value={selectedTenantId || ''}
-                    onChange={(e) => setSelectedTenantId(e.target.value || null)}
-                    className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white"
-                  >
-                    {tenants.map((tenant) => (
-                      <option key={tenant.id} value={tenant.id}>
-                        {tenant.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
+          <div className="flex items-center">
             <button
               onClick={handleLogout}
               className="inline-flex items-center bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
