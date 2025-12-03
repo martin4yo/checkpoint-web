@@ -1,6 +1,7 @@
 'use client'
 
 import Sidebar from './Sidebar'
+import { ChatWidgetWrapper } from './chat'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -27,6 +28,9 @@ export default function DashboardLayout({ children, title, titleIcon }: Dashboar
           {children}
         </div>
       </main>
+
+      {/* Asistente IA flotante */}
+      <ChatWidgetWrapper />
     </div>
   )
 }

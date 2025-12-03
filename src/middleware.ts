@@ -20,6 +20,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Allow health check for chat API (GET only)
+  if (pathname === '/api/chat' && request.method === 'GET') {
+    return NextResponse.next()
+  }
+
   // Check authentication for API routes
   if (pathname.startsWith('/api/')) {
     // Try Bearer token first (mobile API)
