@@ -24,13 +24,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Filter by tenant (superusers can see all or filter by specific tenant)
+    // Filter by tenant
+    // - Non-superusers: only their tenant
+    // - Superusers: specific tenant if provided, otherwise their own tenant
     const { searchParams } = new URL(req.url)
     const filterTenantId = searchParams.get('tenantId')
 
-    const whereClause = currentUser.superuser
-      ? (filterTenantId ? { tenantId: filterTenantId } : {})
-      : { tenantId: currentUser.tenantId }
+    const whereClause = {
+      tenantId: filterTenantId || currentUser.tenantId
+    }
 
     const noveltyTypes = await prisma.noveltyType.findMany({
       where: whereClause,

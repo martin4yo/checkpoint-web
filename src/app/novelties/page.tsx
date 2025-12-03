@@ -122,10 +122,9 @@ export default function NoveltiesPage() {
 
   const fetchNoveltyTypes = useCallback(async () => {
     try {
-      // Filter by current tenant (or selected tenant for superusers)
-      const tenantId = filterTenantId || currentUser?.tenantId
-      const url = tenantId
-        ? `/api/novelty-types?tenantId=${tenantId}`
+      // Only add tenantId parameter when filtering by a specific tenant (superuser selecting different tenant)
+      const url = filterTenantId
+        ? `/api/novelty-types?tenantId=${filterTenantId}`
         : '/api/novelty-types'
       const response = await fetch(url)
       if (response.ok) {
@@ -136,7 +135,7 @@ export default function NoveltiesPage() {
     } catch (error) {
       console.error('Error fetching novelty types:', error)
     }
-  }, [filterTenantId, currentUser?.tenantId])
+  }, [filterTenantId])
 
   const fetchTenants = async () => {
     try {
