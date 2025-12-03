@@ -1,30 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTenant } from '@/contexts/TenantContext';
 import { useRouter } from 'next/navigation';
 import { Building2 } from 'lucide-react';
-
-interface TenantOption {
-  id: string;
-  name: string;
-  slug: string;
-}
 
 export function TenantSelector() {
   const { currentUser, selectedTenant, tenants, switchTenant, isLoading: contextLoading } = useTenant();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Auto-select first tenant if none is selected
-  useEffect(() => {
-    if (currentUser && !selectedTenant && tenants.length > 0 && !contextLoading) {
-      console.log('🏢 [TenantSelector] Auto-selecting first tenant:', tenants[0].name);
-      handleTenantChange(tenants[0].id);
-    }
-  }, [currentUser, selectedTenant, tenants, contextLoading]);
-
-  const handleTenantChange = async (tenantId: string) => {
+  const handleTenantChange = useCallback(async (tenantId: string) => {
     if (tenantId === selectedTenant?.id) return;
 
     console.log('🔄 [TenantSelector] Changing tenant:', tenantId);
@@ -40,7 +26,15 @@ export function TenantSelector() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [switchTenant, selectedTenant, router]);
+
+  // Auto-select first tenant if none is selected
+  useEffect(() => {
+    if (currentUser && !selectedTenant && tenants.length > 0 && !contextLoading) {
+      console.log('🏢 [TenantSelector] Auto-selecting first tenant:', tenants[0].name);
+      handleTenantChange(tenants[0].id);
+    }
+  }, [currentUser, selectedTenant, tenants, contextLoading, handleTenantChange]);
 
   // Don't show if not superuser or no tenants available
   if (!currentUser?.superuser || tenants.length === 0) {

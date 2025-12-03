@@ -36,16 +36,6 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    fetchCurrentUser()
-  }, [])
-
-  useEffect(() => {
-    if (currentUser?.superuser && tenants.length === 0) {
-      fetchTenants()
-    }
-  }, [currentUser, tenants.length])
-
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch('/api/auth/me')
@@ -66,6 +56,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCurrentUser()
+  }, [])
+
+  useEffect(() => {
+    if (currentUser?.superuser && tenants.length === 0) {
+      fetchTenants()
+    }
+  }, [currentUser, tenants.length])
 
   const fetchTenants = async () => {
     try {
