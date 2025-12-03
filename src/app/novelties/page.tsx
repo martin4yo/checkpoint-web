@@ -120,9 +120,14 @@ export default function NoveltiesPage() {
     }
   }, [filterTenantId, tenants.length])
 
-  const fetchNoveltyTypes = async () => {
+  const fetchNoveltyTypes = useCallback(async () => {
     try {
-      const response = await fetch('/api/novelty-types')
+      // Filter by current tenant (or selected tenant for superusers)
+      const tenantId = filterTenantId || currentUser?.tenantId
+      const url = tenantId
+        ? `/api/novelty-types?tenantId=${tenantId}`
+        : '/api/novelty-types'
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         const activeTypes = data.noveltyTypes.filter((t: NoveltyType & { isActive: boolean }) => t.isActive)
@@ -131,7 +136,7 @@ export default function NoveltiesPage() {
     } catch (error) {
       console.error('Error fetching novelty types:', error)
     }
-  }
+  }, [filterTenantId, currentUser?.tenantId])
 
   const fetchTenants = async () => {
     try {
@@ -161,7 +166,7 @@ export default function NoveltiesPage() {
     fetchNovelties()
     fetchNoveltyTypes()
     fetchUsers()
-  }, [fetchNovelties])
+  }, [fetchNovelties, fetchNoveltyTypes])
 
   const fetchAttachments = async (noveltyId: string) => {
     try {
@@ -183,6 +188,11 @@ export default function NoveltiesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.noveltyTypeId) {
+      alert('Por favor selecciona un tipo de novedad')
+      return
+    }
 
     try {
       const payload: Record<string, unknown> = {
@@ -675,23 +685,59 @@ export default function NoveltiesPage() {
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     Tipo de Novedad
                   </label>
-                  <select
-                    value={formData.noveltyTypeId}
-                    onChange={(e) => handleTypeChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-                    required
-                    disabled={!!editingNovelty}
-                  >
-                    <option value="">Seleccionar tipo...</option>
+                  <div className="grid grid-cols-2 gap-3">
                     {noveltyTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
+                      <button
+                        key={type.id}
+                        type="button"
+                        onClick={() => !editingNovelty && handleTypeChange(type.id)}
+                        disabled={!!editingNovelty}
+                        className={`
+                          relative p-4 rounded-lg border-2 transition-all text-left
+                          ${formData.noveltyTypeId === type.id
+                            ? 'border-secondary bg-secondary/5 ring-2 ring-secondary ring-offset-2'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }
+                          ${editingNovelty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                        `}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div
+                            className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: type.color }}
+                          >
+                            <DynamicIcon name={type.icon} className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {type.name}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {type.requiresAmount && '💰 '}
+                              {type.requiresDate && '📅 '}
+                              {type.requiresDateRange && '📆 '}
+                              {type.allowsAttachments && '📎 '}
+                            </div>
+                          </div>
+                        </div>
+                        {formData.noveltyTypeId === type.id && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center">
+                              <Check className="h-3 w-3 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </button>
                     ))}
-                  </select>
+                  </div>
+                  {noveltyTypes.length === 0 && (
+                    <div className="text-sm text-gray-500 text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                      No hay tipos de novedades disponibles para este tenant
+                    </div>
+                  )}
                 </div>
 
                 {selectedType?.requiresAmount && (
