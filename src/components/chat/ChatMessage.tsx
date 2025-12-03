@@ -8,7 +8,7 @@ export interface ChatMessageType {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 interface ChatMessageProps {

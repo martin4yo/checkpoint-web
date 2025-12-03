@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, Loader2, Sparkles } from 'lucide-react';
 import { ChatMessage, ChatMessageType } from './ChatMessage';
 import { chatService } from '@/lib/chatService';
 
@@ -55,7 +55,7 @@ Puedo ayudarte con:
       };
       setMessages([welcomeMessage]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -1,5 +1,3 @@
-import { ChatMessageType } from '@/components/chat/ChatMessage';
-
 export interface ChatRequest {
   message: string;
   tenantId: string;
@@ -8,9 +6,9 @@ export interface ChatRequest {
 export interface ChatResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   error?: string;
-  debug?: any;
+  debug?: Record<string, unknown>;
 }
 
 class ChatService {
@@ -31,13 +29,13 @@ class ChatService {
       const data = await response.json();
       return data;
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Chat service error:', error);
 
       return {
         success: false,
         message: 'Error de conexión con el servidor',
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -49,7 +47,7 @@ class ChatService {
     try {
       const response = await fetch('/api/chat');
       return await response.json();
-    } catch (error) {
+    } catch {
       return {
         available: false,
         service: 'AI Chat Assistant',

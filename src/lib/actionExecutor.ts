@@ -9,16 +9,82 @@ import { startOfMonth, endOfMonth, differenceInHours, parseISO } from 'date-fns'
  * (crear empleados, novedades, consultas, etc.)
  */
 
+interface EmpleadoData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  dni?: string;
+  cuil?: string;
+  puesto?: string;
+  supervisorEmail?: string;
+}
+
+interface EdicionData {
+  empleadoEmail: string;
+  cambios: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    puesto?: string;
+    area?: string;
+    supervisorEmail?: string;
+  };
+}
+
+interface DesactivacionData {
+  empleadoEmail: string;
+  motivo?: string;
+}
+
+interface AsignacionData {
+  empleadoEmail: string;
+  supervisorEmail: string;
+}
+
+interface NovedadData {
+  tipoNovedad: string;
+  fecha?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  monto?: number;
+  notas?: string;
+}
+
+interface AprobacionData {
+  novedadId?: string;
+  empleadoEmail?: string;
+  tipoNovedad?: string;
+  comentario?: string;
+}
+
+interface ConsultaData {
+  empleadoEmail?: string;
+  empleadoNombre?: string;
+  mes?: number;
+  anio?: number;
+  tipo?: 'todas' | 'extras' | 'normales';
+}
+
+interface Entidades {
+  empleado?: EmpleadoData;
+  edicion?: EdicionData;
+  desactivacion?: DesactivacionData;
+  asignacion?: AsignacionData;
+  novedad?: NovedadData;
+  aprobacion?: AprobacionData;
+  consulta?: ConsultaData;
+}
+
 interface AIAction {
   accion: string;
-  entidades?: any;
+  entidades?: Entidades;
   error?: string;
 }
 
 interface ExecutionResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
@@ -31,14 +97,14 @@ class ActionExecutorService {
     action: AIAction,
     userId: string,
     tenantId: string,
-    originalPrompt?: string
+    _originalPrompt?: string
   ): Promise<ExecutionResult> {
     try {
       console.log(`\n⚙️  [Action Executor] Ejecutando: ${action.accion}`);
 
       switch (action.accion) {
         case 'crear_empleado':
-          return await this.crearEmpleado(action, userId, tenantId, originalPrompt);
+          return await this.crearEmpleado(action, userId, tenantId);
 
         case 'editar_empleado':
           return await this.editarEmpleado(action, userId, tenantId);
@@ -50,7 +116,7 @@ class ActionExecutorService {
           return await this.asignarSupervisor(action, userId, tenantId);
 
         case 'crear_novedad':
-          return await this.crearNovedad(action, userId, tenantId, originalPrompt);
+          return await this.crearNovedad(action, userId, tenantId, _originalPrompt);
 
         case 'aprobar_novedad':
           return await this.aprobarNovedad(action, userId, tenantId);
@@ -103,8 +169,7 @@ class ActionExecutorService {
   private async crearEmpleado(
     action: AIAction,
     userId: string,
-    tenantId: string,
-    originalPrompt?: string
+    tenantId: string
   ): Promise<ExecutionResult> {
     try {
       const { empleado } = action.entidades || {};
@@ -335,6 +400,7 @@ class ActionExecutorService {
       // Buscar empleado si se especificó
       let empleadoId: string | undefined;
       if (consulta?.empleadoEmail || consulta?.empleadoNombre) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const where: any = { tenantId };
         if (consulta.empleadoEmail) {
           where.email = consulta.empleadoEmail;
@@ -475,6 +541,7 @@ class ActionExecutorService {
     try {
       const { consulta } = action.entidades || {};
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const where: any = { tenantId };
       if (consulta?.empleadoEmail) {
         where.email = consulta.empleadoEmail;
@@ -580,6 +647,7 @@ class ActionExecutorService {
       }
 
       // Preparar datos a actualizar
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateData: any = {};
       if (edicion.cambios.firstName) updateData.firstName = edicion.cambios.firstName;
       if (edicion.cambios.lastName) updateData.lastName = edicion.cambios.lastName;
@@ -676,7 +744,7 @@ ${cambiosRealizados.map(campo => {
    */
   private async desactivarEmpleado(
     action: AIAction,
-    userId: string,
+    _userId: string,
     tenantId: string
   ): Promise<ExecutionResult> {
     try {
@@ -747,7 +815,7 @@ ${desactivacion.motivo ? `\n📝 **Motivo:** ${desactivacion.motivo}` : ''}
    */
   private async asignarSupervisor(
     action: AIAction,
-    userId: string,
+    _userId: string,
     tenantId: string
   ): Promise<ExecutionResult> {
     try {
@@ -1047,7 +1115,7 @@ ${aprobacion?.comentario ? `\n💬 **Motivo del rechazo:** ${aprobacion.comentar
    * Lista novedades pendientes de aprobación
    */
   private async listarNovedadesPendientes(
-    action: AIAction,
+    _action: AIAction,
     userId: string,
     tenantId: string
   ): Promise<ExecutionResult> {
@@ -1073,6 +1141,7 @@ ${aprobacion?.comentario ? `\n💬 **Motivo del rechazo:** ${aprobacion.comentar
       }
 
       // Determinar qué novedades puede ver
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const where: any = {
         tenantId,
         status: 'PENDING'
@@ -1166,7 +1235,9 @@ ${novedades.map((nov, i) => {
     return `LEG-${(count + 1).toString().padStart(5, '0')}`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private calcularHorasPorEmpleado(jornadas: any[]): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const porEmpleado = new Map<string, any>();
 
     jornadas.forEach(jornada => {
@@ -1196,7 +1267,9 @@ ${novedades.map((nov, i) => {
     return Array.from(porEmpleado.values());
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private calcularHorasExtras(jornadas: any[]): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const porEmpleado = new Map<string, any>();
 
     jornadas.forEach(jornada => {
@@ -1228,6 +1301,7 @@ ${novedades.map((nov, i) => {
 
   // ============ MENSAJES ============
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private construirMensajeEmpleado(empleado: any, tempPassword: string): string {
     return `✅ **Empleado creado exitosamente**
 
@@ -1245,6 +1319,7 @@ ${empleado.supervisor ? `• **Supervisor:** ${empleado.supervisor.firstName} ${
 3. El empleado debe cambiar su contraseña en el primer login`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private construirMensajeNovedad(novedad: any): string {
     const tipo = novedad.noveltyType.name;
     let periodo = '';
@@ -1269,6 +1344,7 @@ ${novedad.notes ? `\n📝 **Notas:** ${novedad.notes}` : ''}
 2. Esperar la aprobación del supervisor`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private construirMensajeHoras(resumen: any[], mes: number, anio: number): string {
     if (resumen.length === 0) {
       return `No se encontraron jornadas registradas para ${mes}/${anio}`;
@@ -1287,6 +1363,7 @@ ${lista}
 **Total general:** ${totalHoras} horas`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private construirMensajeHorasExtras(resumen: any[], mes: number, anio: number): string {
     if (resumen.length === 0) {
       return `No se registraron horas extras en ${mes}/${anio}`;
@@ -1307,6 +1384,7 @@ ${lista}
 💡 *Nota: El cálculo considera extras toda jornada > 8 horas*`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private construirMensajeEmpleadoInfo(empleado: any): string {
     const legajo = empleado.legajo;
     const datosPersonales = legajo?.datosPersonales;

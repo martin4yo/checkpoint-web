@@ -72,7 +72,10 @@
       "Bash(npx next build:*)",
       "Bash(ssh:*)",
       "Bash(tee:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(/dev/null)",
+      "Bash(npx next lint:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []

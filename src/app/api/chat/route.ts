@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
  * Verifica si el servicio de AI está disponible (health check)
  * Este endpoint NO requiere autenticación
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   console.log('🔍 Health check - AI Assistant disponible:', aiAssistant !== null);
 
   return NextResponse.json({
