@@ -83,11 +83,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch(`/api/tenants/${tenantId}`)
       if (response.ok) {
-        const data = await response.json()
-        setSelectedTenant(data.tenant)
+        const tenant = await response.json()
+        console.log('🏢 [TenantContext] Tenant details fetched:', tenant)
+        setSelectedTenant(tenant)
+      } else {
+        console.error('❌ [TenantContext] Error fetching tenant:', response.status)
       }
     } catch (error) {
-      console.error('Error fetching tenant details:', error)
+      console.error('❌ [TenantContext] Error fetching tenant details:', error)
     }
   }
 

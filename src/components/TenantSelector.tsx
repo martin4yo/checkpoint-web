@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTenant } from '@/contexts/TenantContext';
 import { useRouter } from 'next/navigation';
 import { Building2 } from 'lucide-react';
@@ -9,8 +9,25 @@ export function TenantSelector() {
   const { currentUser, selectedTenant, tenants, switchTenant, isLoading: contextLoading } = useTenant();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const handleTenantChange = useCallback(async (tenantId: string) => {
+  // Auto-select first tenant if none is selected (only once)
+  useEffect(() => {
+    if (currentUser && !hasInitialized && !contextLoading && tenants.length > 0) {
+      console.log('🏢 [TenantSelector] Initializing tenant selection...');
+      setHasInitialized(true);
+
+      if (!selectedTenant) {
+        console.log('🏢 [TenantSelector] Auto-selecting first tenant:', tenants[0].name);
+        handleTenantChange(tenants[0].id);
+      } else {
+        console.log('🏢 [TenantSelector] Tenant already selected:', selectedTenant.name);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, hasInitialized, contextLoading, tenants, selectedTenant]);
+
+  const handleTenantChange = async (tenantId: string) => {
     if (tenantId === selectedTenant?.id) return;
 
     console.log('🔄 [TenantSelector] Changing tenant:', tenantId);
@@ -26,15 +43,7 @@ export function TenantSelector() {
     } finally {
       setLoading(false);
     }
-  }, [switchTenant, selectedTenant, router]);
-
-  // Auto-select first tenant if none is selected
-  useEffect(() => {
-    if (currentUser && !selectedTenant && tenants.length > 0 && !contextLoading) {
-      console.log('🏢 [TenantSelector] Auto-selecting first tenant:', tenants[0].name);
-      handleTenantChange(tenants[0].id);
-    }
-  }, [currentUser, selectedTenant, tenants, contextLoading, handleTenantChange]);
+  };
 
   // Don't show if not superuser or no tenants available
   if (!currentUser?.superuser || tenants.length === 0) {
@@ -70,7 +79,7 @@ export function TenantSelector() {
         )}
       </div>
 
-      {!selectedTenant && tenants.length > 0 && (
+      {hasInitialized && !selectedTenant && tenants.length > 0 && (
         <span className="text-xs text-white bg-red-500 px-3 py-1 rounded-full font-medium">
           Sin organización seleccionada
         </span>
